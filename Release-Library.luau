@@ -5719,7 +5719,7 @@ end)
 
 -- [FIX] Place Card: Info dirapikan + Divider ditambahkan
 local plCard, plBody = infoCard(row1, "Place", "map-pin", 118, 0.5, -4)
-local gcInfo = Library.GameChecker.Result or detectGameInfo()
+local gcInfo = detectGameInfo()
 local plName = infoLabel(plBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
 plName.Text = gcInfo.PlaceName
 local plId = infoLabel(plBody, 18, 13, 10, Enum.Font.Gotham, "SubText", true)
