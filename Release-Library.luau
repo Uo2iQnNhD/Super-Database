@@ -1995,12 +1995,9 @@ if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Libr
 return nil
 end
 config = config or {}
---// [V5.5] Game Checker loading screen (sekali saja, sebelum UI dibangun)
-if config.GameChecker ~= false and not Library._gameChecked then
-Library:RunGameChecker(type(config.GameChecker) == "table" and config.GameChecker or {})
-end
+-- [FIX] Game Checker loading screen dihapus sesuai permintaan agar bisa dipanggil manual dari luar
 local title = config.Title or "ZETHUB"
-local subtitle = config.Subtitle or "V5.5 • Quick Bar • Game Checker"
+local subtitle = config.Subtitle or "V5.6 • Quick Bar • Net Stats"
 local OPEN_SIZE = UDim2.new(0, 560, 0, 420)
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZethHubV5"
@@ -2119,7 +2116,8 @@ titleLayout.Padding = UDim.new(0, 8)
 titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 titleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 titleLayout.Parent = titleRow
---// [V5.6 BARU] Dot hijau live + pembatas "|" sebelum title
+
+--// [V5.6] Dot hijau live + pembatas "|" sebelum title
 local statusDot = Instance.new("Frame")
 statusDot.Name = "StatusDot"
 statusDot.Size = UDim2.new(0, 8, 0, 8)
@@ -2133,10 +2131,9 @@ Corner(statusDot, 99)
 local dotScale = Instance.new("UIScale")
 dotScale.Scale = 1
 dotScale.Parent = statusDot
-local dotGlow = Instance.new("UIGlow")
-dotGlow.Transparency = 0.4
-dotGlow.Enabled = Library.Effects.Glow
-dotGlow.Parent = statusDot
+
+-- [FIX] UIGlow dihapus karena bukan Instance valid di Roblox.
+-- Animasi pulse di bawah ini sudah cukup untuk membuat efek live/berdenyut.
 task.spawn(function()
 while statusDot and statusDot.Parent do
 if statusDot.Parent then
@@ -2150,6 +2147,7 @@ Tween(dotScale, 0.6, {Scale = 1})
 task.wait(0.62)
 end
 end)
+
 local titleSeparator = Instance.new("Frame")
 titleSeparator.Name = "TitleSeparator"
 titleSeparator.Size = UDim2.new(0, 1, 0, 14)
@@ -2159,6 +2157,7 @@ titleSeparator.LayoutOrder = 2
 titleSeparator.ZIndex = 47
 titleSeparator.Parent = titleRow
 registerThemeRef(titleSeparator, "BackgroundColor3", "Border")
+
 local titleLbl = Instance.new("TextLabel")
 titleLbl.Size = UDim2.new(0, 0, 0, 18)
 titleLbl.AutomaticSize = Enum.AutomaticSize.X
@@ -2172,6 +2171,7 @@ titleLbl.LayoutOrder = 3
 titleLbl.ZIndex = 47
 titleLbl.Parent = titleRow
 registerThemeRef(titleLbl, "TextColor3", "Text")
+
 local subLbl = Instance.new("TextLabel")
 subLbl.Size = UDim2.new(0.6, 0, 0, 14)
 subLbl.Position = UDim2.new(0, 16, 0, 31)
@@ -2184,6 +2184,7 @@ subLbl.TextXAlignment = Enum.TextXAlignment.Left
 subLbl.ZIndex = 46
 subLbl.Parent = topbar
 registerThemeRef(subLbl, "TextColor3", "SubText")
+
 local tagRow = Instance.new("Frame")
 tagRow.Size = UDim2.new(0, 0, 0, 22)
 tagRow.AutomaticSize = Enum.AutomaticSize.X
@@ -2199,6 +2200,7 @@ tagLayout.Padding = UDim.new(0, 6)
 tagLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 tagLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 tagLayout.Parent = tagRow
+
 local window
 local function getCloseColor()
 return (window and window.closeColor) or Library.CloseColor or Theme.Close
@@ -3533,8 +3535,7 @@ end
 registerElement(window, tab, name, f, cfg, "slider", obj)
 return obj
 end
-
--- PART 2 END (V5.6 FIX)
+-- PART 2 END (V5.6 FIXED)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3
 
 function tab:CreateButton(cfg)
