@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
+
 --// Anti duplicate environment
 local Env = (typeof(getgenv) == "function" and getgenv()) or _G
 local Generation = (type(Env) == "table" and tonumber(Env.ZethHubGeneration) or 0) + 1
@@ -16,9 +17,9 @@ Env.ZethHubGeneration = Generation
 end
 local function purgeOldGuis()
 local targets = {
-"ZethHubV5",
-"ZethNotifies",
-"ZethGameChecker",
+"Ro-Netrium",
+"Ro-NetriumUPD",
+"Ro-NetriumV4",
 }
 local parents = {
 game:GetService("CoreGui"),
