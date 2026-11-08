@@ -1,6 +1,7 @@
 --[[ Ro-Netrium Updated by Zaycapcay ]]
 --[[ Release in 2 Week ]]
 
+--[[ ZETHUB - Library V5.3 Updated by Exterminate0 ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -927,377 +928,6 @@ end
 ThemeManager:RefreshWindows()
 return true
 end
---// ==========================================================
---// [V5.5 BARU] UTILITAS: Clipboard, Join Script, Rejoin, Durasi
---// ==========================================================
-local function copyToClipboard(text)
-text = tostring(text or "")
-if typeof(setclipboard) == "function" then
-local ok = pcall(setclipboard, text)
-if ok then return true end
-end
-if typeof(toclipboard) == "function" then
-local ok = pcall(toclipboard, text)
-if ok then return true end
-end
-if type(syn) == "table" and typeof(syn.setclipboard) == "function" then
-local ok = pcall(syn.setclipboard, text)
-if ok then return true end
-end
-if type(fluxus) == "table" and typeof(fluxus.setclipboard) == "function" then
-local ok = pcall(fluxus.setclipboard, text)
-if ok then return true end
-end
-return false
-end
-local function joinScriptText()
-return string.format(
-'game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game:GetService("Players").LocalPlayer)',
-tonumber(game.PlaceId) or 0,
-tostring(game.JobId or "")
-)
-end
-local function rejoinServer()
-local ok, err = pcall(function()
-game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
-end)
-return ok, err
-end
-local function formatDuration(seconds)
-seconds = math.floor(tonumber(seconds) or 0)
-local h = math.floor(seconds / 3600)
-local m = math.floor((seconds % 3600) / 60)
-return string.format("%dh %02dm", h, m)
-end
---// ==========================================================
---// [V5.5 BARU] MOVEMENT ENGINE (backend Quick Bar)
---// Slider WalkSpeed/JumpPower/InfJump di Tools tab DIPINDAH ke sini
---// ==========================================================
-Library.Movement = {
-WalkSpeedActive = false,
-WalkSpeedValue = 16,
-JumpPowerActive = false,
-JumpPowerValue = 50,
-InfJump = false,
-_hooksInstalled = false,
-}
-local function movementHumanoid()
-local char = LocalPlayer.Character
-if char then
-return char:FindFirstChildOfClass("Humanoid")
-end
-return nil
-end
-local function applyWalkSpeed()
-local hum = movementHumanoid()
-if not hum then return end
-if Library.Movement.WalkSpeedActive then
-hum.WalkSpeed = Library.Movement.WalkSpeedValue
-else
-hum.WalkSpeed = 16
-end
-end
-local function applyJumpPower()
-local hum = movementHumanoid()
-if not hum then return end
-hum.UseJumpPower = true
-if Library.Movement.JumpPowerActive then
-hum.JumpPower = Library.Movement.JumpPowerValue
-else
-hum.JumpPower = 50
-end
-end
-function Library.Movement:InstallHooks()
-if self._hooksInstalled then return end
-self._hooksInstalled = true
-LocalPlayer.CharacterAdded:Connect(function(char)
-task.wait(0.8)
-if not char or not char.Parent then return end
-local hum = char:FindFirstChildOfClass("Humanoid")
-if not hum then return end
-if Library.Movement.WalkSpeedActive then
-hum.WalkSpeed = Library.Movement.WalkSpeedValue
-end
-if Library.Movement.JumpPowerActive then
-hum.UseJumpPower = true
-hum.JumpPower = Library.Movement.JumpPowerValue
-end
-end)
-UserInputService.JumpRequest:Connect(function()
-if not Library.Movement.InfJump then return end
-local char = LocalPlayer.Character
-local hum = char and char:FindFirstChildOfClass("Humanoid")
-if hum then
-hum:ChangeState(Enum.HumanoidStateType.Jumping)
-end
-end)
-end
-function Library.Movement:SetWalkSpeed(value)
-self.WalkSpeedValue = tonumber(value) or 16
-if self.WalkSpeedActive then applyWalkSpeed() end
-end
-function Library.Movement:SetWalkSpeedActive(on)
-self.WalkSpeedActive = on and true or false
-applyWalkSpeed()
-end
-function Library.Movement:SetJumpPower(value)
-self.JumpPowerValue = tonumber(value) or 50
-if self.JumpPowerActive then applyJumpPower() end
-end
-function Library.Movement:SetJumpPowerActive(on)
-self.JumpPowerActive = on and true or false
-applyJumpPower()
-end
-function Library.Movement:SetInfJump(on)
-self.InfJump = on and true or false
-end
-Library.Movement:InstallHooks()
---// ==========================================================
---// [V5.5 BARU] GAME CHECKER (Loading screen ala DEK DEV HUB)
---// ==========================================================
-Library.GameChecker = {
-Result = nil,
-SupportedPlaces = {},
-SupportedUniverses = {},
-}
-local function detectGameInfo()
-local info = {
-PlaceName = "Unknown Place",
-PlaceId = 0,
-UniverseId = 0,
-Creator = "Unknown",
-Supported = false,
-Status = "UNIVERSAL",
-}
-pcall(function() info.PlaceId = game.PlaceId end)
-pcall(function() info.UniverseId = game.GameId end)
-local okProd, product = pcall(function()
-return game:GetService("MarketplaceService"):GetProductInfo(info.PlaceId)
-end)
-if okProd and type(product) == "table" then
-if type(product.Name) == "string" and product.Name ~= "" then
-info.PlaceName = product.Name
-end
-if type(product.Creator) == "table" and type(product.Creator.Name) == "string" then
-info.Creator = product.Creator.Name
-end
-end
-for _, id in ipairs(Library.GameChecker.SupportedPlaces) do
-if id == info.PlaceId then
-info.Supported = true
-break
-end
-end
-if not info.Supported then
-for _, id in ipairs(Library.GameChecker.SupportedUniverses) do
-if id == info.UniverseId then
-info.Supported = true
-break
-end
-end
-end
-info.Status = info.Supported and "SUPPORTED" or "NO KEY REQUIRED"
-Library.GameChecker.Result = info
-return info
-end
-function Library:RunGameChecker(cfg)
-if Library._gameChecked then
-return Library.GameChecker.Result
-end
-Library._gameChecked = true
-cfg = cfg or {}
-if type(cfg.SupportedPlaces) == "table" then
-Library.GameChecker.SupportedPlaces = cfg.SupportedPlaces
-end
-if type(cfg.SupportedUniverses) == "table" then
-Library.GameChecker.SupportedUniverses = cfg.SupportedUniverses
-end
-local steps = cfg.Steps or {
-"Initializing executor environment",
-"Connecting to Roblox services",
-"Detecting current place",
-"Verifying game support",
-"Preparing interface",
-}
-local gui = Instance.new("ScreenGui")
-gui.Name = "ZethGameChecker"
-gui.ResetOnSpawn = false
-gui.DisplayOrder = 99999
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.IgnoreGuiInset = true
-pcall(function()
-gui.Parent = game:GetService("CoreGui")
-end)
-if not gui.Parent then
-pcall(function()
-gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end)
-end
-local dim = Instance.new("Frame")
-dim.Name = "Dim"
-dim.Size = UDim2.new(1, 0, 1, 0)
-dim.BackgroundColor3 = Color3.new(0, 0, 0)
-dim.BackgroundTransparency = 0.45
-dim.BorderSizePixel = 0
-dim.ZIndex = 1
-dim.Parent = gui
-local card = Instance.new("Frame")
-card.Name = "CheckerCard"
-card.AnchorPoint = Vector2.new(0.5, 0.5)
-card.Position = UDim2.new(0.5, 0, 0.5, 0)
-card.Size = UDim2.new(0, 470, 0, 240)
-card.BackgroundColor3 = Theme.Background
-card.BorderSizePixel = 0
-card.ZIndex = 2
-card.Parent = gui
-Corner(card, 12)
-local cardStroke = Stroke(card, Color3.new(1, 1, 1), 2)
-registerRGB(cardStroke)
-if Library.Effects.Shadow then
-pcall(function()
-local shadow = Instance.new("UIDropShadow")
-shadow.Color = Color3.new(0, 0, 0)
-shadow.Transparency = 0.5
-shadow.Size = UDim2.new(0, 26, 0, 26)
-shadow.Offset = Vector2.new(0, 8)
-shadow.Parent = card
-end)
-end
-local gcIcon = Instance.new("ImageLabel")
-gcIcon.Name = "Icon"
-gcIcon.Size = UDim2.new(0, 40, 0, 40)
-gcIcon.Position = UDim2.new(0, 18, 0, 18)
-gcIcon.BackgroundTransparency = 1
-gcIcon.ImageColor3 = Library.Accent
-gcIcon.ZIndex = 3
-gcIcon.Parent = card
-setIcon(gcIcon, cfg.Icon or "shield-check")
-local gcTitle = Instance.new("TextLabel")
-gcTitle.Size = UDim2.new(1, -150, 0, 22)
-gcTitle.Position = UDim2.new(0, 68, 0, 20)
-gcTitle.BackgroundTransparency = 1
-gcTitle.Text = cfg.Title or "GAME CHECKER"
-gcTitle.TextColor3 = Theme.Text
-gcTitle.TextSize = 17
-gcTitle.Font = Enum.Font.GothamBlack
-gcTitle.TextXAlignment = Enum.TextXAlignment.Left
-gcTitle.ZIndex = 3
-gcTitle.Parent = card
-local gcSubtitle = Instance.new("TextLabel")
-gcSubtitle.Size = UDim2.new(1, -150, 0, 16)
-gcSubtitle.Position = UDim2.new(0, 68, 0, 44)
-gcSubtitle.BackgroundTransparency = 1
-gcSubtitle.Text = cfg.Subtitle or "Verifying environment & place support"
-gcSubtitle.TextColor3 = Theme.SubText
-gcSubtitle.TextSize = 11
-gcSubtitle.Font = Enum.Font.Gotham
-gcSubtitle.TextXAlignment = Enum.TextXAlignment.Left
-gcSubtitle.ZIndex = 3
-gcSubtitle.Parent = card
-local gcBadge = Instance.new("TextLabel")
-gcBadge.Name = "Badge"
-gcBadge.Size = UDim2.new(0, 130, 0, 24)
-gcBadge.Position = UDim2.new(1, -148, 0, 20)
-gcBadge.BackgroundColor3 = Theme.Element
-gcBadge.BorderSizePixel = 0
-gcBadge.Text = "CHECKING..."
-gcBadge.TextColor3 = Theme.SubText
-gcBadge.TextSize = 10
-gcBadge.Font = Enum.Font.GothamBold
-gcBadge.ZIndex = 3
-gcBadge.Parent = card
-Corner(gcBadge, 99)
-local gcGameName = Instance.new("TextLabel")
-gcGameName.Size = UDim2.new(1, -36, 0, 20)
-gcGameName.Position = UDim2.new(0, 18, 0, 82)
-gcGameName.BackgroundTransparency = 1
-gcGameName.Text = "Detecting place..."
-gcGameName.TextColor3 = Theme.Text
-gcGameName.TextSize = 14
-gcGameName.Font = Enum.Font.GothamBold
-gcGameName.TextXAlignment = Enum.TextXAlignment.Left
-gcGameName.TextTruncate = Enum.TextTruncate.AtEnd
-gcGameName.ZIndex = 3
-gcGameName.Parent = card
-local gcGameMeta = Instance.new("TextLabel")
-gcGameMeta.Size = UDim2.new(1, -36, 0, 16)
-gcGameMeta.Position = UDim2.new(0, 18, 0, 104)
-gcGameMeta.BackgroundTransparency = 1
-gcGameMeta.Text = "PlaceId -  |  Universe -  |  by -"
-gcGameMeta.TextColor3 = Theme.SubText
-gcGameMeta.TextSize = 10
-gcGameMeta.Font = Enum.Font.Gotham
-gcGameMeta.TextXAlignment = Enum.TextXAlignment.Left
-gcGameMeta.TextTruncate = Enum.TextTruncate.AtEnd
-gcGameMeta.ZIndex = 3
-gcGameMeta.Parent = card
-local gcStep = Instance.new("TextLabel")
-gcStep.Size = UDim2.new(1, -36, 0, 16)
-gcStep.Position = UDim2.new(0, 18, 1, -44)
-gcStep.BackgroundTransparency = 1
-gcStep.Text = "Starting..."
-gcStep.TextColor3 = Theme.SubText
-gcStep.TextSize = 11
-gcStep.Font = Enum.Font.GothamMedium
-gcStep.TextXAlignment = Enum.TextXAlignment.Left
-gcStep.ZIndex = 3
-gcStep.Parent = card
-local gcTrack = Instance.new("Frame")
-gcTrack.Size = UDim2.new(1, -36, 0, 5)
-gcTrack.Position = UDim2.new(0, 18, 1, -24)
-gcTrack.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-gcTrack.BackgroundTransparency = 0.2
-gcTrack.BorderSizePixel = 0
-gcTrack.ClipsDescendants = true
-gcTrack.ZIndex = 3
-gcTrack.Parent = card
-Corner(gcTrack, 99)
-local gcFill = Instance.new("Frame")
-gcFill.Size = UDim2.new(0, 0, 1, 0)
-gcFill.BackgroundColor3 = Library.Accent
-gcFill.BorderSizePixel = 0
-gcFill.ZIndex = 4
-gcFill.Parent = gcTrack
-Corner(gcFill, 99)
-registerRGB(gcFill)
-local info = nil
-local total = #steps
-for i, stepText in ipairs(steps) do
-if not gui.Parent then break end
-gcStep.Text = "[" .. i .. "/" .. total .. "] " .. tostring(stepText) .. "..."
-Tween(gcFill, 0.34, {Size = UDim2.new(i / total, 0, 1, 0)}, Enum.EasingStyle.Linear)
-if i == 3 then
-info = detectGameInfo()
-gcGameName.Text = info.PlaceName
-gcGameMeta.Text = "PlaceId " .. tostring(info.PlaceId) .. "  |  Universe " .. tostring(info.UniverseId) .. "  |  by " .. info.Creator
-end
-task.wait(0.38)
-end
-if not info then
-info = detectGameInfo()
-gcGameName.Text = info.PlaceName
-gcGameMeta.Text = "PlaceId " .. tostring(info.PlaceId) .. "  |  Universe " .. tostring(info.UniverseId) .. "  |  by " .. info.Creator
-end
-if info.Supported then
-gcBadge.Text = "SUPPORTED"
-gcBadge.TextColor3 = Color3.fromRGB(46, 230, 110)
-else
-gcBadge.Text = "NO KEY REQUIRED"
-gcBadge.TextColor3 = Color3.fromRGB(255, 204, 0)
-end
-gcStep.Text = "Ready. Launching interface..."
-task.wait(0.9)
-Tween(dim, 0.4, {BackgroundTransparency = 1})
-local cardScale = Instance.new("UIScale")
-cardScale.Parent = card
-Tween(cardScale, 0.4, {Scale = 0.9}, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-Tween(card, 0.4, {BackgroundTransparency = 1})
-task.wait(0.42)
-pcall(function()
-gui:Destroy()
-end)
-return info
-end
 --// Moving Particle Background
 local function createParticleBackground(parent, count, owner)
 if not Library.Effects.Particles then
@@ -1516,7 +1146,7 @@ end
 return files
 end
 local function writeSaveRaw(name, text)
-if typeof(writefile) == "function" then
+if typeof(writefile) ~= "function" then
 return false, "writefile tidak tersedia di executor ini."
 end
 ensureFolder()
@@ -1578,7 +1208,7 @@ end)
 local payload = {
 Meta = {
 Library = "ZethHub",
-Version = 5.5,
+Version = 5.3,
 SavedAt = os.time(),
 PlaceId = placeId,
 FileName = name,
@@ -1741,7 +1371,8 @@ end
 rebuildNotifyContainer()
 local function notifyToText(value)
 if type(value) == "table" then
-return table.concat(value, "\n")
+return table.concat(value, "
+")
 end
 return tostring(value or "")
 end
@@ -1986,7 +1617,7 @@ end)
 end)
 end
 
--- PART 1 END (V5.5 UPDATE)
+-- PART 1 END
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 2
 
 --// Window
