@@ -1372,8 +1372,7 @@ end
 rebuildNotifyContainer()
 local function notifyToText(value)
 if type(value) == "table" then
-return table.concat(value, "
-")
+return table.concat(value, "")
 end
 return tostring(value or "")
 end
