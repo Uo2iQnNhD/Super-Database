@@ -1995,8 +1995,12 @@ if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Libr
 return nil
 end
 config = config or {}
+--// [V5.5] Game Checker loading screen (sekali saja, sebelum UI dibangun)
+if config.GameChecker ~= false and not Library._gameChecked then
+Library:RunGameChecker(type(config.GameChecker) == "table" and config.GameChecker or {})
+end
 local title = config.Title or "ZETHUB"
-local subtitle = config.Subtitle or "V5.4 • Scroll Tabs / Multi-Select"
+local subtitle = config.Subtitle or "V5.5 • Quick Bar • Game Checker"
 local OPEN_SIZE = UDim2.new(0, 560, 0, 420)
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZethHubV5"
@@ -2115,6 +2119,46 @@ titleLayout.Padding = UDim.new(0, 8)
 titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 titleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 titleLayout.Parent = titleRow
+--// [V5.6 BARU] Dot hijau live + pembatas "|" sebelum title
+local statusDot = Instance.new("Frame")
+statusDot.Name = "StatusDot"
+statusDot.Size = UDim2.new(0, 8, 0, 8)
+statusDot.BackgroundColor3 = Color3.fromRGB(46, 230, 110)
+statusDot.BackgroundTransparency = 0
+statusDot.BorderSizePixel = 0
+statusDot.LayoutOrder = 1
+statusDot.ZIndex = 47
+statusDot.Parent = titleRow
+Corner(statusDot, 99)
+local dotScale = Instance.new("UIScale")
+dotScale.Scale = 1
+dotScale.Parent = statusDot
+local dotGlow = Instance.new("UIGlow")
+dotGlow.Transparency = 0.4
+dotGlow.Enabled = Library.Effects.Glow
+dotGlow.Parent = statusDot
+task.spawn(function()
+while statusDot and statusDot.Parent do
+if statusDot.Parent then
+Tween(statusDot, 0.6, {BackgroundTransparency = 0.45})
+Tween(dotScale, 0.6, {Scale = 1.35})
+end
+task.wait(0.62)
+if not statusDot.Parent then return end
+Tween(statusDot, 0.6, {BackgroundTransparency = 0})
+Tween(dotScale, 0.6, {Scale = 1})
+task.wait(0.62)
+end
+end)
+local titleSeparator = Instance.new("Frame")
+titleSeparator.Name = "TitleSeparator"
+titleSeparator.Size = UDim2.new(0, 1, 0, 14)
+titleSeparator.BackgroundColor3 = Theme.Border
+titleSeparator.BorderSizePixel = 0
+titleSeparator.LayoutOrder = 2
+titleSeparator.ZIndex = 47
+titleSeparator.Parent = titleRow
+registerThemeRef(titleSeparator, "BackgroundColor3", "Border")
 local titleLbl = Instance.new("TextLabel")
 titleLbl.Size = UDim2.new(0, 0, 0, 18)
 titleLbl.AutomaticSize = Enum.AutomaticSize.X
@@ -2124,7 +2168,7 @@ titleLbl.TextColor3 = Theme.Text
 titleLbl.TextSize = 15
 titleLbl.Font = Enum.Font.GothamBold
 titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-titleLbl.LayoutOrder = 1
+titleLbl.LayoutOrder = 3
 titleLbl.ZIndex = 47
 titleLbl.Parent = titleRow
 registerThemeRef(titleLbl, "TextColor3", "Text")
@@ -2146,7 +2190,7 @@ tagRow.AutomaticSize = Enum.AutomaticSize.X
 tagRow.BackgroundTransparency = 1
 tagRow.ZIndex = 47
 tagRow.Active = false
-tagRow.LayoutOrder = 2
+tagRow.LayoutOrder = 4
 tagRow.Parent = titleRow
 local tagLayout = Instance.new("UIListLayout")
 tagLayout.FillDirection = Enum.FillDirection.Horizontal
@@ -2436,8 +2480,8 @@ end
 local tagsConfig = config.Tags
 if tagsConfig == nil then
 tagsConfig = {
-{Text = "V5.4", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
-{Text = "Scroll Tabs", Color = Color3.fromRGB(46, 230, 110), TextColor = Color3.fromRGB(0, 0, 0)},
+{Text = "V5.6", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
+{Text = "Quick Bar", Color = Color3.fromRGB(46, 230, 110), TextColor = Color3.fromRGB(0, 0, 0)},
 }
 end
 if tagsConfig ~= false and type(tagsConfig) == "table" then
@@ -2544,7 +2588,7 @@ main.Position = UDim2.new(0.5, x, 0.5, y)
 end
 end, window)
 -- ==========================================================
--- [V5.4 FIX #1] SIDEBAR: Search sticky di atas + Tab SCROLLABLE
+-- SIDEBAR: Search sticky di atas + Tab SCROLLABLE
 -- ==========================================================
 local SIDE_PAD = 8
 local SEARCH_H = 34
@@ -2561,7 +2605,6 @@ registerThemeRef(sidebar, "BackgroundColor3", "Sidebar")
 local sideStroke = Stroke(sidebar, Theme.Border, 1.2)
 sideStroke.Transparency = 0.35
 registerThemeRef(sideStroke, "Color", "Border")
--- Search bar: TETAP di atas (tidak ikut scroll tab)
 local searchBar = Instance.new("Frame")
 searchBar.Name = "SearchBar"
 searchBar.Size = UDim2.new(1, -(SIDE_PAD * 2), 0, SEARCH_H)
@@ -2597,7 +2640,6 @@ searchInput.ZIndex = 44
 searchInput.Parent = searchBar
 registerThemeRef(searchInput, "TextColor3", "Text")
 registerThemeRef(searchInput, "PlaceholderColor3", "SubText")
--- Tab scroll area: mengisi sisa tinggi di bawah search bar
 local tabScroll = Instance.new("ScrollingFrame")
 tabScroll.Name = "TabScroll"
 tabScroll.Size = UDim2.new(1, -(SIDE_PAD * 2), 1, -(SEARCH_H + SIDE_PAD * 2 + 6))
@@ -2619,7 +2661,6 @@ local sideList = Instance.new("UIListLayout")
 sideList.SortOrder = Enum.SortOrder.LayoutOrder
 sideList.Padding = UDim.new(0, 5)
 sideList.Parent = tabScroll
--- [V5.4 FIX #2a] margin bawah tab agar tab terakhir tidak terpotong sudut
 local sidePad = Instance.new("UIPadding")
 sidePad.PaddingTop = UDim.new(0, 2)
 sidePad.PaddingBottom = UDim.new(0, 14)
@@ -2651,7 +2692,6 @@ local containerList = Instance.new("UIListLayout")
 containerList.SortOrder = Enum.SortOrder.LayoutOrder
 containerList.Padding = UDim.new(0, 8)
 containerList.Parent = container
--- [V5.4 FIX #2b] margin bawah konten agar button/element terakhir tidak terpotong
 local containerPad = Instance.new("UIPadding")
 containerPad.PaddingTop = UDim.new(0, 0)
 containerPad.PaddingBottom = UDim.new(0, 16)
@@ -2939,7 +2979,7 @@ btn.BorderSizePixel = 0
 btn.Text = ""
 btn.AutoButtonColor = false
 btn.ZIndex = 42
-btn.Parent = tabScroll   -- [V5.4] tab masuk ke area scroll, bukan sidebar langsung
+btn.Parent = tabScroll
 Corner(btn, 7)
 local ind = Instance.new("Frame")
 ind.Size = UDim2.new(0, 3, 0, 16)
@@ -3124,7 +3164,7 @@ Keywords = {"label", "text", "info"},
 }, "label", obj)
 return obj
 end
---// Paragraph dengan DIVIDER/PEMBATAS (V5.3.1 fix dipertahankan)
+--// Paragraph dengan DIVIDER/PEMBATAS
 function tab:CreateParagraph(cfg)
 cfg = cfg or {}
 local function toText(v)
@@ -3162,19 +3202,19 @@ local sizeConstraint = Instance.new("UISizeConstraint")
 sizeConstraint.MinSize = Vector2.new(0, 58)
 sizeConstraint.MaxSize = Vector2.new(999999, 999999)
 sizeConstraint.Parent = f
-local titleRow = Instance.new("Frame")
-titleRow.Size = UDim2.new(1, 0, 0, 0)
-titleRow.AutomaticSize = Enum.AutomaticSize.Y
-titleRow.BackgroundTransparency = 1
-titleRow.LayoutOrder = 1
-titleRow.Parent = f
+local titleRow2 = Instance.new("Frame")
+titleRow2.Size = UDim2.new(1, 0, 0, 0)
+titleRow2.AutomaticSize = Enum.AutomaticSize.Y
+titleRow2.BackgroundTransparency = 1
+titleRow2.LayoutOrder = 1
+titleRow2.Parent = f
 local rowLayout = Instance.new("UIListLayout")
 rowLayout.FillDirection = Enum.FillDirection.Horizontal
 rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
 rowLayout.Padding = UDim.new(0, 8)
 rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-rowLayout.Parent = titleRow
+rowLayout.Parent = titleRow2
 local iconOffset = 0
 if cfg.Icon and cfg.Icon ~= "" then
 local asset, offset, rectSize = resolveIcon(cfg.Icon)
@@ -3189,7 +3229,7 @@ icon.ImageRectSize = rectSize
 end
 icon.ImageColor3 = window.accent
 icon.LayoutOrder = 1
-icon.Parent = titleRow
+icon.Parent = titleRow2
 window:onAccent(function(c)
 if icon.Parent then
 icon.ImageColor3 = c
@@ -3211,9 +3251,9 @@ titleObj.TextYAlignment = Enum.TextYAlignment.Top
 titleObj.TextWrapped = true
 titleObj.LayoutOrder = 2
 titleObj.Visible = hasTitle
-titleObj.Parent = titleRow
+titleObj.Parent = titleRow2
 registerThemeRef(titleObj, "TextColor3", "Text")
-titleRow.Visible = (iconOffset > 0) or hasTitle
+titleRow2.Visible = (iconOffset > 0) or hasTitle
 local titleSpacer = Instance.new("Frame")
 titleSpacer.Name = "TitleSpacer"
 titleSpacer.Size = UDim2.new(1, 0, 0, 10)
@@ -3272,7 +3312,7 @@ titleText = toText(newCfg.Title)
 hasTitle = titleText ~= ""
 titleObj.Text = titleText
 titleObj.Visible = hasTitle
-titleRow.Visible = (iconOffset > 0) or hasTitle
+titleRow2.Visible = (iconOffset > 0) or hasTitle
 end
 if newCfg.Content ~= nil then
 contentText = toText(newCfg.Content)
@@ -3494,8 +3534,8 @@ registerElement(window, tab, name, f, cfg, "slider", obj)
 return obj
 end
 
--- PART 2 END
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3.
+-- PART 2 END (V5.6 FIX)
+-- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3
 
 function tab:CreateButton(cfg)
 cfg = cfg or {}
@@ -3936,11 +3976,6 @@ return obj
 end
 --// ==========================================================
 --// MULTI-DROPDOWN
---// - Bisa pilih lebih dari 1 opsi
---// - Checkbox visual + counter "N selected"
---// - Tombol Select All / Clear All
---// - Tidak auto-close saat klik opsi
---// - Support Save/Load (nilai = table array of string)
 --// ==========================================================
 function tab:CreateMultiDropdown(cfg)
 cfg = cfg or {}
@@ -4451,7 +4486,7 @@ end
 registerElement(window, tab, name, f, cfg, "keybind", obj)
 return obj
 end
---// COLOR PICKER HSV (pointer tidak terbalik + mobile)
+--// COLOR PICKER HSV
 function tab:CreateColorPicker(cfg)
 cfg = cfg or {}
 local TextService = game:GetService("TextService")
@@ -4749,7 +4784,10 @@ return obj
 end
 return tab
 end
--- Mini Toggle
+
+-- ==========================================================
+-- [V5.6 FIX] Mini Toggle & UI Elements
+-- ==========================================================
 local MINI_W, MINI_H = 168, 42
 local MINI_ICON = 22
 local MINI_LINE = 3
@@ -4877,9 +4915,6 @@ closeSearchResults()
 local open = (force ~= nil) and force or not Library.Open
 Library.Open = open
 windowOpen = open
-if info then
-info.Visible = open
-end
 if open then
 main.Visible = true
 Tween(main, .35, {Size = OPEN_SIZE}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
@@ -4890,7 +4925,6 @@ main.Visible = false
 end
 end)
 end
-refreshKbVis()
 setMiniIcon(open)
 setMiniLabel(open)
 end
@@ -4898,16 +4932,15 @@ MiniToggle.MouseButton1Click:Connect(function()
 if mMoved > 8 then return end
 window:Toggle()
 end)
---// [V5.5] Info card lama DIGANTI tab Home (style DEK DEV HUB).
---// Fungsi dipertahankan agar script lama tidak error.
 function window:SetInfoCard(vis)
 -- no-op: info sekarang ada di tab Home
 end
 minimizeBtn.MouseButton1Click:Connect(function()
 window:Toggle(false)
 end)
+
 --// ==========================================================
---// [V5.5 BARU] QUICK BAR (WalkSpeed / JumpPower / Inf Jump)
+--// [V5.6 BARU] QUICK BAR (WalkSpeed / JumpPower / Inf Jump)
 --// Floating, collapsible, draggable, follow theme
 --// ==========================================================
 if config.QuickBar ~= false then
@@ -5004,7 +5037,7 @@ end
 end
 Tween(qbChevron, 0.25, {Rotation = qbOpen and 90 or -90})
 end
--- Row: toggle kecil
+-- Row: toggle kecil (FIXED: knob putih sekarang pas dengan padding 4px)
 local function qbToggleRow(title, default, callback)
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, 0, 0, 24)
@@ -5030,7 +5063,7 @@ lbl.Parent = row
 registerThemeRef(lbl, "TextColor3", "Text")
 local sw = Instance.new("TextButton")
 sw.Size = UDim2.new(0, 30, 0, 15)
-sw.Position = UDim2.new(1, -36, 0.5, -8)
+sw.Position = UDim2.new(1, -38, 0.5, -7.5)
 sw.BackgroundColor3 = Theme.Border
 sw.BorderSizePixel = 0
 sw.Text = ""
@@ -5041,7 +5074,7 @@ Corner(sw, 99)
 registerThemeRef(sw, "BackgroundColor3", "Border")
 local knob = Instance.new("Frame")
 knob.Size = UDim2.new(0, 11, 0, 11)
-knob.Position = UDim2.new(0, 2, 0.5, -5.5)
+knob.Position = UDim2.new(0, 4, 0.5, -5.5) -- [FIX] Padding kiri 4px
 knob.BackgroundColor3 = Theme.SubText
 knob.BorderSizePixel = 0
 knob.ZIndex = 74
@@ -5052,10 +5085,10 @@ local on = default and true or false
 local function update()
 if on then
 Tween(sw, .2, {BackgroundColor3 = window.accent})
-Tween(knob, .2, {Position = UDim2.new(1, -13, 0.5, -5.5), BackgroundColor3 = Color3.new(1, 1, 1)})
+Tween(knob, .2, {Position = UDim2.new(1, -15, 0.5, -5.5), BackgroundColor3 = Color3.new(1, 1, 1)}) -- [FIX] Padding kanan 4px (30-11-4=15)
 else
 Tween(sw, .2, {BackgroundColor3 = Theme.Border})
-Tween(knob, .2, {Position = UDim2.new(0, 2, 0.5, -5.5), BackgroundColor3 = Theme.SubText})
+Tween(knob, .2, {Position = UDim2.new(0, 4, 0.5, -5.5), BackgroundColor3 = Theme.SubText})
 end
 end
 update()
@@ -5230,8 +5263,275 @@ function window:ToggleQuickBar(force)
 setQuickBarOpen((force == nil) and not qbOpen or force)
 end
 end
--- PART 3 END (V5.5 UPDATE)
+
+--// ==========================================================
+--// [V5.6 BARU] FLOATING NET STATS BAR (Outside UI)
+--// Draggable, collapsible, style sama seperti Quick Bar
+--// ==========================================================
+if config.NetStatsBar ~= false then
+local NSB_W = 180
+local NSB_HEADER_H = 28
+local netStatsBar = Instance.new("Frame")
+netStatsBar.Name = "NetStatsBar"
+netStatsBar.AnchorPoint = Vector2.new(0.5, 0)
+netStatsBar.Position = UDim2.new(0.5, 0, 0, 130)
+netStatsBar.Size = UDim2.new(0, NSB_W, 0, NSB_HEADER_H)
+netStatsBar.BackgroundColor3 = Theme.Background
+netStatsBar.BackgroundTransparency = 0.12
+netStatsBar.BorderSizePixel = 0
+netStatsBar.ClipsDescendants = true
+netStatsBar.ZIndex = 70
+netStatsBar.Parent = gui
+Corner(netStatsBar, 9)
+registerThemeRef(netStatsBar, "BackgroundColor3", "Background")
+local nsbStroke = Stroke(netStatsBar, Color3.new(1, 1, 1), 1.6)
+registerRGB(nsbStroke)
+local nsbHeader = Instance.new("TextButton")
+nsbHeader.Name = "Header"
+nsbHeader.Size = UDim2.new(1, 0, 0, NSB_HEADER_H)
+nsbHeader.BackgroundTransparency = 1
+nsbHeader.Text = ""
+nsbHeader.AutoButtonColor = false
+nsbHeader.ZIndex = 71
+nsbHeader.Parent = netStatsBar
+local nsbIcon = makeIcon(nsbHeader, "wifi", UDim2.new(0, 14, 0, 14), UDim2.new(0, 10, 0.5, -7), Theme.Text)
+if nsbIcon then registerThemeRef(nsbIcon, "ImageColor3", "Text") end
+local nsbTitle = Instance.new("TextLabel")
+nsbTitle.Size = UDim2.new(1, -60, 1, 0)
+nsbTitle.Position = UDim2.new(0, 30, 0, 0)
+nsbTitle.BackgroundTransparency = 1
+nsbTitle.Text = config.NetStatsBarTitle or "Net Stats"
+nsbTitle.TextColor3 = Theme.Text
+nsbTitle.TextSize = 12
+nsbTitle.Font = Enum.Font.GothamBold
+nsbTitle.TextXAlignment = Enum.TextXAlignment.Left
+nsbTitle.TextYAlignment = Enum.TextYAlignment.Center
+nsbTitle.ZIndex = 71
+nsbTitle.Parent = nsbHeader
+registerThemeRef(nsbTitle, "TextColor3", "Text")
+local nsbChevron = Instance.new("TextLabel")
+nsbChevron.Size = UDim2.new(0, 16, 0, 16)
+nsbChevron.Position = UDim2.new(1, -24, 0.5, -8)
+nsbChevron.BackgroundTransparency = 1
+nsbChevron.Text = "›"
+nsbChevron.TextColor3 = Theme.SubText
+nsbChevron.TextSize = 14
+nsbChevron.Font = Enum.Font.GothamBold
+nsbChevron.Rotation = 90
+nsbChevron.ZIndex = 71
+nsbChevron.Parent = nsbHeader
+registerThemeRef(nsbChevron, "TextColor3", "SubText")
+local nsbBody = Instance.new("Frame")
+nsbBody.Name = "Body"
+nsbBody.Size = UDim2.new(1, -12, 0, 0)
+nsbBody.Position = UDim2.new(0, 6, 0, NSB_HEADER_H + 2)
+nsbBody.BackgroundTransparency = 1
+nsbBody.BorderSizePixel = 0
+nsbBody.ZIndex = 71
+nsbBody.Parent = netStatsBar
+local nsbList = Instance.new("UIListLayout")
+nsbList.SortOrder = Enum.SortOrder.LayoutOrder
+nsbList.Padding = UDim.new(0, 4)
+nsbList.Parent = nsbBody
+local nsbBodyPad = Instance.new("UIPadding")
+nsbBodyPad.PaddingBottom = UDim.new(0, 6)
+nsbBodyPad.Parent = nsbBody
+local nsbOpen = true
+local function setNetStatsBarOpen(on, instant)
+nsbOpen = on and true or false
+local bodyH = 0
+if nsbOpen then
+bodyH = nsbList.AbsoluteContentSize.Y + 8
+end
+local targetH = NSB_HEADER_H + 2 + bodyH
+if instant then
+netStatsBar.Size = UDim2.new(0, NSB_W, 0, targetH)
+nsbBody.Visible = nsbOpen
+else
+if nsbOpen then
+nsbBody.Visible = true
+end
+Tween(netStatsBar, 0.25, {Size = UDim2.new(0, NSB_W, 0, targetH)})
+if not nsbOpen then
+task.delay(0.26, function()
+if netStatsBar.Parent and not nsbOpen then
+nsbBody.Visible = false
+end
+end)
+end
+end
+Tween(nsbChevron, 0.25, {Rotation = nsbOpen and 90 or -90})
+end
+-- Row: Ping
+local nsbPingRow = Instance.new("Frame")
+nsbPingRow.Size = UDim2.new(1, 0, 0, 22)
+nsbPingRow.BackgroundColor3 = Theme.Element
+nsbPingRow.BackgroundTransparency = 0.35
+nsbPingRow.BorderSizePixel = 0
+nsbPingRow.ZIndex = 72
+nsbPingRow.Parent = nsbBody
+Corner(nsbPingRow, 6)
+registerThemeRef(nsbPingRow, "BackgroundColor3", "Element")
+local nsbPingLbl = Instance.new("TextLabel")
+nsbPingLbl.Size = UDim2.new(0.5, -8, 1, 0)
+nsbPingLbl.Position = UDim2.new(0, 8, 0, 0)
+nsbPingLbl.BackgroundTransparency = 1
+nsbPingLbl.Text = "Ping"
+nsbPingLbl.TextColor3 = Theme.Text
+nsbPingLbl.TextSize = 11
+nsbPingLbl.Font = Enum.Font.GothamMedium
+nsbPingLbl.TextXAlignment = Enum.TextXAlignment.Left
+nsbPingLbl.TextYAlignment = Enum.TextYAlignment.Center
+nsbPingLbl.ZIndex = 73
+nsbPingLbl.Parent = nsbPingRow
+registerThemeRef(nsbPingLbl, "TextColor3", "Text")
+local nsbPingVal = Instance.new("TextLabel")
+nsbPingVal.Size = UDim2.new(0.5, -8, 1, 0)
+nsbPingVal.Position = UDim2.new(0.5, 0, 0, 0)
+nsbPingVal.BackgroundTransparency = 1
+nsbPingVal.Text = "-- ms"
+nsbPingVal.TextColor3 = window.accent
+nsbPingVal.TextSize = 11
+nsbPingVal.Font = Enum.Font.GothamBold
+nsbPingVal.TextXAlignment = Enum.TextXAlignment.Right
+nsbPingVal.TextYAlignment = Enum.TextYAlignment.Center
+nsbPingVal.ZIndex = 73
+nsbPingVal.Parent = nsbPingRow
+window:onAccent(function(c) nsbPingVal.TextColor3 = c end)
+-- Row: FPS
+local nsbFpsRow = Instance.new("Frame")
+nsbFpsRow.Size = UDim2.new(1, 0, 0, 22)
+nsbFpsRow.BackgroundColor3 = Theme.Element
+nsbFpsRow.BackgroundTransparency = 0.35
+nsbFpsRow.BorderSizePixel = 0
+nsbFpsRow.ZIndex = 72
+nsbFpsRow.Parent = nsbBody
+Corner(nsbFpsRow, 6)
+registerThemeRef(nsbFpsRow, "BackgroundColor3", "Element")
+local nsbFpsLbl = Instance.new("TextLabel")
+nsbFpsLbl.Size = UDim2.new(0.5, -8, 1, 0)
+nsbFpsLbl.Position = UDim2.new(0, 8, 0, 0)
+nsbFpsLbl.BackgroundTransparency = 1
+nsbFpsLbl.Text = "FPS"
+nsbFpsLbl.TextColor3 = Theme.Text
+nsbFpsLbl.TextSize = 11
+nsbFpsLbl.Font = Enum.Font.GothamMedium
+nsbFpsLbl.TextXAlignment = Enum.TextXAlignment.Left
+nsbFpsLbl.TextYAlignment = Enum.TextYAlignment.Center
+nsbFpsLbl.ZIndex = 73
+nsbFpsLbl.Parent = nsbFpsRow
+registerThemeRef(nsbFpsLbl, "TextColor3", "Text")
+local nsbFpsVal = Instance.new("TextLabel")
+nsbFpsVal.Size = UDim2.new(0.5, -8, 1, 0)
+nsbFpsVal.Position = UDim2.new(0.5, 0, 0, 0)
+nsbFpsVal.BackgroundTransparency = 1
+nsbFpsVal.Text = "-- FPS"
+nsbFpsVal.TextColor3 = window.accent
+nsbFpsVal.TextSize = 11
+nsbFpsVal.Font = Enum.Font.GothamBold
+nsbFpsVal.TextXAlignment = Enum.TextXAlignment.Right
+nsbFpsVal.TextYAlignment = Enum.TextYAlignment.Center
+nsbFpsVal.ZIndex = 73
+nsbFpsVal.Parent = nsbFpsRow
+window:onAccent(function(c) nsbFpsVal.TextColor3 = c end)
+setNetStatsBarOpen(true, true)
+-- Drag Net Stats Bar
+local nsbDrag, nsbStart, nsbMoved = false, nil, 0
+local nsbOrigX, nsbOrigY = 0, 130
+Connect(nsbHeader.InputBegan, function(inp)
+if isPressInput(inp) then
+nsbDrag = true
+nsbMoved = 0
+nsbStart = inp.Position
+nsbOrigX = netStatsBar.Position.X.Offset
+nsbOrigY = netStatsBar.Position.Y.Offset
+end
+end, window)
+Connect(UserInputService.InputChanged, function(inp)
+if nsbDrag and (inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch) then
+local d = inp.Position - nsbStart
+nsbMoved = math.max(nsbMoved, math.abs(d.X) + math.abs(d.Y))
+netStatsBar.Position = UDim2.new(0.5, nsbOrigX + d.X, 0, nsbOrigY + d.Y)
+end
+end, window)
+Connect(UserInputService.InputEnded, function(inp)
+if isPressInput(inp) then
+nsbDrag = false
+end
+end, window)
+nsbHeader.MouseButton1Click:Connect(function()
+if nsbMoved > 6 then return end
+setNetStatsBarOpen(not nsbOpen)
+end)
+-- Live update
+task.spawn(function()
+while netStatsBar.Parent do
+task.wait(1)
+if window._destroyed or Library._destroyed then return end
+nsbPingVal.Text = currentPing .. " ms"
+nsbFpsVal.Text = math.min(currentFps, 999) .. " FPS"
+end
+end)
+function window:SetNetStatsBarVisible(v)
+netStatsBar.Visible = v and true or false
+end
+function window:ToggleNetStatsBar(force)
+setNetStatsBarOpen((force == nil) and not nsbOpen or force)
+end
+end
+
+--// ==========================================================
+--// [V5.6 BARU] NET STATS INSIDE UI (Sidebar Bottom)
+--// ==========================================================
+local sidebarNetStats = Instance.new("Frame")
+sidebarNetStats.Name = "SidebarNetStats"
+sidebarNetStats.Size = UDim2.new(1, -(SIDE_PAD * 2), 0, 24)
+sidebarNetStats.Position = UDim2.new(0, SIDE_PAD, 1, -30)
+sidebarNetStats.BackgroundColor3 = Theme.Element
+sidebarNetStats.BackgroundTransparency = 0.2
+sidebarNetStats.BorderSizePixel = 0
+sidebarNetStats.ZIndex = 42
+sidebarNetStats.Parent = sidebar
+Corner(sidebarNetStats, 6)
+registerThemeRef(sidebarNetStats, "BackgroundColor3", "Element")
+local snsPing = Instance.new("TextLabel")
+snsPing.Size = UDim2.new(0.5, -4, 1, 0)
+snsPing.Position = UDim2.new(0, 4, 0, 0)
+snsPing.BackgroundTransparency = 1
+snsPing.Text = "Ping: --ms"
+snsPing.TextColor3 = Theme.SubText
+snsPing.TextSize = 10
+snsPing.Font = Enum.Font.GothamMedium
+snsPing.TextXAlignment = Enum.TextXAlignment.Left
+snsPing.TextYAlignment = Enum.TextYAlignment.Center
+snsPing.ZIndex = 43
+snsPing.Parent = sidebarNetStats
+registerThemeRef(snsPing, "TextColor3", "SubText")
+local snsFps = Instance.new("TextLabel")
+snsFps.Size = UDim2.new(0.5, -4, 1, 0)
+snsFps.Position = UDim2.new(0.5, 0, 0, 0)
+snsFps.BackgroundTransparency = 1
+snsFps.Text = "FPS: --"
+snsFps.TextColor3 = window.accent
+snsFps.TextSize = 10
+snsFps.Font = Enum.Font.GothamBold
+snsFps.TextXAlignment = Enum.TextXAlignment.Right
+snsFps.TextYAlignment = Enum.TextYAlignment.Center
+snsFps.ZIndex = 43
+snsFps.Parent = sidebarNetStats
+window:onAccent(function(c) snsFps.TextColor3 = c end)
+task.spawn(function()
+while sidebarNetStats.Parent do
+task.wait(1)
+if window._destroyed or Library._destroyed then return end
+snsPing.Text = "Ping: " .. currentPing .. "ms"
+snsFps.Text = "FPS: " .. math.min(currentFps, 999)
+end
+end)
+
+-- PART 3 END (V5.6 FIX)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 4
+
 --// ==========================================================
 --// CLOSE CONFIRMATION (System + divider + subtitle, WAIT = 3)
 --// ==========================================================
@@ -5538,9 +5838,10 @@ Library:Notify("Auto load: " .. target, 3, "Loader Information", "upload")
 end
 end)
 end
+
 --// ==========================================================
---// [V5.5 BARU] HOME TAB - Info card style DEK DEV HUB
---// Operator / Place / FPS / Ping / Session / Key Status
+--// [V5.6 BARU & FIXED] HOME TAB - Info card style DEK DEV HUB
+--// Operator / Place (dengan divider) / FPS / Ping / Session / Key Status / Website
 --// Semua card FOLLOW THEME (background + border + accent)
 --// ==========================================================
 if config.InfoTab ~= false then
@@ -5713,6 +6014,7 @@ end
 end
 return spark, holder
 end
+
 -- ROW 1: Operator + Place
 local row1 = infoRow(118)
 local opCard, opBody = infoCard(row1, "Operator", "user", 118, 0.5, -4)
@@ -5750,15 +6052,26 @@ infoButton(opBtnRow, "Copy Name", 2, function()
 local ok = copyToClipboard(LocalPlayer.Name)
 Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard tidak tersedia di executor ini.", 3, "Operator", ok and "check-circle" or "x-circle")
 end)
+
+-- [FIX] Place Card: Info dirapikan + Divider ditambahkan
 local plCard, plBody = infoCard(row1, "Place", "map-pin", 118, 0.5, -4)
 local gcInfo = Library.GameChecker.Result or detectGameInfo()
 local plName = infoLabel(plBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
 plName.Text = gcInfo.PlaceName
-local plId = infoLabel(plBody, 17, 13, 10, Enum.Font.Gotham, "SubText", true)
+local plId = infoLabel(plBody, 18, 13, 10, Enum.Font.Gotham, "SubText", true)
 plId.Text = "PlaceId " .. tostring(gcInfo.PlaceId)
-local plJob = infoLabel(plBody, 31, 13, 10, Enum.Font.Gotham, "SubText", true)
+local plJob = infoLabel(plBody, 33, 13, 10, Enum.Font.Gotham, "SubText", true)
 plJob.Text = "JobId " .. tostring(game.JobId)
-local plBtnRowA = infoButtonRow(plBody, -48)
+
+local plDivider = Instance.new("Frame")
+plDivider.Size = UDim2.new(1, 0, 0, 1)
+plDivider.Position = UDim2.new(0, 0, 0, 52)
+plDivider.BackgroundColor3 = Theme.Border
+plDivider.BorderSizePixel = 0
+plDivider.Parent = plBody
+registerThemeRef(plDivider, "BackgroundColor3", "Border")
+
+local plBtnRowA = infoButtonRow(plBody, -50)
 infoButton(plBtnRowA, "Rejoin Server", 1, function()
 Library:Notify("Rejoining server...", 3, "Place", "refresh-cw")
 local ok, err = rejoinServer()
@@ -5770,7 +6083,7 @@ infoButton(plBtnRowA, "Copy Job ID", 2, function()
 local ok = copyToClipboard(tostring(game.JobId))
 Library:Notify(ok and "Job ID copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
 end)
-local plBtnRowB = infoButtonRow(plBody, -22)
+local plBtnRowB = infoButtonRow(plBody, -24)
 infoButton(plBtnRowB, "Copy PlaceId", 1, function()
 local ok = copyToClipboard(tostring(game.PlaceId))
 Library:Notify(ok and ("PlaceId copied: " .. game.PlaceId) or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
@@ -5779,6 +6092,7 @@ infoButton(plBtnRowB, "Copy Join Script", 2, function()
 local ok = copyToClipboard(joinScriptText())
 Library:Notify(ok and "Join script copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
 end)
+
 -- ROW 2: Frame Rate + Network Ping + Session
 local row2 = infoRow(86)
 local fpsCard, fpsBody = infoCard(row2, "Frame Rate", "activity", 86, 1 / 3, -6)
@@ -5808,6 +6122,7 @@ local sesPlayers = infoLabel(sesBody, 20, 13, 10, Enum.Font.Gotham, "SubText", t
 sesPlayers.Text = "Players: --/--"
 local sesServer = infoLabel(sesBody, 34, 13, 10, Enum.Font.Gotham, "SubText", true)
 sesServer.Text = "Server up: --"
+
 -- ROW 3: Key Status
 local row3 = infoRow(58)
 local keyCard, keyBody = infoCard(row3, "Key Status", "badge-check", 58, 1, 0)
@@ -5819,8 +6134,56 @@ if keyTitle.Parent then
 keyTitle.TextColor3 = c
 end
 end)
+-- [FIX] Key Status text wrapped agar tidak keluar frame
 local keySub = infoLabel(keyBody, 18, 14, 10, Enum.Font.Gotham, "SubText", true)
+keySub.TextWrapped = true
 keySub.Text = keyStatusCfg.Subtitle or "This map is free"
+
+-- ROW 4: Website (Baru)
+local row4 = infoRow(42)
+local webCard, webBody = infoCard(row4, "Website", "globe", 42, 1, 0)
+local webInput = Instance.new("TextBox")
+webInput.Size = UDim2.new(1, -40, 1, 0)
+webInput.Position = UDim2.new(0, 0, 0, 0)
+webInput.BackgroundColor3 = Theme.Background
+webInput.BorderSizePixel = 0
+webInput.Text = "https://u721rd.mimo.run/Ro-NetriumV4.html"
+webInput.TextColor3 = Theme.SubText
+webInput.TextSize = 11
+webInput.Font = Enum.Font.Gotham
+webInput.TextXAlignment = Enum.TextXAlignment.Left
+webInput.TextYAlignment = Enum.TextYAlignment.Center
+webInput.ClearTextOnFocus = false
+webInput.Parent = webBody
+Corner(webInput, 4)
+registerThemeRef(webInput, "BackgroundColor3", "Background")
+registerThemeRef(webInput, "TextColor3", "SubText")
+
+local webCopyBtn = Instance.new("TextButton")
+webCopyBtn.Size = UDim2.new(0, 36, 1, 0)
+webCopyBtn.Position = UDim2.new(1, -36, 0, 0)
+webCopyBtn.BackgroundColor3 = Theme.Element
+webCopyBtn.BorderSizePixel = 0
+webCopyBtn.Text = "Copy"
+webCopyBtn.TextColor3 = Theme.Text
+webCopyBtn.TextSize = 11
+webCopyBtn.Font = Enum.Font.GothamBold
+webCopyBtn.AutoButtonColor = false
+webCopyBtn.Parent = webBody
+Corner(webCopyBtn, 4)
+registerThemeRef(webCopyBtn, "BackgroundColor3", "Element")
+registerThemeRef(webCopyBtn, "TextColor3", "Text")
+webCopyBtn.MouseEnter:Connect(function()
+Tween(webCopyBtn, .15, {BackgroundColor3 = Theme.ElementHover})
+end)
+webCopyBtn.MouseLeave:Connect(function()
+Tween(webCopyBtn, .15, {BackgroundColor3 = Theme.Element})
+end)
+webCopyBtn.MouseButton1Click:Connect(function()
+local ok = copyToClipboard("https://u721rd.mimo.run/Ro-NetriumV4.html")
+Library:Notify(ok and "Website link copied!" or "Clipboard tidak tersedia.", 3, "Website", ok and "check-circle" or "x-circle")
+end)
+
 -- Live update loop (FPS / Ping / Session / sparkline)
 task.spawn(function()
 while homeTab.content.Parent do
@@ -5850,8 +6213,9 @@ sesServer.Text = "Server up: " .. formatDuration(up)
 end
 end)
 end
--- PART 4 END (V5.5 UPDATE)
+-- PART 4 END (V5.6 FIX)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 5
+
 -- Built-in Tools Tab
 if config.ToolsTab ~= false then
 local ToolsTab = window:CreateTab("Tools", "wrench")
