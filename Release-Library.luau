@@ -1,10 +1,4 @@
---[[ ZETHUB - Library V5.5 Updated by Exterminate0 ]]
---[[ CHANGELOG V5.5:
-    - Quick Bar floating (WalkSpeed / JumpPower / Inf Jump)
-    - Slider movement di Tools tab DIHAPUS (dipindah ke Quick Bar)
-    - Info card model DEK DEV HUB (tab Home: Operator, Place, FPS, Ping, Session, Key Status)
-    - Semua UI baru follow theme (background + border)
-    - Game Checker loading screen (detect place + support status)
+--[[ Ro-Netrium Updated by Exterminate0 ]]
 ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
