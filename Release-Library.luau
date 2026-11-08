@@ -15,11 +15,15 @@ local Generation = (type(Env) == "table" and tonumber(Env.ZethHubGeneration) or 
 if type(Env) == "table" then
 Env.ZethHubGeneration = Generation
 end
+
 local function purgeOldGuis()
 local targets = {
 "Ro-Netrium",
 "Ro-NetriumUPD",
 "Ro-NetriumV4",
+"ZethHubV5",
+"ZethNotifies",
+"ZethGameChecker",
 }
 local parents = {
 game:GetService("CoreGui"),
@@ -47,6 +51,7 @@ end
 end
 end
 end
+
 --// Hancurkan library sebelumnya jika ada
 local PreviousLibrary = type(Env) == "table" and Env.ZethHubLibrary or nil
 if PreviousLibrary and type(PreviousLibrary.Destroy) == "function" then
@@ -55,6 +60,7 @@ PreviousLibrary:Destroy()
 end)
 end
 purgeOldGuis()
+
 local Library = {
 Accent = Color3.fromRGB(255, 255, 255),
 Rainbow = true,
@@ -65,11 +71,8 @@ Generation = Generation,
 _connections = {},
 _windows = {},
 _destroyed = false,
--- Animation / smoothness
 AnimationSpeed = 1,
--- Search system
 _searchIndex = {},
--- Save/Load element registry
 _elements = {},
 _saveFile = "autosave",
 _autoLoaded = false,
@@ -92,6 +95,7 @@ Ripple = true,
 Shadow = true,
 },
 }
+
 local Theme = {
 Background = Color3.fromRGB(12, 12, 14),
 Sidebar = Color3.fromRGB(8, 8, 10),
@@ -100,20 +104,16 @@ ElementHover = Color3.fromRGB(32, 32, 38),
 Border = Color3.fromRGB(70, 70, 78),
 Text = Color3.fromRGB(255, 255, 255),
 SubText = Color3.fromRGB(165, 165, 172),
--- Stronger borders
 MainBorderThickness = 3,
 ElementBorderThickness = 1.6,
 BorderThickness = 1.6,
 BorderTransparency = 0,
--- Glow border
 BorderGlow = true,
 GlowTransparency = 0.68,
--- RGB Rainbow speed
 RainbowSpeed = 0.12,
--- Particle background
 ParticleCount = 28,
 }
--- Close / Confirm Theme
+
 Theme.Close = Color3.fromRGB(225, 70, 70)
 Theme.CloseHover = Color3.fromRGB(255, 95, 95)
 Theme.ClosePressed = Color3.fromRGB(185, 45, 45)
@@ -125,11 +125,11 @@ Theme.Neutral = Color3.fromRGB(60, 60, 60)
 Theme.NeutralHover = Color3.fromRGB(85, 85, 85)
 Theme.Disabled = Color3.fromRGB(100, 100, 100)
 Theme.DisabledText = Color3.fromRGB(150, 150, 150)
--- Default global untuk close color, bisa dioverride per window lewat config
+
 Library.CloseColor = Theme.Close
 Library.CloseHoverColor = Theme.CloseHover
 Library.ClosePressedColor = Theme.ClosePressed
--- Theme presets
+
 Theme.Presets = {
 ["Solid"] = {
 Rainbow = false,
@@ -404,19 +404,19 @@ SubText = Color3.fromRGB(205, 170, 160),
 },
 },
 }
--- Lock system agar UI tidak bisa digeser saat close confirm muncul / tombol close ditekan
+
 Library._confirmOpen = false
 Library._buttonPressLock = false
---// Presisi tinggi elemen
+
 local H_ELEMENT = 38
 local H_SLIDER = 46
 local H_SECTION = 20
 local H_TAB = 34
 local TOPBAR_H = 58
---// Lucide Icons + Rayfield-style icon engine
+
 Library.Lucide = {}
 Library.LucideRect = {}
--- Fallback icon milik library lama
+
 local fallbackIcons = {
 ["home"]="rbxassetid://7733960981", ["settings"]="rbxassetid://7734053495", ["settings-2"]="rbxassetid://8997386997",
 ["shield"]="rbxassetid://7734056608", ["shield-check"]="rbxassetid://7734056411", ["key"]="rbxassetid://7733965118",
@@ -455,7 +455,6 @@ local fallbackIcons = {
 ["badge-check"]="rbxassetid://7743875503", ["badge"]="rbxassetid://7733692043", ["award"]="rbxassetid://7733673987",
 ["battery"]="rbxassetid://7733674820", ["battery-charging"]="rbxassetid://7733674402", ["lightbulb"]="rbxassetid://7733975185",
 ["locate"]="rbxassetid://7733992469", ["locate-fixed"]="rbxassetid://7733992424",
--- Aliases / effect icons
 ["house"]="rbxassetid://7733960981", ["gear"]="rbxassetid://7734053495", ["dashboard"]="rbxassetid://7733970318",
 ["sliders-horizontal"]="rbxassetid://7734058803", ["sparkles"]="rbxassetid://7734068321",
 ["droplet"]="rbxassetid://7734021595", ["border-all"]="rbxassetid://7733955179",
@@ -467,7 +466,7 @@ local fallbackIcons = {
 for name, asset in pairs(fallbackIcons) do
 Library.Lucide[name] = asset
 end
--- Cache global supaya kalau script dijalankan ulang, icon tidak perlu download terus
+
 local IconCache = (type(Env) == "table" and Env.ZethHubIconCache) or {
 Loaded = false,
 Lucide = {},
@@ -476,13 +475,14 @@ Rect = {},
 if type(Env) == "table" then
 Env.ZethHubIconCache = IconCache
 end
--- Terapkan cache jika sudah pernah dimuat
+
 for name, asset in pairs(IconCache.Lucide) do
 Library.Lucide[name] = asset
 end
 for name, rect in pairs(IconCache.Rect) do
 Library.LucideRect[name] = rect
 end
+
 local function fetchRayfieldIconSource()
 local url = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"
 local ok, body = pcall(function()
@@ -505,6 +505,7 @@ end
 end
 return nil
 end
+
 local function loadRayfieldIcons()
 if IconCache.Loaded then
 return
@@ -549,6 +550,7 @@ end
 end
 end
 loadRayfieldIcons()
+
 local function resolveIcon(icon)
 if icon == nil or icon == false or icon == 0 or icon == "" then
 return nil, nil, nil
@@ -577,6 +579,7 @@ return asset, rect and rect.ImageRectOffset, rect and rect.ImageRectSize
 end
 return nil, nil, nil
 end
+
 local function setIcon(instance, icon)
 if not instance then
 return
@@ -594,6 +597,7 @@ instance.ImageRectOffset = Vector2.new(0, 0)
 instance.ImageRectSize = Vector2.new(0, 0)
 end
 end
+
 local function makeIcon(parent, icon, size, pos, color)
 local asset, offset, rectSize = resolveIcon(icon)
 if not asset or asset == "" then
@@ -613,6 +617,7 @@ end
 im.Parent = parent
 return im
 end
+
 local function Tween(obj, dur, props, style, dir)
 local speed = math.max(0.05, tonumber(Library.AnimationSpeed) or 1)
 local info = TweenInfo.new(
@@ -624,12 +629,14 @@ local tw = TweenService:Create(obj, info, props)
 tw:Play()
 return tw
 end
+
 local function Corner(p, r)
 local c = Instance.new("UICorner")
 c.CornerRadius = UDim.new(0, r or 7)
 c.Parent = p
 return c
 end
+
 local function Stroke(p, col, th)
 local s = Instance.new("UIStroke")
 s.Color = col or Theme.Border
@@ -639,6 +646,7 @@ s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 s.Parent = p
 return s
 end
+
 local function Pad(p, t, l, b, r)
 local d = Instance.new("UIPadding")
 d.PaddingTop = UDim.new(0, t or 0)
@@ -648,13 +656,14 @@ d.PaddingRight = UDim.new(0, r or 0)
 d.Parent = p
 return d
 end
--- Helper untuk input press & blur-like close button
+
 local function isPressInput(inp)
 return inp ~= nil and (
 inp.UserInputType == Enum.UserInputType.MouseButton1 or
 inp.UserInputType == Enum.UserInputType.Touch
 )
 end
+
 local function playCloseBlur(btn, overlay, scale, lines, pressColor, textColor)
 if not btn or not btn.Parent then
 return
@@ -692,6 +701,7 @@ end
 end
 end
 end
+
 local function Connect(signal, callback, owner)
 local conn
 conn = signal:Connect(function(...)
@@ -715,10 +725,11 @@ table.insert(owner._connections, conn)
 end
 return conn
 end
+
 function Library:GetFlag(flag)
 return Library.Flags[flag]
 end
---// FPS / Ping global
+
 local fpsFrames, fpsLast = 0, os.clock()
 Connect(RunService.RenderStepped, function()
 fpsFrames += 1
@@ -738,7 +749,7 @@ currentPing = math.floor(LocalPlayer:GetNetworkPing() * 1000)
 end)
 end
 end)
---// Theme / RGB Rainbow Engine
+
 local ThemeManager = {
 Mode = Library.Rainbow and "RGB Rainbow" or "Solid",
 Time = 0,
@@ -746,6 +757,7 @@ Dirty = true,
 Gradients = {},
 Strokes = {},
 }
+
 local function rainbowSeq()
 return ColorSequence.new{
 ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
@@ -757,6 +769,7 @@ ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 200)),
 ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
 }
 end
+
 local function accentSeq(c)
 c = (typeof(c) == "Color3" and c) or Color3.new(1, 1, 1)
 return ColorSequence.new{
@@ -765,18 +778,21 @@ ColorSequenceKeypoint.new(.5, c:Lerp(Color3.new(1, 1, 1), .2)),
 ColorSequenceKeypoint.new(1, c:Lerp(Color3.new(0, 0, 0), .45)),
 }
 end
+
 local function currentRainbowColor(offset)
 offset = tonumber(offset) or 0
 local speed = tonumber(Theme.RainbowSpeed) or 0.12
 local hue = ((ThemeManager.Time * speed) + offset) % 1
 return Color3.fromHSV(hue, 1, 1)
 end
+
 function ThemeManager:GetColor(offset)
 if ThemeManager.Mode == "RGB Rainbow" then
 return currentRainbowColor(offset)
 end
 return Library.Accent
 end
+
 local function refreshRGBColors()
 for i = #ThemeManager.Gradients, 1, -1 do
 local g = ThemeManager.Gradients[i]
@@ -787,6 +803,7 @@ table.remove(ThemeManager.Gradients, i)
 end
 end
 end
+
 function ThemeManager:NotifyWindows()
 for _, w in ipairs(Library._windows) do
 if w and not w._destroyed then
@@ -799,6 +816,7 @@ end
 end
 end
 end
+
 function ThemeManager:RefreshWindows()
 for _, w in ipairs(Library._windows) do
 if w and not w._destroyed and type(w.ApplyTheme) == "function" then
@@ -808,6 +826,7 @@ end)
 end
 end
 end
+
 function ThemeManager:Update()
 if ThemeManager.Mode == "RGB Rainbow" then
 Library.Accent = currentRainbowColor(0)
@@ -820,6 +839,7 @@ ThemeManager:NotifyWindows()
 ThemeManager.Dirty = false
 end
 end
+
 function ThemeManager:SetMode(mode)
 ThemeManager.Mode = mode
 Library.Rainbow = (mode == "RGB Rainbow")
@@ -829,6 +849,7 @@ end
 ThemeManager.Dirty = true
 ThemeManager:Update()
 end
+
 local function registerRGB(parent)
 if not parent then
 return nil
@@ -853,6 +874,7 @@ g.Parent = parent
 table.insert(ThemeManager.Gradients, g)
 return g
 end
+
 local strokeAcc, gradientAcc, accentAcc = 0, 0, 0
 Connect(RunService.RenderStepped, function(dt)
 dt = tonumber(dt) or 0.016
@@ -894,9 +916,11 @@ accentAcc = 0
 ThemeManager:Update()
 end
 end)
+
 function Library:SetRainbow(on)
 ThemeManager:SetMode(on and "RGB Rainbow" or "Solid")
 end
+
 function Library:SetAccent(c)
 if typeof(c) ~= "Color3" then
 return
@@ -907,6 +931,7 @@ if ThemeManager.Mode ~= "RGB Rainbow" then
 ThemeManager:Update()
 end
 end
+
 function Library:SetTheme(name)
 local preset = Theme.Presets[name]
 if not preset then
@@ -929,7 +954,7 @@ end
 ThemeManager:RefreshWindows()
 return true
 end
---// Moving Particle Background
+
 local function createParticleBackground(parent, count, owner)
 if not Library.Effects.Particles then
 return nil
@@ -1024,7 +1049,7 @@ end
 end, owner)
 return layer
 end
---// Search Registry
+
 function Library:_RegisterSearch(data)
 if Library._destroyed then
 return
@@ -1033,6 +1058,7 @@ data.Index = #Library._searchIndex + 1
 data._removed = false
 table.insert(Library._searchIndex, data)
 end
+
 function Library:Search(query)
 query = string.lower(tostring(query or ""))
 local out = {}
@@ -1042,9 +1068,7 @@ end
 for _, item in ipairs(Library._searchIndex) do
 if not item._removed then
 if item.Window and item.Window._destroyed then
--- skip
 elseif item.Frame and not item.Frame.Parent then
--- skip
 else
 local keywords = ""
 if type(item.Keywords) == "table" then
@@ -1070,6 +1094,7 @@ return string.len(tostring(a.Name or "")) < string.len(tostring(b.Name or ""))
 end)
 return out
 end
+
 local function registerElement(windowRef, tabRef, tabName, frameRef, cfgRef, elementType, objRef)
 cfgRef = cfgRef or {}
 local displayName = cfgRef.Name or cfgRef.Title or elementType
@@ -1098,7 +1123,7 @@ Window = windowRef,
 })
 return objRef
 end
---// Save / Load System
+
 local SAVE_FOLDER = "ZethHub/Saves"
 local function sanitizeFileName(name)
 name = tostring(name or "autosave")
@@ -1112,14 +1137,17 @@ name = name:sub(1, 64)
 end
 return name
 end
+
 local function saveFilePath(name)
 return SAVE_FOLDER .. "/" .. sanitizeFileName(name) .. ".json"
 end
+
 local function ensureFolder()
 if typeof(makefolder) == "function" then
 pcall(makefolder, SAVE_FOLDER)
 end
 end
+
 local function listSaveFiles()
 local files = {}
 if typeof(listfiles) ~= "function" then
@@ -1139,6 +1167,7 @@ end
 table.sort(files)
 return files
 end
+
 local function getSaveOptions()
 local files = listSaveFiles()
 if #files == 0 then
@@ -1146,6 +1175,7 @@ return { "(no saves)" }
 end
 return files
 end
+
 local function writeSaveRaw(name, text)
 if typeof(writefile) ~= "function" then
 return false, "writefile tidak tersedia di executor ini."
@@ -1154,6 +1184,7 @@ ensureFolder()
 local ok = pcall(writefile, saveFilePath(name), text)
 return ok, ok and nil or "Gagal menulis file."
 end
+
 local function readSaveRaw(name)
 if typeof(readfile) ~= "function" then
 return nil, "readfile tidak tersedia di executor ini."
@@ -1170,6 +1201,7 @@ return content
 end
 return nil, "Gagal membaca file."
 end
+
 local function encodeValue(v)
 if typeof(v) == "Color3" then
 return {
@@ -1186,6 +1218,7 @@ Name = v.Name,
 end
 return v
 end
+
 local function decodeValue(v)
 if type(v) == "table" then
 if v.__type == "Color3" then
@@ -1196,6 +1229,7 @@ end
 end
 return v
 end
+
 function Library:SaveToFile(name)
 name = sanitizeFileName(name)
 local values = {}
@@ -1224,6 +1258,7 @@ return false, "Gagal encode JSON."
 end
 return writeSaveRaw(name, encoded)
 end
+
 function Library:LoadFromFile(name)
 name = sanitizeFileName(name)
 local raw, err = readSaveRaw(name)
@@ -1273,6 +1308,7 @@ Library._loading = false
 Library._saveFile = name
 return true
 end
+
 function Library:DeleteSave(name)
 name = sanitizeFileName(name)
 local del = nil
@@ -1287,7 +1323,7 @@ end
 local ok = pcall(del, saveFilePath(name))
 return ok, ok and nil or "Gagal menghapus file."
 end
--- Auto Save Loop
+
 task.spawn(function()
 local timer = 0
 while true do
@@ -1309,12 +1345,12 @@ timer = 0
 end
 end
 end)
---// Notification settings (Rayfield-inspired)
+
 Library.NotificationWidth = Library.NotificationWidth or 320
 Library.NotificationRightOffset = Library.NotificationRightOffset or 16
 Library.NotificationTopOffset = Library.NotificationTopOffset or 12
 Library.MiniSafeMargin = Library.MiniSafeMargin or 8
---// Notification GUI (Self-healing + Rayfield-style)
+
 local NotifGui = Instance.new("ScreenGui")
 NotifGui.Name = "ZethNotifies"
 NotifGui.ResetOnSpawn = false
@@ -1329,6 +1365,7 @@ pcall(function()
 NotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end)
 end
+
 local notifyContainer
 local notifyList
 local function rebuildNotifyContainer()
@@ -1370,21 +1407,21 @@ notifyList.Parent = notifyContainer
 end
 end
 rebuildNotifyContainer()
+
+-- [FIX] PASTIKAN \n DITULIS SEBAGAI BACKSLASH DAN N, BUKAN ENTER ASLI
 local function notifyToText(value)
 if type(value) == "table" then
-return table.concat(value, "")
+return table.concat(value, "\n")
 end
 return tostring(value or "")
 end
+
 function Library:Notify(...)
 if Library._destroyed then
 return
 end
 local first = ...
 local cfg
--- Kompatibel:
--- Library:Notify({Title=..., Content=..., Duration=..., Image=...})
--- Library:Notify(text, duration, title, icon)
 if type(first) == "table" then
 cfg = first
 else
@@ -1398,7 +1435,6 @@ end
 local content = notifyToText(cfg.Content or cfg.Text or cfg.Message or "")
 local title = notifyToText(cfg.Title or cfg.title or "")
 local image = cfg.Image or cfg.Icon or cfg.icon
--- Default icon supaya mirip Rayfield: selalu ada icon kecuali Image = 0 / false / nil secara eksplisit ingin disembunyikan.
 if image == nil and (title ~= "" or content ~= "") then
 image = "info"
 end
@@ -1423,7 +1459,6 @@ if Library._destroyed then
 return
 end
 rebuildNotifyContainer()
--- Holder dipakai supaya animasi slide kanan-kiri tidak berantakan kena UIListLayout.
 local holder = Instance.new("Frame")
 holder.Name = "NotifyHolder"
 holder.Size = UDim2.new(1, 0, 0, 0)
@@ -1553,7 +1588,6 @@ fill.BackgroundColor3 = accent
 fill.BorderSizePixel = 0
 fill.Parent = track
 Corner(fill, 99)
--- Animasi masuk
 task.wait()
 Tween(
 n,
@@ -1575,7 +1609,6 @@ end
 if contentLbl then
 Tween(contentLbl, 0.28, {TextTransparency = 0})
 end
--- Progress bar sesuai durasi
 Tween(
 fill,
 duration,
@@ -1583,7 +1616,6 @@ duration,
 Enum.EasingStyle.Linear,
 Enum.EasingDirection.Out
 )
--- Animasi keluar
 task.delay(duration, function()
 if not holder or not holder.Parent then
 return
@@ -1617,7 +1649,7 @@ end)
 end)
 end
 
--- PART 1 END
+-- PART 1 END (CLEAN & FIXED)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 2
 
 --// Window
