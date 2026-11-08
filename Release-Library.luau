@@ -5196,9 +5196,6 @@ end)
 -- PART 3 END (V5.6 FIX)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 4
 
---// ==========================================================
---// CLOSE CONFIRMATION (System + divider + subtitle, WAIT = 3)
---// ==========================================================
 local CONFIRM_COOLDOWN = 3
 window.confirmTitle = config.ConfirmTitle or "System"
 window.confirmSubtitle = config.ConfirmSubtitle or "You are about to close this window. This action cannot be undone and all unsaved changes will be lost."
@@ -5718,14 +5715,25 @@ Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard tidak 
 end)
 
 -- [FIX] Place Card: Info dirapikan + Divider ditambahkan
+-- [FIX] Place Card: Mengambil info Place secara manual (Tanpa GameChecker)
 local plCard, plBody = infoCard(row1, "Place", "map-pin", 118, 0.5, -4)
-local gcInfo = detectGameInfo()
+
+-- Mengambil info Place secara manual karena detectGameInfo() sudah dihapus
+local placeName = "Unknown Place"
+local placeId = game.PlaceId or 0
+pcall(function()
+    local productInfo = game:GetService("MarketplaceService"):GetProductInfo(placeId)
+    if productInfo and productInfo.Name then
+        placeName = productInfo.Name
+    end
+end)
+
 local plName = infoLabel(plBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
-plName.Text = gcInfo.PlaceName
+plName.Text = placeName
 local plId = infoLabel(plBody, 18, 13, 10, Enum.Font.Gotham, "SubText", true)
-plId.Text = "PlaceId " .. tostring(gcInfo.PlaceId)
+plId.Text = "PlaceId " .. tostring(placeId)
 local plJob = infoLabel(plBody, 33, 13, 10, Enum.Font.Gotham, "SubText", true)
-plJob.Text = "JobId " .. tostring(game.JobId)
+plJob.Text = "JobId " .. tostring(game.JobId or "Unknown")
 
 local plDivider = Instance.new("Frame")
 plDivider.Size = UDim2.new(1, 0, 0, 1)
@@ -5877,6 +5885,7 @@ sesServer.Text = "Server up: " .. formatDuration(up)
 end
 end)
 end
+
 -- PART 4 END (V5.6 FIX)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 5
 
