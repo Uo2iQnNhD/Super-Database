@@ -2657,12 +2657,15 @@ local containerList = Instance.new("UIListLayout")
 containerList.SortOrder = Enum.SortOrder.LayoutOrder
 containerList.Padding = UDim.new(0, 8)
 containerList.Parent = container
+
+-- [FIX] UIPadding menggunakan UDim, bukan UDim2
 local containerPad = Instance.new("UIPadding")
-containerPad.PaddingTop = UDim2.new(0, 0)
-containerPad.PaddingBottom = UDim2.new(0, 16)
-containerPad.PaddingLeft = UDim2.new(0, 0)
-containerPad.PaddingRight = UDim2.new(0, 0)
+containerPad.PaddingTop = UDim.new(0, 0)
+containerPad.PaddingBottom = UDim.new(0, 16)
+containerPad.PaddingLeft = UDim.new(0, 0)
+containerPad.PaddingRight = UDim.new(0, 0)
 containerPad.Parent = container
+
 local spacer = Instance.new("Frame")
 spacer.Size = UDim2.new(1, 0, 0, 2)
 spacer.BackgroundTransparency = 1
