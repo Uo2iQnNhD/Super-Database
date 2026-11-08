@@ -1996,11 +1996,11 @@ return nil
 end
 config = config or {}
 -- [FIX] Game Checker loading screen dihapus sesuai permintaan agar bisa dipanggil manual dari luar
-local title = config.Title or "ZETHUB"
-local subtitle = config.Subtitle or "V5.6 • Quick Bar • Net Stats"
+local title = config.Title or "Ro-Netrium"
+local subtitle = config.Subtitle or "Powered By Zaycapcay"
 local OPEN_SIZE = UDim2.new(0, 560, 0, 420)
 local gui = Instance.new("ScreenGui")
-gui.Name = "ZethHubV5"
+gui.Name = "Ro-NetriumV4"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 998
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
