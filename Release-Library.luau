@@ -1,5 +1,6 @@
---[[ Ro-Netrium Updated by Exterminate0 ]]
-]]
+--[[ Ro-Netrium Updated by Zaycapcay ]]
+--[[ Release in 2 Week ]]
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -1984,20 +1985,18 @@ end)
 end)
 end)
 end
+
 -- PART 1 END (V5.5 UPDATE)
 -- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 2
+
 --// Window
 function Library:CreateWindow(config)
 if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
 return nil
 end
 config = config or {}
---// [V5.5 BARU] Game Checker loading screen (sekali saja, sebelum UI dibangun)
-if config.GameChecker ~= false and not Library._gameChecked then
-Library:RunGameChecker(type(config.GameChecker) == "table" and config.GameChecker or {})
-end
 local title = config.Title or "ZETHUB"
-local subtitle = config.Subtitle or "V5.5 • Quick Bar • Game Checker"
+local subtitle = config.Subtitle or "V5.4 • Scroll Tabs / Multi-Select"
 local OPEN_SIZE = UDim2.new(0, 560, 0, 420)
 local gui = Instance.new("ScreenGui")
 gui.Name = "ZethHubV5"
@@ -2437,8 +2436,8 @@ end
 local tagsConfig = config.Tags
 if tagsConfig == nil then
 tagsConfig = {
-{Text = "V5.5", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
-{Text = "Quick Bar", Color = Color3.fromRGB(46, 230, 110), TextColor = Color3.fromRGB(0, 0, 0)},
+{Text = "V5.4", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
+{Text = "Scroll Tabs", Color = Color3.fromRGB(46, 230, 110), TextColor = Color3.fromRGB(0, 0, 0)},
 }
 end
 if tagsConfig ~= false and type(tagsConfig) == "table" then
@@ -2545,7 +2544,7 @@ main.Position = UDim2.new(0.5, x, 0.5, y)
 end
 end, window)
 -- ==========================================================
--- SIDEBAR: Search sticky di atas + Tab SCROLLABLE
+-- [V5.4 FIX #1] SIDEBAR: Search sticky di atas + Tab SCROLLABLE
 -- ==========================================================
 local SIDE_PAD = 8
 local SEARCH_H = 34
@@ -2620,6 +2619,7 @@ local sideList = Instance.new("UIListLayout")
 sideList.SortOrder = Enum.SortOrder.LayoutOrder
 sideList.Padding = UDim.new(0, 5)
 sideList.Parent = tabScroll
+-- [V5.4 FIX #2a] margin bawah tab agar tab terakhir tidak terpotong sudut
 local sidePad = Instance.new("UIPadding")
 sidePad.PaddingTop = UDim.new(0, 2)
 sidePad.PaddingBottom = UDim.new(0, 14)
@@ -2651,15 +2651,13 @@ local containerList = Instance.new("UIListLayout")
 containerList.SortOrder = Enum.SortOrder.LayoutOrder
 containerList.Padding = UDim.new(0, 8)
 containerList.Parent = container
-
--- [FIX] UIPadding menggunakan UDim, bukan UDim2
+-- [V5.4 FIX #2b] margin bawah konten agar button/element terakhir tidak terpotong
 local containerPad = Instance.new("UIPadding")
 containerPad.PaddingTop = UDim.new(0, 0)
 containerPad.PaddingBottom = UDim.new(0, 16)
 containerPad.PaddingLeft = UDim.new(0, 0)
 containerPad.PaddingRight = UDim.new(0, 0)
 containerPad.Parent = container
-
 local spacer = Instance.new("Frame")
 spacer.Size = UDim2.new(1, 0, 0, 2)
 spacer.BackgroundTransparency = 1
@@ -2941,7 +2939,7 @@ btn.BorderSizePixel = 0
 btn.Text = ""
 btn.AutoButtonColor = false
 btn.ZIndex = 42
-btn.Parent = tabScroll
+btn.Parent = tabScroll   -- [V5.4] tab masuk ke area scroll, bukan sidebar langsung
 Corner(btn, 7)
 local ind = Instance.new("Frame")
 ind.Size = UDim2.new(0, 3, 0, 16)
@@ -3126,7 +3124,7 @@ Keywords = {"label", "text", "info"},
 }, "label", obj)
 return obj
 end
---// Paragraph dengan DIVIDER/PEMBATAS
+--// Paragraph dengan DIVIDER/PEMBATAS (V5.3.1 fix dipertahankan)
 function tab:CreateParagraph(cfg)
 cfg = cfg or {}
 local function toText(v)
@@ -3495,8 +3493,10 @@ end
 registerElement(window, tab, name, f, cfg, "slider", obj)
 return obj
 end
--- PART 2 END (V5.5 UPDATE)
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3
+
+-- PART 2 END
+-- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3.
+
 function tab:CreateButton(cfg)
 cfg = cfg or {}
 local col = cfg.Color
