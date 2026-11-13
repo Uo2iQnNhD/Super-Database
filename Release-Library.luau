@@ -1,119 +1,98 @@
 --[[ Ro-Netrium Updated by Zaycapcay ]]
---[[ Version 4 ]]
+--[[ Version 4.1 FIXED ]]
+--[[ ZETHUB - Library V5.7 ]]
+--[[ PART 1/3 : Core + Theme + Icons + Helpers + Movement + Notify ]]
+--[[ GABUNGKAN PART 1/3 + PART 2/3 + PART 3/3 JADI SATU SCRIPT LALU EXECUTE ]]
 
---[[ ZETHUB - Library V5.3 Updated by Exterminate0 ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
 local LocalPlayer = Players.LocalPlayer
 
 --// Anti duplicate environment
 local Env = (typeof(getgenv) == "function" and getgenv()) or _G
 local Generation = (type(Env) == "table" and tonumber(Env.ZethHubGeneration) or 0) + 1
 if type(Env) == "table" then
-Env.ZethHubGeneration = Generation
+	Env.ZethHubGeneration = Generation
 end
 
 local function purgeOldGuis()
-local targets = {
-"Ro-Netrium",
-"Ro-NetriumUPD",
-"Ro-NetriumV4",
-"ZethHubV5",
-"ZethNotifies",
-"ZethGameChecker",
-}
-local parents = {
-game:GetService("CoreGui"),
-LocalPlayer:FindFirstChild("PlayerGui"),
-}
-if typeof(gethui) == "function" then
-local ok, hui = pcall(gethui)
-if ok and hui then
-table.insert(parents, hui)
-end
-end
-for _, parent in ipairs(parents) do
-if parent then
-for _, child in ipairs(parent:GetChildren()) do
-if child:IsA("ScreenGui") then
-for _, name in ipairs(targets) do
-if child.Name == name then
-pcall(function()
-child:Destroy()
-end)
-end
-end
-end
-end
-end
-end
+	local targets = {
+		"Ro-Netrium", "Ro-NetriumUPD", "Ro-NetriumV4",
+		"ZethHubV5", "ZethNotifies", "ZethGameChecker",
+	}
+	local parents = {
+		game:GetService("CoreGui"),
+		LocalPlayer:FindFirstChild("PlayerGui"),
+	}
+	if typeof(gethui) == "function" then
+		local ok, hui = pcall(gethui)
+		if ok and hui then table.insert(parents, hui) end
+	end
+	for _, parent in ipairs(parents) do
+		if parent then
+			for _, child in ipairs(parent:GetChildren()) do
+				if child:IsA("ScreenGui") then
+					for _, name in ipairs(targets) do
+						if child.Name == name then
+							pcall(function() child:Destroy() end)
+						end
+					end
+				end
+			end
+		end
+	end
 end
 
---// Hancurkan library sebelumnya jika ada
 local PreviousLibrary = type(Env) == "table" and Env.ZethHubLibrary or nil
 if PreviousLibrary and type(PreviousLibrary.Destroy) == "function" then
-pcall(function()
-PreviousLibrary:Destroy()
-end)
+	pcall(function() PreviousLibrary:Destroy() end)
 end
 purgeOldGuis()
 
 local Library = {
-Accent = Color3.fromRGB(255, 255, 255),
-Rainbow = true,
-ToggleKey = Enum.KeyCode.RightShift,
-Open = true,
-Flags = {},
-Generation = Generation,
-_connections = {},
-_windows = {},
-_destroyed = false,
-AnimationSpeed = 1,
-_searchIndex = {},
-_elements = {},
-_saveFile = "autosave",
-_autoLoaded = false,
-_loading = false,
-_gameChecked = false,
-SessionStart = os.clock(),
-AutoSave = {
-Enabled = false,
-Interval = 60,
-File = "autosave",
-},
-AutoLoad = {
-Enabled = true,
-File = "autosave",
-},
-Effects = {
-Particles = true,
-Glow = true,
-Ripple = true,
-Shadow = true,
-},
+	Accent = Color3.fromRGB(255, 255, 255),
+	Rainbow = true,
+	ToggleKey = Enum.KeyCode.RightShift,
+	Open = true,
+	Flags = {},
+	Generation = Generation,
+	_connections = {},
+	_windows = {},
+	_destroyed = false,
+	AnimationSpeed = 1,
+	_searchIndex = {},
+	_elements = {},
+	_saveFile = "autosave",
+	_autoLoaded = false,
+	_loading = false,
+	_gameChecked = false,
+	SessionStart = os.clock(),
+	AutoSave = { Enabled = false, Interval = 60, File = "autosave" },
+	AutoLoad = { Enabled = true, File = "autosave" },
+	Effects = { Particles = true, Glow = true, Ripple = true, Shadow = true },
 }
 
 local Theme = {
-Background = Color3.fromRGB(12, 12, 14),
-Sidebar = Color3.fromRGB(8, 8, 10),
-Element = Color3.fromRGB(22, 22, 26),
-ElementHover = Color3.fromRGB(32, 32, 38),
-Border = Color3.fromRGB(70, 70, 78),
-Text = Color3.fromRGB(255, 255, 255),
-SubText = Color3.fromRGB(165, 165, 172),
-MainBorderThickness = 3,
-ElementBorderThickness = 1.6,
-BorderThickness = 1.6,
-BorderTransparency = 0,
-BorderGlow = true,
-GlowTransparency = 0.68,
-RainbowSpeed = 0.12,
-ParticleCount = 28,
+	Background = Color3.fromRGB(12, 12, 14),
+	Sidebar = Color3.fromRGB(8, 8, 10),
+	Element = Color3.fromRGB(22, 22, 26),
+	ElementHover = Color3.fromRGB(32, 32, 38),
+	Border = Color3.fromRGB(70, 70, 78),
+	Text = Color3.fromRGB(255, 255, 255),
+	SubText = Color3.fromRGB(165, 165, 172),
+	MainBorderThickness = 3,
+	ElementBorderThickness = 1.6,
+	BorderThickness = 1.6,
+	BorderTransparency = 0,
+	BorderGlow = true,
+	GlowTransparency = 0.68,
+	RainbowSpeed = 0.12,
+	ParticleCount = 28,
 }
-
 Theme.Close = Color3.fromRGB(225, 70, 70)
 Theme.CloseHover = Color3.fromRGB(255, 95, 95)
 Theme.ClosePressed = Color3.fromRGB(185, 45, 45)
@@ -125,289 +104,204 @@ Theme.Neutral = Color3.fromRGB(60, 60, 60)
 Theme.NeutralHover = Color3.fromRGB(85, 85, 85)
 Theme.Disabled = Color3.fromRGB(100, 100, 100)
 Theme.DisabledText = Color3.fromRGB(150, 150, 150)
-
 Library.CloseColor = Theme.Close
 Library.CloseHoverColor = Theme.CloseHover
 Library.ClosePressedColor = Theme.ClosePressed
 
 Theme.Presets = {
-["Solid"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 255, 255),
-Colors = {
-Background = Color3.fromRGB(12, 12, 14),
-Sidebar = Color3.fromRGB(8, 8, 10),
-Element = Color3.fromRGB(22, 22, 26),
-ElementHover = Color3.fromRGB(32, 32, 38),
-Border = Color3.fromRGB(70, 70, 78),
-Text = Color3.fromRGB(255, 255, 255),
-SubText = Color3.fromRGB(165, 165, 172),
-},
-},
-["RGB Rainbow"] = {
-Rainbow = true,
-Colors = {
-Background = Color3.fromRGB(10, 10, 12),
-Sidebar = Color3.fromRGB(7, 7, 9),
-Element = Color3.fromRGB(20, 20, 24),
-ElementHover = Color3.fromRGB(30, 30, 36),
-Border = Color3.fromRGB(80, 80, 90),
-Text = Color3.fromRGB(255, 255, 255),
-SubText = Color3.fromRGB(170, 170, 178),
-},
-},
-["Neon Blue"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(60, 170, 255),
-Colors = {
-Background = Color3.fromRGB(9, 12, 18),
-Sidebar = Color3.fromRGB(6, 9, 14),
-Element = Color3.fromRGB(18, 24, 34),
-ElementHover = Color3.fromRGB(28, 38, 54),
-Border = Color3.fromRGB(55, 90, 130),
-Text = Color3.fromRGB(240, 248, 255),
-SubText = Color3.fromRGB(150, 175, 200),
-},
-},
-["Emerald"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(46, 230, 110),
-Colors = {
-Background = Color3.fromRGB(10, 14, 12),
-Sidebar = Color3.fromRGB(7, 10, 9),
-Element = Color3.fromRGB(18, 26, 22),
-ElementHover = Color3.fromRGB(28, 40, 34),
-Border = Color3.fromRGB(50, 90, 70),
-Text = Color3.fromRGB(240, 255, 245),
-SubText = Color3.fromRGB(150, 190, 165),
-},
-},
-["Sunset"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 120, 60),
-Colors = {
-Background = Color3.fromRGB(16, 11, 12),
-Sidebar = Color3.fromRGB(11, 8, 9),
-Element = Color3.fromRGB(28, 20, 22),
-ElementHover = Color3.fromRGB(42, 30, 34),
-Border = Color3.fromRGB(100, 60, 55),
-Text = Color3.fromRGB(255, 245, 240),
-SubText = Color3.fromRGB(200, 160, 150),
-},
-},
-["Ocean"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(40, 210, 220),
-Colors = {
-Background = Color3.fromRGB(8, 14, 16),
-Sidebar = Color3.fromRGB(5, 10, 12),
-Element = Color3.fromRGB(16, 26, 30),
-ElementHover = Color3.fromRGB(24, 38, 44),
-Border = Color3.fromRGB(45, 95, 105),
-Text = Color3.fromRGB(235, 255, 255),
-SubText = Color3.fromRGB(145, 185, 190),
-},
-},
-["Violet"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(170, 90, 255),
-Colors = {
-Background = Color3.fromRGB(13, 10, 18),
-Sidebar = Color3.fromRGB(9, 7, 13),
-Element = Color3.fromRGB(24, 18, 34),
-ElementHover = Color3.fromRGB(36, 28, 50),
-Border = Color3.fromRGB(85, 60, 120),
-Text = Color3.fromRGB(248, 240, 255),
-SubText = Color3.fromRGB(180, 160, 205),
-},
-},
-["Crimson"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 70, 90),
-Colors = {
-Background = Color3.fromRGB(16, 9, 11),
-Sidebar = Color3.fromRGB(11, 6, 8),
-Element = Color3.fromRGB(30, 16, 20),
-ElementHover = Color3.fromRGB(44, 24, 30),
-Border = Color3.fromRGB(110, 45, 55),
-Text = Color3.fromRGB(255, 240, 242),
-SubText = Color3.fromRGB(205, 150, 158),
-},
-},
-["Gold"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 200, 70),
-Colors = {
-Background = Color3.fromRGB(15, 13, 9),
-Sidebar = Color3.fromRGB(10, 9, 6),
-Element = Color3.fromRGB(28, 24, 16),
-ElementHover = Color3.fromRGB(42, 36, 24),
-Border = Color3.fromRGB(105, 88, 45),
-Text = Color3.fromRGB(255, 250, 235),
-SubText = Color3.fromRGB(205, 190, 150),
-},
-},
-["Cyberpunk"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 40, 200),
-Colors = {
-Background = Color3.fromRGB(10, 8, 16),
-Sidebar = Color3.fromRGB(6, 5, 11),
-Element = Color3.fromRGB(20, 14, 32),
-ElementHover = Color3.fromRGB(32, 22, 50),
-Border = Color3.fromRGB(90, 40, 130),
-Text = Color3.fromRGB(255, 240, 255),
-SubText = Color3.fromRGB(190, 150, 210),
-},
-},
-["Toxic"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(170, 255, 60),
-Colors = {
-Background = Color3.fromRGB(10, 13, 8),
-Sidebar = Color3.fromRGB(7, 9, 5),
-Element = Color3.fromRGB(18, 24, 14),
-ElementHover = Color3.fromRGB(28, 38, 22),
-Border = Color3.fromRGB(65, 95, 40),
-Text = Color3.fromRGB(240, 255, 230),
-SubText = Color3.fromRGB(160, 190, 135),
-},
-},
-["Sakura"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 140, 190),
-Colors = {
-Background = Color3.fromRGB(16, 11, 14),
-Sidebar = Color3.fromRGB(11, 8, 10),
-Element = Color3.fromRGB(30, 20, 26),
-ElementHover = Color3.fromRGB(44, 30, 38),
-Border = Color3.fromRGB(110, 70, 90),
-Text = Color3.fromRGB(255, 242, 248),
-SubText = Color3.fromRGB(205, 165, 185),
-},
-},
-["Ice"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(150, 220, 255),
-Colors = {
-Background = Color3.fromRGB(10, 13, 16),
-Sidebar = Color3.fromRGB(7, 9, 12),
-Element = Color3.fromRGB(18, 24, 30),
-ElementHover = Color3.fromRGB(28, 38, 46),
-Border = Color3.fromRGB(60, 95, 120),
-Text = Color3.fromRGB(240, 250, 255),
-SubText = Color3.fromRGB(160, 185, 205),
-},
-},
-["Blood Moon"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(220, 40, 60),
-Colors = {
-Background = Color3.fromRGB(12, 7, 8),
-Sidebar = Color3.fromRGB(8, 5, 6),
-Element = Color3.fromRGB(24, 12, 15),
-ElementHover = Color3.fromRGB(38, 20, 24),
-Border = Color3.fromRGB(95, 35, 45),
-Text = Color3.fromRGB(255, 235, 238),
-SubText = Color3.fromRGB(195, 140, 148),
-},
-},
-["Forest"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(90, 200, 120),
-Colors = {
-Background = Color3.fromRGB(9, 12, 10),
-Sidebar = Color3.fromRGB(6, 8, 7),
-Element = Color3.fromRGB(16, 22, 18),
-ElementHover = Color3.fromRGB(26, 34, 28),
-Border = Color3.fromRGB(45, 80, 58),
-Text = Color3.fromRGB(238, 255, 244),
-SubText = Color3.fromRGB(150, 185, 160),
-},
-},
-["Royal"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(120, 90, 255),
-Colors = {
-Background = Color3.fromRGB(11, 10, 17),
-Sidebar = Color3.fromRGB(7, 7, 12),
-Element = Color3.fromRGB(20, 18, 32),
-ElementHover = Color3.fromRGB(32, 28, 50),
-Border = Color3.fromRGB(75, 65, 125),
-Text = Color3.fromRGB(245, 242, 255),
-SubText = Color3.fromRGB(170, 165, 210),
-},
-},
-["Amber"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 170, 50),
-Colors = {
-Background = Color3.fromRGB(15, 12, 8),
-Sidebar = Color3.fromRGB(10, 8, 5),
-Element = Color3.fromRGB(28, 22, 14),
-ElementHover = Color3.fromRGB(42, 34, 22),
-Border = Color3.fromRGB(105, 80, 40),
-Text = Color3.fromRGB(255, 248, 235),
-SubText = Color3.fromRGB(205, 180, 140),
-},
-},
-["Mono"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(210, 210, 210),
-Colors = {
-Background = Color3.fromRGB(14, 14, 14),
-Sidebar = Color3.fromRGB(9, 9, 9),
-Element = Color3.fromRGB(24, 24, 24),
-ElementHover = Color3.fromRGB(34, 34, 34),
-Border = Color3.fromRGB(70, 70, 70),
-Text = Color3.fromRGB(245, 245, 245),
-SubText = Color3.fromRGB(160, 160, 160),
-},
-},
-["Lava"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 90, 30),
-Colors = {
-Background = Color3.fromRGB(14, 8, 6),
-Sidebar = Color3.fromRGB(9, 5, 4),
-Element = Color3.fromRGB(26, 14, 10),
-ElementHover = Color3.fromRGB(40, 22, 16),
-Border = Color3.fromRGB(100, 45, 30),
-Text = Color3.fromRGB(255, 240, 230),
-SubText = Color3.fromRGB(200, 150, 130),
-},
-},
-["Mint"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(80, 240, 190),
-Colors = {
-Background = Color3.fromRGB(9, 14, 13),
-Sidebar = Color3.fromRGB(6, 10, 9),
-Element = Color3.fromRGB(16, 26, 24),
-ElementHover = Color3.fromRGB(24, 38, 35),
-Border = Color3.fromRGB(45, 95, 85),
-Text = Color3.fromRGB(235, 255, 250),
-SubText = Color3.fromRGB(145, 190, 180),
-},
-},
-["Peach"] = {
-Rainbow = false,
-Accent = Color3.fromRGB(255, 155, 120),
-Colors = {
-Background = Color3.fromRGB(16, 12, 11),
-Sidebar = Color3.fromRGB(11, 8, 7),
-Element = Color3.fromRGB(30, 22, 20),
-ElementHover = Color3.fromRGB(44, 32, 29),
-Border = Color3.fromRGB(110, 75, 68),
-Text = Color3.fromRGB(255, 245, 240),
-SubText = Color3.fromRGB(205, 170, 160),
-},
-},
+	["Solid"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 255, 255),
+		Colors = {
+			Background = Color3.fromRGB(12, 12, 14), Sidebar = Color3.fromRGB(8, 8, 10),
+			Element = Color3.fromRGB(22, 22, 26), ElementHover = Color3.fromRGB(32, 32, 38),
+			Border = Color3.fromRGB(70, 70, 78), Text = Color3.fromRGB(255, 255, 255),
+			SubText = Color3.fromRGB(165, 165, 172),
+		},
+	},
+	["RGB Rainbow"] = {
+		Rainbow = true,
+		Colors = {
+			Background = Color3.fromRGB(10, 10, 12), Sidebar = Color3.fromRGB(7, 7, 9),
+			Element = Color3.fromRGB(20, 20, 24), ElementHover = Color3.fromRGB(30, 30, 36),
+			Border = Color3.fromRGB(80, 80, 90), Text = Color3.fromRGB(255, 255, 255),
+			SubText = Color3.fromRGB(170, 170, 178),
+		},
+	},
+	["Neon Blue"] = {
+		Rainbow = false, Accent = Color3.fromRGB(60, 170, 255),
+		Colors = {
+			Background = Color3.fromRGB(9, 12, 18), Sidebar = Color3.fromRGB(6, 9, 14),
+			Element = Color3.fromRGB(18, 24, 34), ElementHover = Color3.fromRGB(28, 38, 54),
+			Border = Color3.fromRGB(55, 90, 130), Text = Color3.fromRGB(240, 248, 255),
+			SubText = Color3.fromRGB(150, 175, 200),
+		},
+	},
+	["Emerald"] = {
+		Rainbow = false, Accent = Color3.fromRGB(46, 230, 110),
+		Colors = {
+			Background = Color3.fromRGB(10, 14, 12), Sidebar = Color3.fromRGB(7, 10, 9),
+			Element = Color3.fromRGB(18, 26, 22), ElementHover = Color3.fromRGB(28, 40, 34),
+			Border = Color3.fromRGB(50, 90, 70), Text = Color3.fromRGB(240, 255, 245),
+			SubText = Color3.fromRGB(150, 190, 165),
+		},
+	},
+	["Sunset"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 120, 60),
+		Colors = {
+			Background = Color3.fromRGB(16, 11, 12), Sidebar = Color3.fromRGB(11, 8, 9),
+			Element = Color3.fromRGB(28, 20, 22), ElementHover = Color3.fromRGB(42, 30, 34),
+			Border = Color3.fromRGB(100, 60, 55), Text = Color3.fromRGB(255, 245, 240),
+			SubText = Color3.fromRGB(200, 160, 150),
+		},
+	},
+	["Ocean"] = {
+		Rainbow = false, Accent = Color3.fromRGB(40, 210, 220),
+		Colors = {
+			Background = Color3.fromRGB(8, 14, 16), Sidebar = Color3.fromRGB(5, 10, 12),
+			Element = Color3.fromRGB(16, 26, 30), ElementHover = Color3.fromRGB(24, 38, 44),
+			Border = Color3.fromRGB(45, 95, 105), Text = Color3.fromRGB(235, 255, 255),
+			SubText = Color3.fromRGB(145, 185, 190),
+		},
+	},
+	["Violet"] = {
+		Rainbow = false, Accent = Color3.fromRGB(170, 90, 255),
+		Colors = {
+			Background = Color3.fromRGB(13, 10, 18), Sidebar = Color3.fromRGB(9, 7, 13),
+			Element = Color3.fromRGB(24, 18, 34), ElementHover = Color3.fromRGB(36, 28, 50),
+			Border = Color3.fromRGB(85, 60, 120), Text = Color3.fromRGB(248, 240, 255),
+			SubText = Color3.fromRGB(180, 160, 205),
+		},
+	},
+	["Crimson"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 70, 90),
+		Colors = {
+			Background = Color3.fromRGB(16, 9, 11), Sidebar = Color3.fromRGB(11, 6, 8),
+			Element = Color3.fromRGB(30, 16, 20), ElementHover = Color3.fromRGB(44, 24, 30),
+			Border = Color3.fromRGB(110, 45, 55), Text = Color3.fromRGB(255, 240, 242),
+			SubText = Color3.fromRGB(205, 150, 158),
+		},
+	},
+	["Gold"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 200, 70),
+		Colors = {
+			Background = Color3.fromRGB(15, 13, 9), Sidebar = Color3.fromRGB(10, 9, 6),
+			Element = Color3.fromRGB(28, 24, 16), ElementHover = Color3.fromRGB(42, 36, 24),
+			Border = Color3.fromRGB(105, 88, 45), Text = Color3.fromRGB(255, 250, 235),
+			SubText = Color3.fromRGB(205, 190, 150),
+		},
+	},
+	["Cyberpunk"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 40, 200),
+		Colors = {
+			Background = Color3.fromRGB(10, 8, 16), Sidebar = Color3.fromRGB(6, 5, 11),
+			Element = Color3.fromRGB(20, 14, 32), ElementHover = Color3.fromRGB(32, 22, 50),
+			Border = Color3.fromRGB(90, 40, 130), Text = Color3.fromRGB(255, 240, 255),
+			SubText = Color3.fromRGB(190, 150, 210),
+		},
+	},
+	["Toxic"] = {
+		Rainbow = false, Accent = Color3.fromRGB(170, 255, 60),
+		Colors = {
+			Background = Color3.fromRGB(10, 13, 8), Sidebar = Color3.fromRGB(7, 9, 5),
+			Element = Color3.fromRGB(18, 24, 14), ElementHover = Color3.fromRGB(28, 38, 22),
+			Border = Color3.fromRGB(65, 95, 40), Text = Color3.fromRGB(240, 255, 230),
+			SubText = Color3.fromRGB(160, 190, 135),
+		},
+	},
+	["Sakura"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 140, 190),
+		Colors = {
+			Background = Color3.fromRGB(16, 11, 14), Sidebar = Color3.fromRGB(11, 8, 10),
+			Element = Color3.fromRGB(30, 20, 26), ElementHover = Color3.fromRGB(44, 30, 38),
+			Border = Color3.fromRGB(110, 70, 90), Text = Color3.fromRGB(255, 242, 248),
+			SubText = Color3.fromRGB(205, 165, 185),
+		},
+	},
+	["Ice"] = {
+		Rainbow = false, Accent = Color3.fromRGB(150, 220, 255),
+		Colors = {
+			Background = Color3.fromRGB(10, 13, 16), Sidebar = Color3.fromRGB(7, 9, 12),
+			Element = Color3.fromRGB(18, 24, 30), ElementHover = Color3.fromRGB(28, 38, 46),
+			Border = Color3.fromRGB(60, 95, 120), Text = Color3.fromRGB(240, 250, 255),
+			SubText = Color3.fromRGB(160, 185, 205),
+		},
+	},
+	["Blood Moon"] = {
+		Rainbow = false, Accent = Color3.fromRGB(220, 40, 60),
+		Colors = {
+			Background = Color3.fromRGB(12, 7, 8), Sidebar = Color3.fromRGB(8, 5, 6),
+			Element = Color3.fromRGB(24, 12, 15), ElementHover = Color3.fromRGB(38, 20, 24),
+			Border = Color3.fromRGB(95, 35, 45), Text = Color3.fromRGB(255, 235, 238),
+			SubText = Color3.fromRGB(195, 140, 148),
+		},
+	},
+	["Forest"] = {
+		Rainbow = false, Accent = Color3.fromRGB(90, 200, 120),
+		Colors = {
+			Background = Color3.fromRGB(9, 12, 10), Sidebar = Color3.fromRGB(6, 8, 7),
+			Element = Color3.fromRGB(16, 22, 18), ElementHover = Color3.fromRGB(26, 34, 28),
+			Border = Color3.fromRGB(45, 80, 58), Text = Color3.fromRGB(238, 255, 244),
+			SubText = Color3.fromRGB(150, 185, 160),
+		},
+	},
+	["Royal"] = {
+		Rainbow = false, Accent = Color3.fromRGB(120, 90, 255),
+		Colors = {
+			Background = Color3.fromRGB(11, 10, 17), Sidebar = Color3.fromRGB(7, 7, 12),
+			Element = Color3.fromRGB(20, 18, 32), ElementHover = Color3.fromRGB(32, 28, 50),
+			Border = Color3.fromRGB(75, 65, 125), Text = Color3.fromRGB(245, 242, 255),
+			SubText = Color3.fromRGB(170, 165, 210),
+		},
+	},
+	["Amber"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 170, 50),
+		Colors = {
+			Background = Color3.fromRGB(15, 12, 8), Sidebar = Color3.fromRGB(10, 8, 5),
+			Element = Color3.fromRGB(28, 22, 14), ElementHover = Color3.fromRGB(42, 34, 22),
+			Border = Color3.fromRGB(105, 80, 40), Text = Color3.fromRGB(255, 248, 235),
+			SubText = Color3.fromRGB(205, 180, 140),
+		},
+	},
+	["Mono"] = {
+		Rainbow = false, Accent = Color3.fromRGB(210, 210, 210),
+		Colors = {
+			Background = Color3.fromRGB(14, 14, 14), Sidebar = Color3.fromRGB(9, 9, 9),
+			Element = Color3.fromRGB(24, 24, 24), ElementHover = Color3.fromRGB(34, 34, 34),
+			Border = Color3.fromRGB(70, 70, 70), Text = Color3.fromRGB(245, 245, 245),
+			SubText = Color3.fromRGB(160, 160, 160),
+		},
+	},
+	["Lava"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 90, 30),
+		Colors = {
+			Background = Color3.fromRGB(14, 8, 6), Sidebar = Color3.fromRGB(9, 5, 4),
+			Element = Color3.fromRGB(26, 14, 10), ElementHover = Color3.fromRGB(40, 22, 16),
+			Border = Color3.fromRGB(100, 45, 30), Text = Color3.fromRGB(255, 240, 230),
+			SubText = Color3.fromRGB(200, 150, 130),
+		},
+	},
+	["Mint"] = {
+		Rainbow = false, Accent = Color3.fromRGB(80, 240, 190),
+		Colors = {
+			Background = Color3.fromRGB(9, 14, 13), Sidebar = Color3.fromRGB(6, 10, 9),
+			Element = Color3.fromRGB(16, 26, 24), ElementHover = Color3.fromRGB(24, 38, 35),
+			Border = Color3.fromRGB(45, 95, 85), Text = Color3.fromRGB(235, 255, 250),
+			SubText = Color3.fromRGB(145, 190, 180),
+		},
+	},
+	["Peach"] = {
+		Rainbow = false, Accent = Color3.fromRGB(255, 155, 120),
+		Colors = {
+			Background = Color3.fromRGB(16, 12, 11), Sidebar = Color3.fromRGB(11, 8, 7),
+			Element = Color3.fromRGB(30, 22, 20), ElementHover = Color3.fromRGB(44, 32, 29),
+			Border = Color3.fromRGB(110, 75, 68), Text = Color3.fromRGB(255, 245, 240),
+			SubText = Color3.fromRGB(205, 170, 160),
+		},
+	},
 }
 
 Library._confirmOpen = false
 Library._buttonPressLock = false
-
 local H_ELEMENT = 38
 local H_SLIDER = 46
 local H_SECTION = 20
@@ -416,936 +310,962 @@ local TOPBAR_H = 58
 
 Library.Lucide = {}
 Library.LucideRect = {}
-
 local fallbackIcons = {
-["home"]="rbxassetid://7733960981", ["settings"]="rbxassetid://7734053495", ["settings-2"]="rbxassetid://8997386997",
-["shield"]="rbxassetid://7734056608", ["shield-check"]="rbxassetid://7734056411", ["key"]="rbxassetid://7733965118",
-["gamepad-2"]="rbxassetid://7733799795", ["folder"]="rbxassetid://7733799185", ["file-text"]="rbxassetid://7733789088",
-["palette"]="rbxassetid://7734021595", ["wrench"]="rbxassetid://7743878358", ["hammer"]="rbxassetid://7733955511",
-["heart"]="rbxassetid://7733956134", ["star"]="rbxassetid://7734068321", ["check"]="rbxassetid://7733715400",
-["x"]="rbxassetid://7743878857", ["search"]="rbxassetid://7734052925", ["globe"]="rbxassetid://7733954760",
-["cpu"]="rbxassetid://7733765045", ["activity"]="rbxassetid://7733655755", ["gauge"]="rbxassetid://7733799969",
-["map-pin"]="rbxassetid://7733992789", ["eye"]="rbxassetid://7733774602", ["eye-off"]="rbxassetid://7733774495",
-["lock"]="rbxassetid://7733992528", ["unlock"]="rbxassetid://7743875263", ["send"]="rbxassetid://7734053039",
-["message-square"]="rbxassetid://7733993369", ["download"]="rbxassetid://7733770755", ["upload"]="rbxassetid://7743875428",
-["refresh-cw"]="rbxassetid://7734051052", ["play"]="rbxassetid://7743871480", ["pause"]="rbxassetid://7734021897",
-["music"]="rbxassetid://7734020554", ["image"]="rbxassetid://7733964126", ["camera"]="rbxassetid://7733708692",
-["mail"]="rbxassetid://7733992732", ["wifi"]="rbxassetid://7743878148", ["sun"]="rbxassetid://7734068495",
-["moon"]="rbxassetid://7743870134", ["cloud"]="rbxassetid://7733746980", ["flame"]="rbxassetid://7733798747",
-["crown"]="rbxassetid://7733765398", ["gem"]="rbxassetid://7733942651", ["banknote"]="rbxassetid://7733674153",
-["shopping-cart"]="rbxassetid://7734056813", ["gift"]="rbxassetid://7733946818", ["package"]="rbxassetid://7734021469",
-["box"]="rbxassetid://7733917120", ["trash-2"]="rbxassetid://7743873772", ["pencil"]="rbxassetid://7734022107",
-["clipboard"]="rbxassetid://7733734762", ["book-open"]="rbxassetid://7733687281", ["calendar"]="rbxassetid://7733919198",
-["timer"]="rbxassetid://7743873443", ["alarm-clock"]="rbxassetid://7733656100", ["watch"]="rbxassetid://7743877668",
-["megaphone"]="rbxassetid://7733993049", ["monitor"]="rbxassetid://7734002839", ["smartphone"]="rbxassetid://7734058979",
-["laptop"]="rbxassetid://7733965386", ["database"]="rbxassetid://7743866778", ["server"]="rbxassetid://7734053426",
-["link"]="rbxassetid://7733978098", ["external-link"]="rbxassetid://7743866903", ["qr-code"]="rbxassetid://7743871575",
-["scan"]="rbxassetid://8997386861", ["flag"]="rbxassetid://7733798691", ["compass"]="rbxassetid://7733924216",
-["map"]="rbxassetid://7733992829", ["navigation"]="rbxassetid://7734020989", ["crosshair"]="rbxassetid://7733765307",
-["target"]="rbxassetid://7743872758", ["bell"]="rbxassetid://7733911828", ["bell-ring"]="rbxassetid://7733675275",
-["info"]="rbxassetid://7733964719", ["terminal"]="rbxassetid://7743872929", ["check-circle"]="rbxassetid://7733919427",
-["x-circle"]="rbxassetid://7743878496", ["help-circle"]="rbxassetid://7733956210", ["user"]="rbxassetid://7743875962",
-["users"]="rbxassetid://7743876054", ["chevron-down"]="rbxassetid://7733717447", ["chevron-right"]="rbxassetid://7733717755",
-["chevron-left"]="rbxassetid://7733717651", ["chevron-up"]="rbxassetid://7733919605", ["log-out"]="rbxassetid://7733992677",
-["log-in"]="rbxassetid://7733992604", ["power"]="rbxassetid://7734042493", ["toggle-left"]="rbxassetid://7734091286",
-["toggle-right"]="rbxassetid://7743873539", ["type"]="rbxassetid://7743874740", ["menu"]="rbxassetid://7733993211",
-["layout-dashboard"]="rbxassetid://7733970318", ["grid"]="rbxassetid://7733955179", ["sidebar"]="rbxassetid://7734058260",
-["shovel"]="rbxassetid://7734056878", ["sliders"]="rbxassetid://7734058803", ["coin"]="rbxassetid://7743866529",
-["wallet"]="rbxassetid://7743877573", ["piggy-bank"]="rbxassetid://7734034513", ["ticket"]="rbxassetid://7734086558",
-["badge-check"]="rbxassetid://7743875503", ["badge"]="rbxassetid://7733692043", ["award"]="rbxassetid://7733673987",
-["battery"]="rbxassetid://7733674820", ["battery-charging"]="rbxassetid://7733674402", ["lightbulb"]="rbxassetid://7733975185",
-["locate"]="rbxassetid://7733992469", ["locate-fixed"]="rbxassetid://7733992424",
-["house"]="rbxassetid://7733960981", ["gear"]="rbxassetid://7734053495", ["dashboard"]="rbxassetid://7733970318",
-["sliders-horizontal"]="rbxassetid://7734058803", ["sparkles"]="rbxassetid://7734068321",
-["droplet"]="rbxassetid://7734021595", ["border-all"]="rbxassetid://7733955179",
-["border-inner"]="rbxassetid://7734058260", ["clock"]="rbxassetid://7743873443",
-["save"]="rbxassetid://7733770755", ["load"]="rbxassetid://7743875428",
-["theme"]="rbxassetid://7734021595", ["layers"]="rbxassetid://7733917120",
-["copy"]="rbxassetid://7733734762", ["list"]="rbxassetid://7733789088",
+	["home"]="rbxassetid://7733960981", ["settings"]="rbxassetid://7734053495", ["settings-2"]="rbxassetid://8997386997",
+	["shield"]="rbxassetid://7734056608", ["shield-check"]="rbxassetid://7734056411", ["key"]="rbxassetid://7733965118",
+	["gamepad-2"]="rbxassetid://7733799795", ["folder"]="rbxassetid://7733799185", ["file-text"]="rbxassetid://7733789088",
+	["palette"]="rbxassetid://7734021595", ["wrench"]="rbxassetid://7743878358", ["hammer"]="rbxassetid://7733955511",
+	["heart"]="rbxassetid://7733956134", ["star"]="rbxassetid://7734068321", ["check"]="rbxassetid://7733715400",
+	["x"]="rbxassetid://7743878857", ["search"]="rbxassetid://7734052925", ["globe"]="rbxassetid://7733954760",
+	["cpu"]="rbxassetid://7733765045", ["activity"]="rbxassetid://7733655755", ["gauge"]="rbxassetid://7733799969",
+	["map-pin"]="rbxassetid://7733992789", ["eye"]="rbxassetid://7733774602", ["eye-off"]="rbxassetid://7733774495",
+	["lock"]="rbxassetid://7733992528", ["unlock"]="rbxassetid://7743875263", ["send"]="rbxassetid://7734053039",
+	["message-square"]="rbxassetid://7733993369", ["download"]="rbxassetid://7733770755", ["upload"]="rbxassetid://7743875428",
+	["refresh-cw"]="rbxassetid://7734051052", ["play"]="rbxassetid://7743871480", ["pause"]="rbxassetid://7734021897",
+	["music"]="rbxassetid://7734020554", ["image"]="rbxassetid://7733964126", ["camera"]="rbxassetid://7733708692",
+	["mail"]="rbxassetid://7733992732", ["wifi"]="rbxassetid://7743878148", ["sun"]="rbxassetid://7734068495",
+	["moon"]="rbxassetid://7743870134", ["cloud"]="rbxassetid://7733746980", ["flame"]="rbxassetid://7733798747",
+	["crown"]="rbxassetid://7733765398", ["gem"]="rbxassetid://7733942651", ["banknote"]="rbxassetid://7733674153",
+	["shopping-cart"]="rbxassetid://7734056813", ["gift"]="rbxassetid://7733946818", ["package"]="rbxassetid://7734021469",
+	["box"]="rbxassetid://7733917120", ["trash-2"]="rbxassetid://7743873772", ["pencil"]="rbxassetid://7734022107",
+	["clipboard"]="rbxassetid://7733734762", ["book-open"]="rbxassetid://7733687281", ["calendar"]="rbxassetid://7733919198",
+	["timer"]="rbxassetid://7743873443", ["alarm-clock"]="rbxassetid://7733656100", ["watch"]="rbxassetid://7743877668",
+	["megaphone"]="rbxassetid://7733993049", ["monitor"]="rbxassetid://7734002839", ["smartphone"]="rbxassetid://7734058979",
+	["laptop"]="rbxassetid://7733965386", ["database"]="rbxassetid://7743866778", ["server"]="rbxassetid://7734053426",
+	["link"]="rbxassetid://7733978098", ["external-link"]="rbxassetid://7743866903", ["qr-code"]="rbxassetid://7743871575",
+	["scan"]="rbxassetid://8997386861", ["flag"]="rbxassetid://7733798691", ["compass"]="rbxassetid://7733924216",
+	["map"]="rbxassetid://7733992829", ["navigation"]="rbxassetid://7734020989", ["crosshair"]="rbxassetid://7733765307",
+	["target"]="rbxassetid://7743872758", ["bell"]="rbxassetid://7733911828", ["bell-ring"]="rbxassetid://7733675275",
+	["info"]="rbxassetid://7733964719", ["terminal"]="rbxassetid://7743872929", ["check-circle"]="rbxassetid://7733919427",
+	["x-circle"]="rbxassetid://7743878496", ["help-circle"]="rbxassetid://7733956210", ["user"]="rbxassetid://7743875962",
+	["users"]="rbxassetid://7743876054", ["chevron-down"]="rbxassetid://7733717447", ["chevron-right"]="rbxassetid://7733717755",
+	["chevron-left"]="rbxassetid://7733717651", ["chevron-up"]="rbxassetid://7733919605", ["log-out"]="rbxassetid://7733992677",
+	["log-in"]="rbxassetid://7733992604", ["power"]="rbxassetid://7734042493", ["toggle-left"]="rbxassetid://7734091286",
+	["toggle-right"]="rbxassetid://7743873539", ["type"]="rbxassetid://7743874740", ["menu"]="rbxassetid://7733993211",
+	["layout-dashboard"]="rbxassetid://7733970318", ["grid"]="rbxassetid://7733955179", ["sidebar"]="rbxassetid://7734058260",
+	["shovel"]="rbxassetid://7734056878", ["sliders"]="rbxassetid://7734058803", ["coin"]="rbxassetid://7743866529",
+	["wallet"]="rbxassetid://7743877573", ["piggy-bank"]="rbxassetid://7734034513", ["ticket"]="rbxassetid://7734086558",
+	["badge-check"]="rbxassetid://7743875503", ["badge"]="rbxassetid://7733692043", ["award"]="rbxassetid://7733673987",
+	["battery"]="rbxassetid://7733674820", ["battery-charging"]="rbxassetid://7733674402", ["lightbulb"]="rbxassetid://7733975185",
+	["locate"]="rbxassetid://7733992469", ["locate-fixed"]="rbxassetid://7733992424",
+	["house"]="rbxassetid://7733960981", ["gear"]="rbxassetid://7734053495", ["dashboard"]="rbxassetid://7733970318",
+	["sliders-horizontal"]="rbxassetid://7734058803", ["sparkles"]="rbxassetid://7734068321",
+	["droplet"]="rbxassetid://7734021595", ["border-all"]="rbxassetid://7733955179",
+	["border-inner"]="rbxassetid://7734058260", ["clock"]="rbxassetid://7743873443",
+	["save"]="rbxassetid://7733770755", ["load"]="rbxassetid://7743875428",
+	["theme"]="rbxassetid://7734021595", ["layers"]="rbxassetid://7733917120",
+	["copy"]="rbxassetid://7733734762", ["list"]="rbxassetid://7733789088",
 }
 for name, asset in pairs(fallbackIcons) do
-Library.Lucide[name] = asset
+	Library.Lucide[name] = asset
 end
 
 local IconCache = (type(Env) == "table" and Env.ZethHubIconCache) or {
-Loaded = false,
-Lucide = {},
-Rect = {},
+	Loaded = false, Lucide = {}, Rect = {},
 }
-if type(Env) == "table" then
-Env.ZethHubIconCache = IconCache
-end
-
-for name, asset in pairs(IconCache.Lucide) do
-Library.Lucide[name] = asset
-end
-for name, rect in pairs(IconCache.Rect) do
-Library.LucideRect[name] = rect
-end
+if type(Env) == "table" then Env.ZethHubIconCache = IconCache end
+for name, asset in pairs(IconCache.Lucide) do Library.Lucide[name] = asset end
+for name, rect in pairs(IconCache.Rect) do Library.LucideRect[name] = rect end
 
 local function fetchRayfieldIconSource()
-local url = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"
-local ok, body = pcall(function()
-return game:HttpGet(url)
-end)
-if ok and type(body) == "string" and #body > 0 then
-return body
-end
-local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
-if requestFunc then
-local okReq, res = pcall(function()
-return requestFunc({
-Url = url,
-Method = "GET",
-})
-end)
-if okReq and type(res) == "table" and type(res.Body) == "string" and #res.Body > 0 then
-return res.Body
-end
-end
-return nil
+	local url = "https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"
+	local ok, body = pcall(function() return game:HttpGet(url) end)
+	if ok and type(body) == "string" and #body > 0 then return body end
+	local requestFunc = (syn and syn.request) or (fluxus and fluxus.request) or (http and http.request) or http_request or request
+	if requestFunc then
+		local okReq, res = pcall(function()
+			return requestFunc({ Url = url, Method = "GET" })
+		end)
+		if okReq and type(res) == "table" and type(res.Body) == "string" and #res.Body > 0 then
+			return res.Body
+		end
+	end
+	return nil
 end
 
 local function loadRayfieldIcons()
-if IconCache.Loaded then
-return
-end
-IconCache.Loaded = true
-local source = fetchRayfieldIconSource()
-if not source then
-warn("[ZethHub] Gagal memuat Rayfield icons.lua, memakai fallback icon.")
-return
-end
-local ok, Icons = pcall(function()
-return loadstring(source)()
-end)
-if not ok or type(Icons) ~= "table" then
-warn("[ZethHub] Rayfield icons.lua gagal dieksekusi, memakai fallback icon.")
-return
-end
-local iconTable = Icons["48px"] or Icons
-for name, data in pairs(iconTable) do
-if type(name) == "string" and type(data) == "table" then
-local assetId = data[1]
-local rectSize = data[2]
-local rectOffset = data[3]
-if
-type(assetId) == "number"
-and type(rectSize) == "table"
-and type(rectOffset) == "table"
-and rectSize[1] and rectSize[2]
-and rectOffset[1] and rectOffset[2]
-then
-local asset = "rbxassetid://" .. assetId
-local rect = {
-ImageRectOffset = Vector2.new(rectOffset[1], rectOffset[2]),
-ImageRectSize = Vector2.new(rectSize[1], rectSize[2]),
-}
-IconCache.Lucide[name] = asset
-IconCache.Rect[name] = rect
-Library.Lucide[name] = asset
-Library.LucideRect[name] = rect
-end
-end
-end
+	if IconCache.Loaded then return end
+	IconCache.Loaded = true
+	local source = fetchRayfieldIconSource()
+	if not source then
+		warn("[ZethHub] Gagal memuat Rayfield icons.lua, memakai fallback icon.")
+		return
+	end
+	local ok, Icons = pcall(function() return loadstring(source)() end)
+	if not ok or type(Icons) ~= "table" then
+		warn("[ZethHub] Rayfield icons.lua gagal dieksekusi, memakai fallback icon.")
+		return
+	end
+	local iconTable = Icons["48px"] or Icons
+	for name, data in pairs(iconTable) do
+		if type(name) == "string" and type(data) == "table" then
+			local assetId, rectSize, rectOffset = data[1], data[2], data[3]
+			if type(assetId) == "number" and type(rectSize) == "table" and type(rectOffset) == "table"
+				and rectSize[1] and rectSize[2] and rectOffset[1] and rectOffset[2] then
+				local asset = "rbxassetid://" .. assetId
+				local rect = {
+					ImageRectOffset = Vector2.new(rectOffset[1], rectOffset[2]),
+					ImageRectSize = Vector2.new(rectSize[1], rectSize[2]),
+				}
+				IconCache.Lucide[name] = asset
+				IconCache.Rect[name] = rect
+				Library.Lucide[name] = asset
+				Library.LucideRect[name] = rect
+			end
+		end
+	end
 end
 loadRayfieldIcons()
 
 local function resolveIcon(icon)
-if icon == nil or icon == false or icon == 0 or icon == "" then
-return nil, nil, nil
-end
-if type(icon) == "number" then
-return "rbxassetid://" .. icon, nil, nil
-end
-if type(icon) == "string" then
-if
-icon:sub(1, 12) == "rbxassetid://" or
-icon:sub(1, 10) == "rbxasset://" or
-icon:sub(1, 11) == "rbxthumb://" or
-icon:sub(1, 7) == "http://" or
-icon:sub(1, 8) == "https://"
-then
-return icon, nil, nil
-end
-local key = string.match(string.lower(icon), "^%s*(.-)%s*$")
-local asset = Library.Lucide[key]
-local rect = Library.LucideRect[key]
-if not asset or asset == "" then
-asset = Library.Lucide["info"]
-rect = Library.LucideRect["info"]
-end
-return asset, rect and rect.ImageRectOffset, rect and rect.ImageRectSize
-end
-return nil, nil, nil
+	if icon == nil or icon == false or icon == 0 or icon == "" then return nil, nil, nil end
+	if type(icon) == "number" then return "rbxassetid://" .. icon, nil, nil end
+	if type(icon) == "string" then
+		if icon:sub(1, 12) == "rbxassetid://" or icon:sub(1, 10) == "rbxasset://"
+			or icon:sub(1, 11) == "rbxthumb://" or icon:sub(1, 7) == "http://" or icon:sub(1, 8) == "https://" then
+			return icon, nil, nil
+		end
+		local key = string.match(string.lower(icon), "^%s*(.-)%s*$")
+		local asset = Library.Lucide[key]
+		local rect = Library.LucideRect[key]
+		if not asset or asset == "" then
+			asset = Library.Lucide["info"]
+			rect = Library.LucideRect["info"]
+		end
+		return asset, rect and rect.ImageRectOffset, rect and rect.ImageRectSize
+	end
+	return nil, nil, nil
 end
 
 local function setIcon(instance, icon)
-if not instance then
-return
-end
-if not (instance:IsA("ImageLabel") or instance:IsA("ImageButton")) then
-return
-end
-local asset, offset, size = resolveIcon(icon)
-instance.Image = asset or ""
-if offset and size then
-instance.ImageRectOffset = offset
-instance.ImageRectSize = size
-else
-instance.ImageRectOffset = Vector2.new(0, 0)
-instance.ImageRectSize = Vector2.new(0, 0)
-end
+	if not instance then return end
+	if not (instance:IsA("ImageLabel") or instance:IsA("ImageButton")) then return end
+	local asset, offset, size = resolveIcon(icon)
+	instance.Image = asset or ""
+	if offset and size then
+		instance.ImageRectOffset = offset
+		instance.ImageRectSize = size
+	else
+		instance.ImageRectOffset = Vector2.new(0, 0)
+		instance.ImageRectSize = Vector2.new(0, 0)
+	end
 end
 
 local function makeIcon(parent, icon, size, pos, color)
-local asset, offset, rectSize = resolveIcon(icon)
-if not asset or asset == "" then
-return nil
-end
-local im = Instance.new("ImageLabel")
-im.Name = "Icon"
-im.Size = size or UDim2.new(0, 16, 0, 16)
-im.Position = pos or UDim2.new(0, 12, 0.5, -8)
-im.BackgroundTransparency = 1
-im.Image = asset
-im.ImageColor3 = color or Theme.Text
-if offset and rectSize then
-im.ImageRectOffset = offset
-im.ImageRectSize = rectSize
-end
-im.Parent = parent
-return im
+	local asset, offset, rectSize = resolveIcon(icon)
+	if not asset or asset == "" then return nil end
+	local im = Instance.new("ImageLabel")
+	im.Name = "Icon"
+	im.Size = size or UDim2.new(0, 16, 0, 16)
+	im.Position = pos or UDim2.new(0, 12, 0.5, -8)
+	im.BackgroundTransparency = 1
+	im.Image = asset
+	im.ImageColor3 = color or Theme.Text
+	if offset and rectSize then
+		im.ImageRectOffset = offset
+		im.ImageRectSize = rectSize
+	end
+	im.Parent = parent
+	return im
 end
 
 local function Tween(obj, dur, props, style, dir)
-local speed = math.max(0.05, tonumber(Library.AnimationSpeed) or 1)
-local info = TweenInfo.new(
-(dur or .3) / speed,
-style or Enum.EasingStyle.Quint,
-dir or Enum.EasingDirection.Out
-)
-local tw = TweenService:Create(obj, info, props)
-tw:Play()
-return tw
+	local speed = math.max(0.05, tonumber(Library.AnimationSpeed) or 1)
+	local info = TweenInfo.new(
+		(dur or .3) / speed,
+		style or Enum.EasingStyle.Quint,
+		dir or Enum.EasingDirection.Out
+	)
+	local tw = TweenService:Create(obj, info, props)
+	tw:Play()
+	return tw
 end
 
 local function Corner(p, r)
-local c = Instance.new("UICorner")
-c.CornerRadius = UDim.new(0, r or 7)
-c.Parent = p
-return c
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, r or 7)
+	c.Parent = p
+	return c
 end
 
 local function Stroke(p, col, th)
-local s = Instance.new("UIStroke")
-s.Color = col or Theme.Border
-s.Thickness = th or Theme.BorderThickness
-s.Transparency = Theme.BorderTransparency or 0
-s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-s.Parent = p
-return s
+	local s = Instance.new("UIStroke")
+	s.Color = col or Theme.Border
+	s.Thickness = th or Theme.BorderThickness
+	s.Transparency = Theme.BorderTransparency or 0
+	s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+	s.Parent = p
+	return s
 end
 
 local function Pad(p, t, l, b, r)
-local d = Instance.new("UIPadding")
-d.PaddingTop = UDim.new(0, t or 0)
-d.PaddingLeft = UDim.new(0, l or 0)
-d.PaddingBottom = UDim.new(0, b or 0)
-d.PaddingRight = UDim.new(0, r or 0)
-d.Parent = p
-return d
+	local d = Instance.new("UIPadding")
+	d.PaddingTop = UDim.new(0, t or 0)
+	d.PaddingLeft = UDim.new(0, l or 0)
+	d.PaddingBottom = UDim.new(0, b or 0)
+	d.PaddingRight = UDim.new(0, r or 0)
+	d.Parent = p
+	return d
 end
 
 local function isPressInput(inp)
-return inp ~= nil and (
-inp.UserInputType == Enum.UserInputType.MouseButton1 or
-inp.UserInputType == Enum.UserInputType.Touch
-)
+	return inp ~= nil and (
+		inp.UserInputType == Enum.UserInputType.MouseButton1 or
+		inp.UserInputType == Enum.UserInputType.Touch
+	)
 end
 
 local function playCloseBlur(btn, overlay, scale, lines, pressColor, textColor)
-if not btn or not btn.Parent then
-return
-end
-if overlay and overlay.Parent then
-overlay.Visible = true
-overlay.Size = UDim2.new(0, 0, 0, 0)
-overlay.BackgroundColor3 = pressColor or Theme.ClosePressed
-overlay.BackgroundTransparency = 0.12
-Tween(
-overlay,
-0.34,
-{
-Size = UDim2.new(0, 76, 0, 76),
-BackgroundTransparency = 1
-},
-Enum.EasingStyle.Quart,
-Enum.EasingDirection.Out
-)
-task.delay(0.35, function()
-if overlay and overlay.Parent then
-overlay.Visible = false
-end
-end)
-end
-if scale and scale.Parent then
-Tween(scale, 0.08, {Scale = 0.82}, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-end
-Tween(btn, 0.08, {BackgroundColor3 = pressColor or Theme.ClosePressed})
-if lines then
-for _, l in ipairs(lines) do
-if l and l.Parent then
-Tween(l, 0.08, {BackgroundColor3 = textColor or Theme.CloseText})
-end
-end
-end
+	if not btn or not btn.Parent then return end
+	if overlay and overlay.Parent then
+		overlay.Visible = true
+		overlay.Size = UDim2.new(0, 0, 0, 0)
+		overlay.BackgroundColor3 = pressColor or Theme.ClosePressed
+		overlay.BackgroundTransparency = 0.12
+		Tween(overlay, 0.34, {
+			Size = UDim2.new(0, 76, 0, 76),
+			BackgroundTransparency = 1,
+		}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+		task.delay(0.35, function()
+			if overlay and overlay.Parent then overlay.Visible = false end
+		end)
+	end
+	if scale and scale.Parent then
+		Tween(scale, 0.08, {Scale = 0.82}, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+	end
+	Tween(btn, 0.08, {BackgroundColor3 = pressColor or Theme.ClosePressed})
+	if lines then
+		for _, l in ipairs(lines) do
+			if l and l.Parent then
+				Tween(l, 0.08, {BackgroundColor3 = textColor or Theme.CloseText})
+			end
+		end
+	end
 end
 
 local function Connect(signal, callback, owner)
-local conn
-conn = signal:Connect(function(...)
-if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
-pcall(function()
-if conn then conn:Disconnect() end
-end)
-return
-end
-if owner and owner._destroyed then
-pcall(function()
-if conn then conn:Disconnect() end
-end)
-return
-end
-callback(...)
-end)
-table.insert(Library._connections, conn)
-if owner and owner._connections then
-table.insert(owner._connections, conn)
-end
-return conn
+	local conn
+	conn = signal:Connect(function(...)
+		if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
+			pcall(function() if conn then conn:Disconnect() end end)
+			return
+		end
+		if owner and owner._destroyed then
+			pcall(function() if conn then conn:Disconnect() end end)
+			return
+		end
+		callback(...)
+	end)
+	table.insert(Library._connections, conn)
+	if owner and owner._connections then
+		table.insert(owner._connections, conn)
+	end
+	return conn
 end
 
 function Library:GetFlag(flag)
-return Library.Flags[flag]
+	return Library.Flags[flag]
 end
 
 local fpsFrames, fpsLast = 0, os.clock()
 Connect(RunService.RenderStepped, function()
-fpsFrames += 1
+	fpsFrames += 1
 end)
 local currentFps, currentPing = 0, 0
 task.spawn(function()
-while true do
-task.wait(1)
-if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
-return
-end
-local now = os.clock()
-currentFps = math.floor(fpsFrames / math.max(now - fpsLast, 0.0001))
-fpsFrames, fpsLast = 0, now
-pcall(function()
-currentPing = math.floor(LocalPlayer:GetNetworkPing() * 1000)
-end)
-end
+	while true do
+		task.wait(1)
+		if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
+		local now = os.clock()
+		currentFps = math.floor(fpsFrames / math.max(now - fpsLast, 0.0001))
+		fpsFrames, fpsLast = 0, now
+		pcall(function()
+			currentPing = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+		end)
+	end
 end)
 
+--// ==========================================================
+--// [V5.7] GLOBAL HELPERS (fix Session, Copy, Rejoin, Quick Bar)
+--// ==========================================================
+local function formatDuration(sec)
+	sec = math.max(0, math.floor(tonumber(sec) or 0))
+	local h = math.floor(sec / 3600)
+	local m = math.floor((sec % 3600) / 60)
+	local s = sec % 60
+	return string.format("%dh %02dm %02ds", h, m, s)
+end
+
+local function copyToClipboard(text)
+	text = tostring(text or "")
+	local fn =
+		(typeof(setclipboard) == "function" and setclipboard)
+		or (typeof(toclipboard) == "function" and toclipboard)
+		or (typeof(setrbxclipboard) == "function" and setrbxclipboard)
+		or (typeof(writeclipboard) == "function" and writeclipboard)
+		or (syn and typeof(syn.write_clipboard) == "function" and syn.write_clipboard)
+		or (typeof(Clipboard) == "table" and typeof(Clipboard.set) == "function" and Clipboard.set)
+		or nil
+	if not fn then return false end
+	local ok = pcall(fn, text)
+	return ok
+end
+
+local function rejoinServer()
+	local ok, err = pcall(function()
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+	end)
+	if ok then return true end
+	local ok2, err2 = pcall(function()
+		TeleportService:Teleport(game.PlaceId, LocalPlayer)
+	end)
+	if ok2 then return true end
+	return false, err2 or err
+end
+
+local function joinScriptText()
+	return string.format(
+		'game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game:GetService("Players").LocalPlayer)',
+		game.PlaceId, tostring(game.JobId)
+	)
+end
+
+local function executeRemoteScript(url, name)
+	name = tostring(name or url)
+	task.spawn(function()
+		local ok, source = pcall(function() return game:HttpGet(url) end)
+		if not ok or type(source) ~= "string" or source == "" then
+			Library:Notify("Gagal fetch: " .. name, 5, "Error", "x-circle")
+			return
+		end
+		local chunk, loadErr = loadstring(source)
+		if not chunk then
+			Library:Notify("Load error: " .. name .. "\n" .. tostring(loadErr), 5, "Error", "x-circle")
+			return
+		end
+		local ran, runErr = pcall(chunk)
+		if not ran then
+			Library:Notify("Runtime error: " .. name .. "\n" .. tostring(runErr), 5, "Error", "x-circle")
+		else
+			Library:Notify("Executed: " .. name, 4, "Success", "check-circle")
+		end
+	end)
+end
+
+--// [V5.7] MOVEMENT MODULE (dipakai Quick Bar)
+Library.Movement = {
+	InfJump = false,
+	WalkSpeedActive = false,
+	WalkSpeedValue = 16,
+	JumpPowerActive = false,
+	JumpPowerValue = 50,
+}
+local Movement = Library.Movement
+
+local function getHumanoid()
+	local char = LocalPlayer.Character
+	if not char then return nil end
+	return char:FindFirstChildOfClass("Humanoid")
+end
+
+local function applyMovement()
+	local hum = getHumanoid()
+	if not hum then return end
+	pcall(function()
+		if Movement.WalkSpeedActive then
+			hum.WalkSpeed = Movement.WalkSpeedValue
+		end
+		if Movement.JumpPowerActive then
+			hum.UseJumpPower = true
+			hum.JumpPower = Movement.JumpPowerValue
+		end
+	end)
+end
+
+function Movement:SetInfJump(on)
+	self.InfJump = on and true or false
+end
+
+function Movement:SetWalkSpeedActive(on)
+	self.WalkSpeedActive = on and true or false
+	if on then
+		applyMovement()
+	else
+		local hum = getHumanoid()
+		if hum then pcall(function() hum.WalkSpeed = 16 end) end
+	end
+end
+
+function Movement:SetWalkSpeed(v)
+	self.WalkSpeedValue = tonumber(v) or 16
+	if self.WalkSpeedActive then applyMovement() end
+end
+
+function Movement:SetJumpPowerActive(on)
+	self.JumpPowerActive = on and true or false
+	if on then
+		applyMovement()
+	else
+		local hum = getHumanoid()
+		if hum then pcall(function() hum.JumpPower = 50 end) end
+	end
+end
+
+function Movement:SetJumpPower(v)
+	self.JumpPowerValue = tonumber(v) or 50
+	if self.JumpPowerActive then applyMovement() end
+end
+
+Connect(UserInputService.JumpRequest, function()
+	if Movement.InfJump then
+		local hum = getHumanoid()
+		if hum then
+			pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
+		end
+	end
+end)
+
+Connect(LocalPlayer.CharacterAdded, function()
+	task.wait(0.5)
+	applyMovement()
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
+		if Movement.WalkSpeedActive or Movement.JumpPowerActive then
+			applyMovement()
+		end
+	end
+end)
+
+--// ==========================================================
+--// THEME MANAGER
+--// ==========================================================
 local ThemeManager = {
-Mode = Library.Rainbow and "RGB Rainbow" or "Solid",
-Time = 0,
-Dirty = true,
-Gradients = {},
-Strokes = {},
+	Mode = Library.Rainbow and "RGB Rainbow" or "Solid",
+	Time = 0,
+	Dirty = true,
+	Gradients = {},
+	Strokes = {},
 }
 
 local function rainbowSeq()
-return ColorSequence.new{
-ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
-ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 150, 0)),
-ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 120)),
-ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 200, 255)),
-ColorSequenceKeypoint.new(0.66, Color3.fromRGB(80, 80, 255)),
-ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 200)),
-ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
-}
+	return ColorSequence.new{
+		ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+		ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 150, 0)),
+		ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 120)),
+		ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 200, 255)),
+		ColorSequenceKeypoint.new(0.66, Color3.fromRGB(80, 80, 255)),
+		ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 200)),
+		ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
+	}
 end
 
 local function accentSeq(c)
-c = (typeof(c) == "Color3" and c) or Color3.new(1, 1, 1)
-return ColorSequence.new{
-ColorSequenceKeypoint.new(0, c:Lerp(Color3.new(0, 0, 0), .45)),
-ColorSequenceKeypoint.new(.5, c:Lerp(Color3.new(1, 1, 1), .2)),
-ColorSequenceKeypoint.new(1, c:Lerp(Color3.new(0, 0, 0), .45)),
-}
+	c = (typeof(c) == "Color3" and c) or Color3.new(1, 1, 1)
+	return ColorSequence.new{
+		ColorSequenceKeypoint.new(0, c:Lerp(Color3.new(0, 0, 0), .45)),
+		ColorSequenceKeypoint.new(.5, c:Lerp(Color3.new(1, 1, 1), .2)),
+		ColorSequenceKeypoint.new(1, c:Lerp(Color3.new(0, 0, 0), .45)),
+	}
 end
 
 local function currentRainbowColor(offset)
-offset = tonumber(offset) or 0
-local speed = tonumber(Theme.RainbowSpeed) or 0.12
-local hue = ((ThemeManager.Time * speed) + offset) % 1
-return Color3.fromHSV(hue, 1, 1)
+	offset = tonumber(offset) or 0
+	local speed = tonumber(Theme.RainbowSpeed) or 0.12
+	local hue = ((ThemeManager.Time * speed) + offset) % 1
+	return Color3.fromHSV(hue, 1, 1)
 end
 
 function ThemeManager:GetColor(offset)
-if ThemeManager.Mode == "RGB Rainbow" then
-return currentRainbowColor(offset)
-end
-return Library.Accent
+	if ThemeManager.Mode == "RGB Rainbow" then
+		return currentRainbowColor(offset)
+	end
+	return Library.Accent
 end
 
 local function refreshRGBColors()
-for i = #ThemeManager.Gradients, 1, -1 do
-local g = ThemeManager.Gradients[i]
-if g and g.Parent then
-g.Color = ThemeManager.Mode == "RGB Rainbow" and rainbowSeq() or accentSeq(Library.Accent)
-else
-table.remove(ThemeManager.Gradients, i)
-end
-end
+	for i = #ThemeManager.Gradients, 1, -1 do
+		local g = ThemeManager.Gradients[i]
+		if g and g.Parent then
+			g.Color = ThemeManager.Mode == "RGB Rainbow" and rainbowSeq() or accentSeq(Library.Accent)
+		else
+			table.remove(ThemeManager.Gradients, i)
+		end
+	end
 end
 
 function ThemeManager:NotifyWindows()
-for _, w in ipairs(Library._windows) do
-if w and not w._destroyed then
-w.accent = Library.Accent
-if type(w.listeners) == "table" then
-for _, fn in ipairs(w.listeners) do
-pcall(fn, w.accent)
-end
-end
-end
-end
+	for _, w in ipairs(Library._windows) do
+		if w and not w._destroyed then
+			w.accent = Library.Accent
+			if type(w.listeners) == "table" then
+				for _, fn in ipairs(w.listeners) do
+					pcall(fn, w.accent)
+				end
+			end
+		end
+	end
 end
 
 function ThemeManager:RefreshWindows()
-for _, w in ipairs(Library._windows) do
-if w and not w._destroyed and type(w.ApplyTheme) == "function" then
-pcall(function()
-w:ApplyTheme()
-end)
-end
-end
+	for _, w in ipairs(Library._windows) do
+		if w and not w._destroyed and type(w.ApplyTheme) == "function" then
+			pcall(function() w:ApplyTheme() end)
+		end
+	end
 end
 
 function ThemeManager:Update()
-if ThemeManager.Mode == "RGB Rainbow" then
-Library.Accent = currentRainbowColor(0)
-refreshRGBColors()
-ThemeManager:NotifyWindows()
-ThemeManager.Dirty = false
-elseif ThemeManager.Dirty then
-refreshRGBColors()
-ThemeManager:NotifyWindows()
-ThemeManager.Dirty = false
-end
+	if ThemeManager.Mode == "RGB Rainbow" then
+		Library.Accent = currentRainbowColor(0)
+		refreshRGBColors()
+		ThemeManager:NotifyWindows()
+		ThemeManager.Dirty = false
+	elseif ThemeManager.Dirty then
+		refreshRGBColors()
+		ThemeManager:NotifyWindows()
+		ThemeManager.Dirty = false
+	end
 end
 
 function ThemeManager:SetMode(mode)
-ThemeManager.Mode = mode
-Library.Rainbow = (mode == "RGB Rainbow")
-if not Library.Rainbow and typeof(Library.Accent) ~= "Color3" then
-Library.Accent = Color3.new(1, 1, 1)
-end
-ThemeManager.Dirty = true
-ThemeManager:Update()
+	ThemeManager.Mode = mode
+	Library.Rainbow = (mode == "RGB Rainbow")
+	if not Library.Rainbow and typeof(Library.Accent) ~= "Color3" then
+		Library.Accent = Color3.new(1, 1, 1)
+	end
+	ThemeManager.Dirty = true
+	ThemeManager:Update()
 end
 
 local function registerRGB(parent)
-if not parent then
-return nil
-end
-if parent:IsA("UIStroke") then
-local data = {
-obj = parent,
-offset = math.random(),
-}
-table.insert(ThemeManager.Strokes, data)
-if ThemeManager.Mode == "RGB Rainbow" then
-parent.Color = currentRainbowColor(data.offset)
-else
-parent.Color = Library.Accent
-end
-return parent
-end
-local g = Instance.new("UIGradient")
-g.Color = ThemeManager.Mode == "RGB Rainbow" and rainbowSeq() or accentSeq(Library.Accent)
-g.Rotation = 35
-g.Parent = parent
-table.insert(ThemeManager.Gradients, g)
-return g
+	if not parent then return nil end
+	if parent:IsA("UIStroke") then
+		local data = { obj = parent, offset = math.random() }
+		table.insert(ThemeManager.Strokes, data)
+		if ThemeManager.Mode == "RGB Rainbow" then
+			parent.Color = currentRainbowColor(data.offset)
+		else
+			parent.Color = Library.Accent
+		end
+		return parent
+	end
+	local g = Instance.new("UIGradient")
+	g.Color = ThemeManager.Mode == "RGB Rainbow" and rainbowSeq() or accentSeq(Library.Accent)
+	g.Rotation = 35
+	g.Parent = parent
+	table.insert(ThemeManager.Gradients, g)
+	return g
 end
 
 local strokeAcc, gradientAcc, accentAcc = 0, 0, 0
 Connect(RunService.RenderStepped, function(dt)
-dt = tonumber(dt) or 0.016
-ThemeManager.Time += dt
-strokeAcc += dt
-if strokeAcc >= 0.03 then
-strokeAcc = 0
-for i = #ThemeManager.Strokes, 1, -1 do
-local data = ThemeManager.Strokes[i]
-if data.obj and data.obj.Parent then
-if ThemeManager.Mode == "RGB Rainbow" then
-data.obj.Color = currentRainbowColor(data.offset + ThemeManager.Time * 0.08)
-else
-data.obj.Color = Library.Accent
-end
-else
-table.remove(ThemeManager.Strokes, i)
-end
-end
-end
-gradientAcc += dt
-if gradientAcc >= 0.04 then
-gradientAcc = 0
-local off = (ThemeManager.Time * 0.18) % 1
-local rot = 35 + math.sin(ThemeManager.Time * 0.7) * 12
-for i = #ThemeManager.Gradients, 1, -1 do
-local g = ThemeManager.Gradients[i]
-if g and g.Parent then
-g.Offset = Vector2.new(off, 0)
-g.Rotation = rot
-else
-table.remove(ThemeManager.Gradients, i)
-end
-end
-end
-accentAcc += dt
-if accentAcc >= 0.10 then
-accentAcc = 0
-ThemeManager:Update()
-end
+	dt = tonumber(dt) or 0.016
+	ThemeManager.Time += dt
+	strokeAcc += dt
+	if strokeAcc >= 0.03 then
+		strokeAcc = 0
+		for i = #ThemeManager.Strokes, 1, -1 do
+			local data = ThemeManager.Strokes[i]
+			if data.obj and data.obj.Parent then
+				if ThemeManager.Mode == "RGB Rainbow" then
+					data.obj.Color = currentRainbowColor(data.offset + ThemeManager.Time * 0.08)
+				else
+					data.obj.Color = Library.Accent
+				end
+			else
+				table.remove(ThemeManager.Strokes, i)
+			end
+		end
+	end
+	gradientAcc += dt
+	if gradientAcc >= 0.04 then
+		gradientAcc = 0
+		local off = (ThemeManager.Time * 0.18) % 1
+		local rot = 35 + math.sin(ThemeManager.Time * 0.7) * 12
+		for i = #ThemeManager.Gradients, 1, -1 do
+			local g = ThemeManager.Gradients[i]
+			if g and g.Parent then
+				g.Offset = Vector2.new(off, 0)
+				g.Rotation = rot
+			else
+				table.remove(ThemeManager.Gradients, i)
+			end
+		end
+	end
+	accentAcc += dt
+	if accentAcc >= 0.10 then
+		accentAcc = 0
+		ThemeManager:Update()
+	end
 end)
 
 function Library:SetRainbow(on)
-ThemeManager:SetMode(on and "RGB Rainbow" or "Solid")
+	ThemeManager:SetMode(on and "RGB Rainbow" or "Solid")
 end
 
 function Library:SetAccent(c)
-if typeof(c) ~= "Color3" then
-return
-end
-Library.Accent = c
-ThemeManager.Dirty = true
-if ThemeManager.Mode ~= "RGB Rainbow" then
-ThemeManager:Update()
-end
+	if typeof(c) ~= "Color3" then return end
+	Library.Accent = c
+	ThemeManager.Dirty = true
+	if ThemeManager.Mode ~= "RGB Rainbow" then
+		ThemeManager:Update()
+	end
 end
 
 function Library:SetTheme(name)
-local preset = Theme.Presets[name]
-if not preset then
-return false
-end
-if type(preset.Colors) == "table" then
-for k, v in pairs(preset.Colors) do
-Theme[k] = v
-end
-end
-if preset.Accent then
-Library.Accent = preset.Accent
-end
-if preset.Rainbow ~= nil then
-ThemeManager:SetMode(preset.Rainbow and "RGB Rainbow" or "Solid")
-else
-ThemeManager.Dirty = true
-ThemeManager:Update()
-end
-ThemeManager:RefreshWindows()
-return true
+	local preset = Theme.Presets[name]
+	if not preset then return false end
+	if type(preset.Colors) == "table" then
+		for k, v in pairs(preset.Colors) do Theme[k] = v end
+	end
+	if preset.Accent then Library.Accent = preset.Accent end
+	if preset.Rainbow ~= nil then
+		ThemeManager:SetMode(preset.Rainbow and "RGB Rainbow" or "Solid")
+	else
+		ThemeManager.Dirty = true
+		ThemeManager:Update()
+	end
+	ThemeManager:RefreshWindows()
+	return true
 end
 
 local function createParticleBackground(parent, count, owner)
-if not Library.Effects.Particles then
-return nil
-end
-count = math.clamp(tonumber(count) or Theme.ParticleCount or 28, 0, 80)
-if count == 0 then
-return nil
-end
-local layer = Instance.new("Frame")
-layer.Name = "ParticleBackground"
-layer.Size = UDim2.new(1, 0, 1, 0)
-layer.BackgroundTransparency = 1
-layer.BorderSizePixel = 0
-layer.ClipsDescendants = true
-layer.ZIndex = 40
-layer.Parent = parent
-local particles = {}
-for _ = 1, count do
-local size = math.random(2, 6)
-local p = Instance.new("Frame")
-p.Name = "Particle"
-p.AnchorPoint = Vector2.new(0.5, 0.5)
-p.Size = UDim2.new(0, size, 0, size)
-p.Position = UDim2.new(math.random(), 0, math.random(), 0)
-p.BackgroundColor3 = Library.Accent
-p.BackgroundTransparency = math.random(55, 88) / 100
-p.BorderSizePixel = 0
-p.ZIndex = 40
-p.Active = false
-p.Parent = layer
-Corner(p, 99)
-table.insert(particles, {
-f = p,
-x = nil,
-y = nil,
-initialized = false,
-vx = (math.random() - 0.5) * 18,
-vy = (math.random() - 0.5) * 18,
-baseT = p.BackgroundTransparency,
-phase = math.random() * math.pi * 2,
-speed = 0.8 + math.random() * 1.2,
-hueOffset = math.random(),
-})
-end
-local lastColorUpdate = 0
-Connect(RunService.RenderStepped, function(dt)
-if not layer or not layer.Parent then
-return
-end
-dt = tonumber(dt) or 0.016
-local size = layer.AbsoluteSize
-if size.X <= 1 or size.Y <= 1 then
-return
-end
-local t = os.clock()
-local updateColor = false
-if t - lastColorUpdate > 0.10 then
-updateColor = true
-lastColorUpdate = t
-end
-for _, d in ipairs(particles) do
-if d.f and d.f.Parent then
-if not d.initialized then
-d.x = math.random() * size.X
-d.y = math.random() * size.Y
-d.initialized = true
-end
-d.x += d.vx * dt
-d.y += d.vy * dt
-if d.x < -12 then
-d.x = size.X + 12
-elseif d.x > size.X + 12 then
-d.x = -12
-end
-if d.y < -12 then
-d.y = size.Y + 12
-elseif d.y > size.Y + 12 then
-d.y = -12
-end
-d.f.Position = UDim2.new(0, d.x, 0, d.y)
-local pulse = 0.5 + 0.5 * math.sin(t * d.speed + d.phase)
-d.f.BackgroundTransparency = math.clamp(d.baseT - pulse * 0.18, 0.05, 0.95)
-if updateColor then
-if ThemeManager.Mode == "RGB Rainbow" then
-d.f.BackgroundColor3 = currentRainbowColor(d.hueOffset)
-else
-d.f.BackgroundColor3 = Library.Accent
-end
-end
-end
-end
-end, owner)
-return layer
+	if not Library.Effects.Particles then return nil end
+	count = math.clamp(tonumber(count) or Theme.ParticleCount or 28, 0, 80)
+	if count == 0 then return nil end
+	local layer = Instance.new("Frame")
+	layer.Name = "ParticleBackground"
+	layer.Size = UDim2.new(1, 0, 1, 0)
+	layer.BackgroundTransparency = 1
+	layer.BorderSizePixel = 0
+	layer.ClipsDescendants = true
+	layer.ZIndex = 40
+	layer.Parent = parent
+	local particles = {}
+	for _ = 1, count do
+		local size = math.random(2, 6)
+		local p = Instance.new("Frame")
+		p.Name = "Particle"
+		p.AnchorPoint = Vector2.new(0.5, 0.5)
+		p.Size = UDim2.new(0, size, 0, size)
+		p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+		p.BackgroundColor3 = Library.Accent
+		p.BackgroundTransparency = math.random(55, 88) / 100
+		p.BorderSizePixel = 0
+		p.ZIndex = 40
+		p.Active = false
+		p.Parent = layer
+		Corner(p, 99)
+		table.insert(particles, {
+			f = p, x = nil, y = nil, initialized = false,
+			vx = (math.random() - 0.5) * 18,
+			vy = (math.random() - 0.5) * 18,
+			baseT = p.BackgroundTransparency,
+			phase = math.random() * math.pi * 2,
+			speed = 0.8 + math.random() * 1.2,
+			hueOffset = math.random(),
+		})
+	end
+	local lastColorUpdate = 0
+	Connect(RunService.RenderStepped, function(dt)
+		if not layer or not layer.Parent then return end
+		dt = tonumber(dt) or 0.016
+		local size = layer.AbsoluteSize
+		if size.X <= 1 or size.Y <= 1 then return end
+		local t = os.clock()
+		local updateColor = false
+		if t - lastColorUpdate > 0.10 then
+			updateColor = true
+			lastColorUpdate = t
+		end
+		for _, d in ipairs(particles) do
+			if d.f and d.f.Parent then
+				if not d.initialized then
+					d.x = math.random() * size.X
+					d.y = math.random() * size.Y
+					d.initialized = true
+				end
+				d.x += d.vx * dt
+				d.y += d.vy * dt
+				if d.x < -12 then d.x = size.X + 12
+				elseif d.x > size.X + 12 then d.x = -12 end
+				if d.y < -12 then d.y = size.Y + 12
+				elseif d.y > size.Y + 12 then d.y = -12 end
+				d.f.Position = UDim2.new(0, d.x, 0, d.y)
+				local pulse = 0.5 + 0.5 * math.sin(t * d.speed + d.phase)
+				d.f.BackgroundTransparency = math.clamp(d.baseT - pulse * 0.18, 0.05, 0.95)
+				if updateColor then
+					if ThemeManager.Mode == "RGB Rainbow" then
+						d.f.BackgroundColor3 = currentRainbowColor(d.hueOffset)
+					else
+						d.f.BackgroundColor3 = Library.Accent
+					end
+				end
+			end
+		end
+	end, owner)
+	return layer
 end
 
 function Library:_RegisterSearch(data)
-if Library._destroyed then
-return
-end
-data.Index = #Library._searchIndex + 1
-data._removed = false
-table.insert(Library._searchIndex, data)
+	if Library._destroyed then return end
+	data.Index = #Library._searchIndex + 1
+	data._removed = false
+	table.insert(Library._searchIndex, data)
 end
 
 function Library:Search(query)
-query = string.lower(tostring(query or ""))
-local out = {}
-if query == "" then
-return out
-end
-for _, item in ipairs(Library._searchIndex) do
-if not item._removed then
-if item.Window and item.Window._destroyed then
-elseif item.Frame and not item.Frame.Parent then
-else
-local keywords = ""
-if type(item.Keywords) == "table" then
-for _, v in ipairs(item.Keywords) do
-keywords = keywords .. " " .. tostring(v)
-end
-end
-local hay = string.lower(table.concat({
-tostring(item.Name or ""),
-tostring(item.Type or ""),
-tostring(item.TabName or ""),
-tostring(item.Flag or ""),
-keywords,
-}, " "))
-if string.find(hay, query, 1, true) then
-table.insert(out, item)
-end
-end
-end
-end
-table.sort(out, function(a, b)
-return string.len(tostring(a.Name or "")) < string.len(tostring(b.Name or ""))
-end)
-return out
+	query = string.lower(tostring(query or ""))
+	local out = {}
+	if query == "" then return out end
+	for _, item in ipairs(Library._searchIndex) do
+		if not item._removed then
+			if item.Window and item.Window._destroyed then
+			elseif item.Frame and not item.Frame.Parent then
+			else
+				local keywords = ""
+				if type(item.Keywords) == "table" then
+					for _, v in ipairs(item.Keywords) do
+						keywords = keywords .. " " .. tostring(v)
+					end
+				end
+				local hay = string.lower(table.concat({
+					tostring(item.Name or ""),
+					tostring(item.Type or ""),
+					tostring(item.TabName or ""),
+					tostring(item.Flag or ""),
+					keywords,
+				}, " "))
+				if string.find(hay, query, 1, true) then
+					table.insert(out, item)
+				end
+			end
+		end
+	end
+	table.sort(out, function(a, b)
+		return string.len(tostring(a.Name or "")) < string.len(tostring(b.Name or ""))
+	end)
+	return out
 end
 
 local function registerElement(windowRef, tabRef, tabName, frameRef, cfgRef, elementType, objRef)
-cfgRef = cfgRef or {}
-local displayName = cfgRef.Name or cfgRef.Title or elementType
-local flag = cfgRef.Flag
-if flag and flag ~= "" then
-Library._elements[flag] = {
-Type = elementType,
-Object = objRef,
-Name = displayName,
-Tab = tabRef,
-TabName = tabName,
-Frame = frameRef,
-Window = windowRef,
-Config = cfgRef,
-}
-end
-Library:_RegisterSearch({
-Name = displayName,
-Type = elementType,
-Tab = tabRef,
-TabName = tabName,
-Frame = frameRef,
-Flag = flag,
-Keywords = cfgRef.Keywords,
-Window = windowRef,
-})
-return objRef
+	cfgRef = cfgRef or {}
+	local displayName = cfgRef.Name or cfgRef.Title or elementType
+	local flag = cfgRef.Flag
+	if flag and flag ~= "" then
+		Library._elements[flag] = {
+			Type = elementType, Object = objRef, Name = displayName,
+			Tab = tabRef, TabName = tabName, Frame = frameRef,
+			Window = windowRef, Config = cfgRef,
+		}
+	end
+	Library:_RegisterSearch({
+		Name = displayName, Type = elementType, Tab = tabRef, TabName = tabName,
+		Frame = frameRef, Flag = flag, Keywords = cfgRef.Keywords, Window = windowRef,
+	})
+	return objRef
 end
 
+--// ==========================================================
+--// SAVE / LOAD SYSTEM
+--// ==========================================================
 local SAVE_FOLDER = "ZethHub/Saves"
+
 local function sanitizeFileName(name)
-name = tostring(name or "autosave")
-name = name:gsub("[^%w_%-%.]", "_")
-name = name:gsub("^_+", ""):gsub("_+$", "")
-if name == "" then
-name = "autosave"
-end
-if #name > 64 then
-name = name:sub(1, 64)
-end
-return name
+	name = tostring(name or "autosave")
+	name = name:gsub("[^%w_%-%.]", "_")
+	name = name:gsub("^_+", ""):gsub("_+$", "")
+	if name == "" then name = "autosave" end
+	if #name > 64 then name = name:sub(1, 64) end
+	return name
 end
 
 local function saveFilePath(name)
-return SAVE_FOLDER .. "/" .. sanitizeFileName(name) .. ".json"
+	return SAVE_FOLDER .. "/" .. sanitizeFileName(name) .. ".json"
 end
 
 local function ensureFolder()
-if typeof(makefolder) == "function" then
-pcall(makefolder, SAVE_FOLDER)
-end
+	if typeof(makefolder) == "function" then
+		pcall(makefolder, SAVE_FOLDER)
+	end
 end
 
 local function listSaveFiles()
-local files = {}
-if typeof(listfiles) ~= "function" then
-return files
-end
-ensureFolder()
-local ok, res = pcall(listfiles, SAVE_FOLDER)
-if ok and type(res) == "table" then
-for _, v in ipairs(res) do
-local s = tostring(v)
-local name = s:match("([^/\\]+)%.json$") or s:match("^([%w_%-%.]+)%.json$")
-if name then
-files[#files + 1] = name
-end
-end
-end
-table.sort(files)
-return files
+	local files = {}
+	if typeof(listfiles) ~= "function" then return files end
+	ensureFolder()
+	local ok, res = pcall(listfiles, SAVE_FOLDER)
+	if ok and type(res) == "table" then
+		for _, v in ipairs(res) do
+			local s = tostring(v)
+			local name = s:match("([^/\\]+)%.json$") or s:match("^([%w_%-%.]+)%.json$")
+			if name then files[#files + 1] = name end
+		end
+	end
+	table.sort(files)
+	return files
 end
 
 local function getSaveOptions()
-local files = listSaveFiles()
-if #files == 0 then
-return { "(no saves)" }
-end
-return files
+	local files = listSaveFiles()
+	if #files == 0 then return { "(no saves)" } end
+	return files
 end
 
 local function writeSaveRaw(name, text)
-if typeof(writefile) ~= "function" then
-return false, "writefile tidak tersedia di executor ini."
-end
-ensureFolder()
-local ok = pcall(writefile, saveFilePath(name), text)
-return ok, ok and nil or "Gagal menulis file."
+	if typeof(writefile) ~= "function" then
+		return false, "writefile tidak tersedia di executor ini."
+	end
+	ensureFolder()
+	local ok = pcall(writefile, saveFilePath(name), text)
+	return ok, ok and nil or "Gagal menulis file."
 end
 
 local function readSaveRaw(name)
-if typeof(readfile) ~= "function" then
-return nil, "readfile tidak tersedia di executor ini."
-end
-if typeof(isfile) == "function" then
-local ok, exists = pcall(isfile, saveFilePath(name))
-if not ok or not exists then
-return nil, "File tidak ditemukan."
-end
-end
-local ok, content = pcall(readfile, saveFilePath(name))
-if ok and type(content) == "string" and #content > 0 then
-return content
-end
-return nil, "Gagal membaca file."
+	if typeof(readfile) ~= "function" then
+		return nil, "readfile tidak tersedia di executor ini."
+	end
+	if typeof(isfile) == "function" then
+		local ok, exists = pcall(isfile, saveFilePath(name))
+		if not ok or not exists then return nil, "File tidak ditemukan." end
+	end
+	local ok, content = pcall(readfile, saveFilePath(name))
+	if ok and type(content) == "string" and #content > 0 then
+		return content
+	end
+	return nil, "Gagal membaca file."
 end
 
 local function encodeValue(v)
-if typeof(v) == "Color3" then
-return {
-__type = "Color3",
-R = v.R,
-G = v.G,
-B = v.B,
-}
-elseif typeof(v) == "EnumItem" and v.EnumType == Enum.KeyCode then
-return {
-__type = "KeyCode",
-Name = v.Name,
-}
-end
-return v
+	if typeof(v) == "Color3" then
+		return { __type = "Color3", R = v.R, G = v.G, B = v.B }
+	elseif typeof(v) == "EnumItem" and v.EnumType == Enum.KeyCode then
+		return { __type = "KeyCode", Name = v.Name }
+	end
+	return v
 end
 
 local function decodeValue(v)
-if type(v) == "table" then
-if v.__type == "Color3" then
-return Color3.new(v.R or 1, v.G or 1, v.B or 1)
-elseif v.__type == "KeyCode" then
-return Enum.KeyCode[v.Name] or Enum.KeyCode.Unknown
-end
-end
-return v
+	if type(v) == "table" then
+		if v.__type == "Color3" then
+			return Color3.new(v.R or 1, v.G or 1, v.B or 1)
+		elseif v.__type == "KeyCode" then
+			return Enum.KeyCode[v.Name] or Enum.KeyCode.Unknown
+		end
+	end
+	return v
 end
 
 function Library:SaveToFile(name)
-name = sanitizeFileName(name)
-local values = {}
-for flag, val in pairs(Library.Flags) do
-values[flag] = encodeValue(val)
-end
-local placeId = 0
-pcall(function()
-placeId = game.PlaceId
-end)
-local payload = {
-Meta = {
-Library = "ZethHub",
-Version = 5.3,
-SavedAt = os.time(),
-PlaceId = placeId,
-FileName = name,
-},
-Values = values,
-}
-local okEnc, encoded = pcall(function()
-return HttpService:JSONEncode(payload)
-end)
-if not okEnc then
-return false, "Gagal encode JSON."
-end
-return writeSaveRaw(name, encoded)
+	name = sanitizeFileName(name)
+	local values = {}
+	for flag, val in pairs(Library.Flags) do
+		values[flag] = encodeValue(val)
+	end
+	local placeId = 0
+	pcall(function() placeId = game.PlaceId end)
+	local payload = {
+		Meta = {
+			Library = "ZethHub", Version = 5.7,
+			SavedAt = os.time(), PlaceId = placeId, FileName = name,
+		},
+		Values = values,
+	}
+	local okEnc, encoded = pcall(function()
+		return HttpService:JSONEncode(payload)
+	end)
+	if not okEnc then return false, "Gagal encode JSON." end
+	return writeSaveRaw(name, encoded)
 end
 
 function Library:LoadFromFile(name)
-name = sanitizeFileName(name)
-local raw, err = readSaveRaw(name)
-if not raw then
-return false, err
-end
-local ok, data = pcall(function()
-return HttpService:JSONDecode(raw)
-end)
-if not ok or type(data) ~= "table" then
-return false, "File save rusak / bukan JSON valid."
-end
-Library._loading = true
-for flag, encoded in pairs(data.Values or {}) do
-local value = decodeValue(encoded)
-Library.Flags[flag] = value
-local el = Library._elements[flag]
-if el and el.Object then
-pcall(function()
-if el.Type == "toggle" then
-el.Object:Set(value)
-elseif el.Type == "slider" then
-el.Object:Set(value)
-elseif el.Type == "textbox" or el.Type == "input" then
-el.Object:Set(tostring(value or ""))
-elseif el.Type == "dropdown" then
-el.Object:Set(tostring(value or ""))
-elseif el.Type == "multidropdown" then
-el.Object:Set(value)
-elseif el.Type == "keybind" then
-local kc = value
-if typeof(kc) == "string" then
-kc = Enum.KeyCode[kc] or Enum.KeyCode.Unknown
-end
-if typeof(kc) == "EnumItem" and kc.EnumType == Enum.KeyCode then
-el.Object:SetKey(kc)
-end
-elseif el.Type == "colorpicker" then
-if typeof(value) == "Color3" then
-el.Object:Set(value)
-end
-end
-end)
-end
-end
-Library._loading = false
-Library._saveFile = name
-return true
+	name = sanitizeFileName(name)
+	local raw, err = readSaveRaw(name)
+	if not raw then return false, err end
+	local ok, data = pcall(function()
+		return HttpService:JSONDecode(raw)
+	end)
+	if not ok or type(data) ~= "table" then
+		return false, "File save rusak / bukan JSON valid."
+	end
+	Library._loading = true
+	for flag, encoded in pairs(data.Values or {}) do
+		local value = decodeValue(encoded)
+		Library.Flags[flag] = value
+		local el = Library._elements[flag]
+		if el and el.Object then
+			pcall(function()
+				if el.Type == "toggle" then
+					el.Object:Set(value)
+				elseif el.Type == "slider" then
+					el.Object:Set(value)
+				elseif el.Type == "textbox" or el.Type == "input" then
+					el.Object:Set(tostring(value or ""))
+				elseif el.Type == "dropdown" then
+					el.Object:Set(tostring(value or ""))
+				elseif el.Type == "multidropdown" then
+					el.Object:Set(value)
+				elseif el.Type == "keybind" then
+					local kc = value
+					if typeof(kc) == "string" then
+						kc = Enum.KeyCode[kc] or Enum.KeyCode.Unknown
+					end
+					if typeof(kc) == "EnumItem" and kc.EnumType == Enum.KeyCode then
+						el.Object:SetKey(kc)
+					end
+				elseif el.Type == "colorpicker" then
+					if typeof(value) == "Color3" then
+						el.Object:Set(value)
+					end
+				end
+			end)
+		end
+	end
+	Library._loading = false
+	Library._saveFile = name
+	return true
 end
 
 function Library:DeleteSave(name)
-name = sanitizeFileName(name)
-local del = nil
-if typeof(delfile) == "function" then
-del = delfile
-elseif typeof(deletefile) == "function" then
-del = deletefile
-end
-if not del then
-return false, "delfile / deletefile tidak tersedia."
-end
-local ok = pcall(del, saveFilePath(name))
-return ok, ok and nil or "Gagal menghapus file."
+	name = sanitizeFileName(name)
+	local del = nil
+	if typeof(delfile) == "function" then
+		del = delfile
+	elseif typeof(deletefile) == "function" then
+		del = deletefile
+	end
+	if not del then return false, "delfile / deletefile tidak tersedia." end
+	local ok = pcall(del, saveFilePath(name))
+	return ok, ok and nil or "Gagal menghapus file."
 end
 
 task.spawn(function()
-local timer = 0
-while true do
-task.wait(1)
-if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
-return
-end
-if Library.AutoSave.Enabled then
-timer += 1
-local interval = math.max(5, tonumber(Library.AutoSave.Interval) or 60)
-if timer >= interval then
-timer = 0
-pcall(function()
-Library:SaveToFile(Library._saveFile or Library.AutoSave.File or "autosave")
-end)
-end
-else
-timer = 0
-end
-end
+	local timer = 0
+	while true do
+		task.wait(1)
+		if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
+		if Library.AutoSave.Enabled then
+			timer += 1
+			local interval = math.max(5, tonumber(Library.AutoSave.Interval) or 60)
+			if timer >= interval then
+				timer = 0
+				pcall(function()
+					Library:SaveToFile(Library._saveFile or Library.AutoSave.File or "autosave")
+				end)
+			end
+		else
+			timer = 0
+		end
+	end
 end)
 
+--// ==========================================================
+--// NOTIFICATION SYSTEM
+--// ==========================================================
 Library.NotificationWidth = Library.NotificationWidth or 320
 Library.NotificationRightOffset = Library.NotificationRightOffset or 16
 Library.NotificationTopOffset = Library.NotificationTopOffset or 12
@@ -1357,328 +1277,280 @@ NotifGui.ResetOnSpawn = false
 NotifGui.DisplayOrder = 9999
 NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 NotifGui.IgnoreGuiInset = true
-pcall(function()
-NotifGui.Parent = game:GetService("CoreGui")
-end)
+pcall(function() NotifGui.Parent = game:GetService("CoreGui") end)
 if not NotifGui.Parent then
-pcall(function()
-NotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end)
+	pcall(function() NotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
 end
 
 local notifyContainer
 local notifyList
+
 local function rebuildNotifyContainer()
-if not NotifGui or not NotifGui.Parent then
-NotifGui = Instance.new("ScreenGui")
-NotifGui.Name = "ZethNotifies"
-NotifGui.ResetOnSpawn = false
-NotifGui.DisplayOrder = 999
-NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-NotifGui.IgnoreGuiInset = true
-pcall(function()
-NotifGui.Parent = game:GetService("CoreGui")
-end)
-if not NotifGui.Parent then
-pcall(function()
-NotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end)
-end
-end
-if not notifyContainer or not notifyContainer.Parent then
-notifyContainer = Instance.new("Frame")
-notifyContainer.Name = "NotifyContainer"
-notifyContainer.Size = UDim2.new(0, Library.NotificationWidth, 1, -24)
-notifyContainer.Position = UDim2.new(
-1,
--(Library.NotificationWidth + Library.NotificationRightOffset),
-0,
-Library.NotificationTopOffset
-)
-notifyContainer.BackgroundTransparency = 1
-notifyContainer.BorderSizePixel = 0
-notifyContainer.Parent = NotifGui
-notifyList = Instance.new("UIListLayout")
-notifyList.SortOrder = Enum.SortOrder.LayoutOrder
-notifyList.Padding = UDim.new(0, 8)
-notifyList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-notifyList.VerticalAlignment = Enum.VerticalAlignment.Top
-notifyList.Parent = notifyContainer
-end
+	if not NotifGui or not NotifGui.Parent then
+		NotifGui = Instance.new("ScreenGui")
+		NotifGui.Name = "ZethNotifies"
+		NotifGui.ResetOnSpawn = false
+		NotifGui.DisplayOrder = 999
+		NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+		NotifGui.IgnoreGuiInset = true
+		pcall(function() NotifGui.Parent = game:GetService("CoreGui") end)
+		if not NotifGui.Parent then
+			pcall(function() NotifGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
+		end
+	end
+	if not notifyContainer or not notifyContainer.Parent then
+		notifyContainer = Instance.new("Frame")
+		notifyContainer.Name = "NotifyContainer"
+		notifyContainer.Size = UDim2.new(0, Library.NotificationWidth, 1, -24)
+		notifyContainer.Position = UDim2.new(
+			1, -(Library.NotificationWidth + Library.NotificationRightOffset),
+			0, Library.NotificationTopOffset
+		)
+		notifyContainer.BackgroundTransparency = 1
+		notifyContainer.BorderSizePixel = 0
+		notifyContainer.Parent = NotifGui
+		notifyList = Instance.new("UIListLayout")
+		notifyList.SortOrder = Enum.SortOrder.LayoutOrder
+		notifyList.Padding = UDim.new(0, 8)
+		notifyList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		notifyList.VerticalAlignment = Enum.VerticalAlignment.Top
+		notifyList.Parent = notifyContainer
+	end
 end
 rebuildNotifyContainer()
 
--- [FIX] PASTIKAN \n DITULIS SEBAGAI BACKSLASH DAN N, BUKAN ENTER ASLI
 local function notifyToText(value)
-if type(value) == "table" then
-return table.concat(value, "\n")
-end
-return tostring(value or "")
+	if type(value) == "table" then
+		return table.concat(value, "\n")
+	end
+	return tostring(value or "")
 end
 
 function Library:Notify(...)
-if Library._destroyed then
-return
-end
-local first = ...
-local cfg
-if type(first) == "table" then
-cfg = first
-else
-cfg = {
-Content = first,
-Duration = select(2, ...),
-Title = select(3, ...),
-Image = select(4, ...),
-}
-end
-local content = notifyToText(cfg.Content or cfg.Text or cfg.Message or "")
-local title = notifyToText(cfg.Title or cfg.title or "")
-local image = cfg.Image or cfg.Icon or cfg.icon
-if image == nil and (title ~= "" or content ~= "") then
-image = "info"
-end
-local duration = tonumber(cfg.Duration or cfg.duration) or 5
-if duration < 0.1 then
-duration = 0.1
-end
-local accent = cfg.Color or cfg.Accent or Library.Accent
-if typeof(accent) ~= "Color3" then
-accent = Library.Accent
-end
-local hasTitle = title ~= ""
-local hasContent = content ~= ""
-local hasIcon = image ~= nil and image ~= "" and image ~= 0
-if not hasTitle and not hasContent and not hasIcon then
-return
-end
-Library._notifyOrder = (Library._notifyOrder or 0) - 1
-local order = Library._notifyOrder
-task.spawn(function()
-if Library._destroyed then
-return
-end
-rebuildNotifyContainer()
-local holder = Instance.new("Frame")
-holder.Name = "NotifyHolder"
-holder.Size = UDim2.new(1, 0, 0, 0)
-holder.AutomaticSize = Enum.AutomaticSize.Y
-holder.BackgroundTransparency = 1
-holder.BorderSizePixel = 0
-holder.ClipsDescendants = true
-holder.LayoutOrder = order
-holder.Parent = notifyContainer
-local n = Instance.new("Frame")
-n.Name = "Notification"
-n.Size = UDim2.new(1, 0, 0, 0)
-n.AutomaticSize = Enum.AutomaticSize.Y
-n.BackgroundColor3 = Theme.Element
-n.BackgroundTransparency = 1
-n.BorderSizePixel = 0
-n.ClipsDescendants = true
-n.Position = UDim2.new(1, 36, 0, 0)
-n.Parent = holder
-Corner(n, 10)
-local stroke = Stroke(n, Color3.new(1, 1, 1), 1.5)
-stroke.Transparency = 1
-registerRGB(stroke)
-local nPad = Instance.new("UIPadding")
-nPad.PaddingTop = UDim.new(0, 12)
-nPad.PaddingLeft = UDim.new(0, 12)
-nPad.PaddingBottom = UDim.new(0, 10)
-nPad.PaddingRight = UDim.new(0, 12)
-nPad.Parent = n
-local nList = Instance.new("UIListLayout")
-nList.SortOrder = Enum.SortOrder.LayoutOrder
-nList.Padding = UDim.new(0, 8)
-nList.HorizontalAlignment = Enum.HorizontalAlignment.Center
-nList.VerticalAlignment = Enum.VerticalAlignment.Top
-nList.Parent = n
-local row = Instance.new("Frame")
-row.Name = "Row"
-row.Size = UDim2.new(1, 0, 0, 0)
-row.AutomaticSize = Enum.AutomaticSize.Y
-row.BackgroundTransparency = 1
-row.BorderSizePixel = 0
-row.LayoutOrder = 1
-row.Parent = n
-local rowLayout = Instance.new("UIListLayout")
-rowLayout.FillDirection = Enum.FillDirection.Horizontal
-rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
-rowLayout.Padding = UDim.new(0, 10)
-rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-rowLayout.Parent = row
-local icon
-if hasIcon then
-icon = Instance.new("ImageLabel")
-icon.Name = "Icon"
-icon.Size = UDim2.new(0, 32, 0, 32)
-icon.BackgroundTransparency = 1
-icon.ImageTransparency = 1
-icon.ImageColor3 = accent
-icon.LayoutOrder = 1
-icon.Parent = row
-setIcon(icon, image)
-end
-local textBox = Instance.new("Frame")
-textBox.Name = "TextBox"
-textBox.Size = UDim2.new(1, hasIcon and -42 or 0, 0, 0)
-textBox.AutomaticSize = Enum.AutomaticSize.Y
-textBox.BackgroundTransparency = 1
-textBox.BorderSizePixel = 0
-textBox.LayoutOrder = 2
-textBox.Parent = row
-local textList = Instance.new("UIListLayout")
-textList.SortOrder = Enum.SortOrder.LayoutOrder
-textList.Padding = UDim.new(0, 3)
-textList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-textList.VerticalAlignment = Enum.VerticalAlignment.Top
-textList.Parent = textBox
-local titleLbl
-local contentLbl
-if hasTitle then
-titleLbl = Instance.new("TextLabel")
-titleLbl.Name = "Title"
-titleLbl.Size = UDim2.new(1, 0, 0, 0)
-titleLbl.AutomaticSize = Enum.AutomaticSize.Y
-titleLbl.BackgroundTransparency = 1
-titleLbl.Text = title
-titleLbl.TextColor3 = accent
-titleLbl.TextSize = 14
-titleLbl.Font = Enum.Font.GothamBold
-titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-titleLbl.TextYAlignment = Enum.TextYAlignment.Top
-titleLbl.TextWrapped = true
-titleLbl.TextTransparency = 1
-titleLbl.LayoutOrder = 1
-titleLbl.Parent = textBox
-end
-if hasContent then
-contentLbl = Instance.new("TextLabel")
-contentLbl.Name = "Content"
-contentLbl.Size = UDim2.new(1, 0, 0, 0)
-contentLbl.AutomaticSize = Enum.AutomaticSize.Y
-contentLbl.BackgroundTransparency = 1
-contentLbl.Text = content
-contentLbl.TextColor3 = Color3.fromRGB(232, 232, 232)
-contentLbl.TextSize = 12
-contentLbl.Font = Enum.Font.Gotham
-contentLbl.TextXAlignment = Enum.TextXAlignment.Left
-contentLbl.TextYAlignment = Enum.TextYAlignment.Top
-contentLbl.TextWrapped = true
-contentLbl.TextTransparency = 1
-contentLbl.LayoutOrder = 2
-contentLbl.Parent = textBox
-end
-local track = Instance.new("Frame")
-track.Name = "ProgressTrack"
-track.Size = UDim2.new(1, 0, 0, 4)
-track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-track.BackgroundTransparency = 0.25
-track.BorderSizePixel = 0
-track.ClipsDescendants = true
-track.LayoutOrder = 2
-track.Parent = n
-Corner(track, 99)
-local fill = Instance.new("Frame")
-fill.Name = "ProgressFill"
-fill.Size = UDim2.new(1, 0, 1, 0)
-fill.BackgroundColor3 = accent
-fill.BorderSizePixel = 0
-fill.Parent = track
-Corner(fill, 99)
-task.wait()
-Tween(
-n,
-0.35,
-{
-Position = UDim2.new(0, 0, 0, 0),
-BackgroundTransparency = 0,
-},
-Enum.EasingStyle.Back,
-Enum.EasingDirection.Out
-)
-Tween(stroke, 0.35, {Transparency = 0})
-if icon then
-Tween(icon, 0.28, {ImageTransparency = 0})
-end
-if titleLbl then
-Tween(titleLbl, 0.28, {TextTransparency = 0})
-end
-if contentLbl then
-Tween(contentLbl, 0.28, {TextTransparency = 0})
-end
-Tween(
-fill,
-duration,
-{Size = UDim2.new(0, 0, 1, 0)},
-Enum.EasingStyle.Linear,
-Enum.EasingDirection.Out
-)
-task.delay(duration, function()
-if not holder or not holder.Parent then
-return
-end
-Tween(
-n,
-0.3,
-{
-Position = UDim2.new(1, 36, 0, 0),
-BackgroundTransparency = 1,
-},
-Enum.EasingStyle.Quint,
-Enum.EasingDirection.In
-)
-Tween(stroke, 0.3, {Transparency = 1})
-if icon then
-Tween(icon, 0.25, {ImageTransparency = 1})
-end
-if titleLbl then
-Tween(titleLbl, 0.25, {TextTransparency = 1})
-end
-if contentLbl then
-Tween(contentLbl, 0.25, {TextTransparency = 1})
-end
-task.delay(0.32, function()
-if holder and holder.Parent then
-holder:Destroy()
-end
-end)
-end)
-end)
+	if Library._destroyed then return end
+	local first = ...
+	local cfg
+	if type(first) == "table" then
+		cfg = first
+	else
+		cfg = {
+			Content = first,
+			Duration = select(2, ...),
+			Title = select(3, ...),
+			Image = select(4, ...),
+		}
+	end
+	local content = notifyToText(cfg.Content or cfg.Text or cfg.Message or "")
+	local title = notifyToText(cfg.Title or cfg.title or "")
+	local image = cfg.Image or cfg.Icon or cfg.icon
+	if image == nil and (title ~= "" or content ~= "") then
+		image = "info"
+	end
+	local duration = tonumber(cfg.Duration or cfg.duration) or 5
+	if duration < 0.1 then duration = 0.1 end
+	local accent = cfg.Color or cfg.Accent or Library.Accent
+	if typeof(accent) ~= "Color3" then accent = Library.Accent end
+	local hasTitle = title ~= ""
+	local hasContent = content ~= ""
+	local hasIcon = image ~= nil and image ~= "" and image ~= 0
+	if not hasTitle and not hasContent and not hasIcon then return end
+	Library._notifyOrder = (Library._notifyOrder or 0) - 1
+	local order = Library._notifyOrder
+	task.spawn(function()
+		if Library._destroyed then return end
+		rebuildNotifyContainer()
+		local holder = Instance.new("Frame")
+		holder.Name = "NotifyHolder"
+		holder.Size = UDim2.new(1, 0, 0, 0)
+		holder.AutomaticSize = Enum.AutomaticSize.Y
+		holder.BackgroundTransparency = 1
+		holder.BorderSizePixel = 0
+		holder.ClipsDescendants = true
+		holder.LayoutOrder = order
+		holder.Parent = notifyContainer
+		local n = Instance.new("Frame")
+		n.Name = "Notification"
+		n.Size = UDim2.new(1, 0, 0, 0)
+		n.AutomaticSize = Enum.AutomaticSize.Y
+		n.BackgroundColor3 = Theme.Element
+		n.BackgroundTransparency = 1
+		n.BorderSizePixel = 0
+		n.ClipsDescendants = true
+		n.Position = UDim2.new(1, 36, 0, 0)
+		n.Parent = holder
+		Corner(n, 10)
+		local stroke = Stroke(n, Color3.new(1, 1, 1), 1.5)
+		stroke.Transparency = 1
+		registerRGB(stroke)
+		local nPad = Instance.new("UIPadding")
+		nPad.PaddingTop = UDim.new(0, 12)
+		nPad.PaddingLeft = UDim.new(0, 12)
+		nPad.PaddingBottom = UDim.new(0, 10)
+		nPad.PaddingRight = UDim.new(0, 12)
+		nPad.Parent = n
+		local nList = Instance.new("UIListLayout")
+		nList.SortOrder = Enum.SortOrder.LayoutOrder
+		nList.Padding = UDim.new(0, 8)
+		nList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+		nList.VerticalAlignment = Enum.VerticalAlignment.Top
+		nList.Parent = n
+		local row = Instance.new("Frame")
+		row.Name = "Row"
+		row.Size = UDim2.new(1, 0, 0, 0)
+		row.AutomaticSize = Enum.AutomaticSize.Y
+		row.BackgroundTransparency = 1
+		row.BorderSizePixel = 0
+		row.LayoutOrder = 1
+		row.Parent = n
+		local rowLayout = Instance.new("UIListLayout")
+		rowLayout.FillDirection = Enum.FillDirection.Horizontal
+		rowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+		rowLayout.Padding = UDim.new(0, 10)
+		rowLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		rowLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+		rowLayout.Parent = row
+		local icon
+		if hasIcon then
+			icon = Instance.new("ImageLabel")
+			icon.Name = "Icon"
+			icon.Size = UDim2.new(0, 32, 0, 32)
+			icon.BackgroundTransparency = 1
+			icon.ImageTransparency = 1
+			icon.ImageColor3 = accent
+			icon.LayoutOrder = 1
+			icon.Parent = row
+			setIcon(icon, image)
+		end
+		local textBox = Instance.new("Frame")
+		textBox.Name = "TextBox"
+		textBox.Size = UDim2.new(1, hasIcon and -42 or 0, 0, 0)
+		textBox.AutomaticSize = Enum.AutomaticSize.Y
+		textBox.BackgroundTransparency = 1
+		textBox.BorderSizePixel = 0
+		textBox.LayoutOrder = 2
+		textBox.Parent = row
+		local textList = Instance.new("UIListLayout")
+		textList.SortOrder = Enum.SortOrder.LayoutOrder
+		textList.Padding = UDim.new(0, 3)
+		textList.HorizontalAlignment = Enum.HorizontalAlignment.Left
+		textList.VerticalAlignment = Enum.VerticalAlignment.Top
+		textList.Parent = textBox
+		local titleLbl
+		local contentLbl
+		if hasTitle then
+			titleLbl = Instance.new("TextLabel")
+			titleLbl.Name = "Title"
+			titleLbl.Size = UDim2.new(1, 0, 0, 0)
+			titleLbl.AutomaticSize = Enum.AutomaticSize.Y
+			titleLbl.BackgroundTransparency = 1
+			titleLbl.Text = title
+			titleLbl.TextColor3 = accent
+			titleLbl.TextSize = 14
+			titleLbl.Font = Enum.Font.GothamBold
+			titleLbl.TextXAlignment = Enum.TextXAlignment.Left
+			titleLbl.TextYAlignment = Enum.TextYAlignment.Top
+			titleLbl.TextWrapped = true
+			titleLbl.TextTransparency = 1
+			titleLbl.LayoutOrder = 1
+			titleLbl.Parent = textBox
+		end
+		if hasContent then
+			contentLbl = Instance.new("TextLabel")
+			contentLbl.Name = "Content"
+			contentLbl.Size = UDim2.new(1, 0, 0, 0)
+			contentLbl.AutomaticSize = Enum.AutomaticSize.Y
+			contentLbl.BackgroundTransparency = 1
+			contentLbl.Text = content
+			contentLbl.TextColor3 = Color3.fromRGB(232, 232, 232)
+			contentLbl.TextSize = 12
+			contentLbl.Font = Enum.Font.Gotham
+			contentLbl.TextXAlignment = Enum.TextXAlignment.Left
+			contentLbl.TextYAlignment = Enum.TextYAlignment.Top
+			contentLbl.TextWrapped = true
+			contentLbl.TextTransparency = 1
+			contentLbl.LayoutOrder = 2
+			contentLbl.Parent = textBox
+		end
+		local track = Instance.new("Frame")
+		track.Name = "ProgressTrack"
+		track.Size = UDim2.new(1, 0, 0, 4)
+		track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+		track.BackgroundTransparency = 0.25
+		track.BorderSizePixel = 0
+		track.ClipsDescendants = true
+		track.LayoutOrder = 2
+		track.Parent = n
+		Corner(track, 99)
+		local fill = Instance.new("Frame")
+		fill.Name = "ProgressFill"
+		fill.Size = UDim2.new(1, 0, 1, 0)
+		fill.BackgroundColor3 = accent
+		fill.BorderSizePixel = 0
+		fill.Parent = track
+		Corner(fill, 99)
+		task.wait()
+		Tween(n, 0.35, {
+			Position = UDim2.new(0, 0, 0, 0),
+			BackgroundTransparency = 0,
+		}, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		Tween(stroke, 0.35, {Transparency = 0})
+		if icon then Tween(icon, 0.28, {ImageTransparency = 0}) end
+		if titleLbl then Tween(titleLbl, 0.28, {TextTransparency = 0}) end
+		if contentLbl then Tween(contentLbl, 0.28, {TextTransparency = 0}) end
+		Tween(fill, duration, {Size = UDim2.new(0, 0, 1, 0)}, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
+		task.delay(duration, function()
+			if not holder or not holder.Parent then return end
+			Tween(n, 0.3, {
+				Position = UDim2.new(1, 36, 0, 0),
+				BackgroundTransparency = 1,
+			}, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+			Tween(stroke, 0.3, {Transparency = 1})
+			if icon then Tween(icon, 0.25, {ImageTransparency = 1}) end
+			if titleLbl then Tween(titleLbl, 0.25, {TextTransparency = 1}) end
+			if contentLbl then Tween(contentLbl, 0.25, {TextTransparency = 1}) end
+			task.delay(0.32, function()
+				if holder and holder.Parent then holder:Destroy() end
+			end)
+		end)
+	end)
 end
 
--- PART 1 END (CLEAN & FIXED)
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 2
+--// ==========================================================
+--// PART 1/3 SELESAI
+--// JANGAN EXECUTE SENDIRI. LANJUTKAN DENGAN PART 2/3
+--// ==========================================================
 
---// Window
+--// ==========================================================
+--// PART 2/4 : CreateWindow s/d CreateSlider
+--// SAMBUNGKAN SETELAH PART 1/3 (core) YANG SUDAH DIKIRIM
+--// ==========================================================
+
 function Library:CreateWindow(config)
 if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
 return nil
 end
 config = config or {}
--- [FIX] Game Checker loading screen dihapus sesuai permintaan agar bisa dipanggil manual dari luar
 local title = config.Title or "Ro-Netrium"
 local subtitle = config.Subtitle or "Powered By Zaycapcay"
 local OPEN_SIZE = UDim2.new(0, 560, 0, 420)
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "Ro-NetriumV4"
 gui.ResetOnSpawn = false
 gui.DisplayOrder = 998
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-pcall(function()
-gui.Parent = game:GetService("CoreGui")
-end)
+pcall(function() gui.Parent = game:GetService("CoreGui") end)
 if not gui.Parent then
 gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 end
+
 --// Theme live-refresh references
 local themeRefs = {}
 local function registerThemeRef(obj, prop, key)
 if not obj then return end
 table.insert(themeRefs, {obj = obj, prop = prop, key = key})
 end
+
 local main = Instance.new("Frame")
 main.Name = "Main"
 main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1692,8 +1564,10 @@ main.ZIndex = 40
 main.Parent = gui
 Corner(main, 12)
 registerThemeRef(main, "BackgroundColor3", "Background")
+
 local mainStroke = Stroke(main, Color3.new(1, 1, 1), Theme.MainBorderThickness)
 registerRGB(mainStroke)
+
 local mainGlow
 if Theme.BorderGlow and Library.Effects.Glow then
 mainGlow = Instance.new("UIStroke")
@@ -1704,6 +1578,7 @@ mainGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
 mainGlow.Parent = main
 registerRGB(mainGlow)
 end
+
 if Library.Effects.Shadow then
 pcall(function()
 local shadow = Instance.new("UIDropShadow")
@@ -1714,8 +1589,10 @@ shadow.Offset = Vector2.new(0, 10)
 shadow.Parent = main
 end)
 end
+
 local particleLayer = createParticleBackground(main, Theme.ParticleCount, nil)
--- Tooltip
+
+--// Tooltip
 local Tooltip, ttText
 Tooltip = Instance.new("Frame")
 Tooltip.Size = UDim2.new(0, 10, 0, 22)
@@ -1745,12 +1622,8 @@ Tooltip.Visible = false
 end
 local function addTooltip(obj, text)
 if text then
-obj.MouseEnter:Connect(function()
-ShowTooltip(text)
-end)
-obj.MouseLeave:Connect(function()
-HideTooltip()
-end)
+obj.MouseEnter:Connect(function() ShowTooltip(text) end)
+obj.MouseLeave:Connect(function() HideTooltip() end)
 end
 end
 Connect(RunService.RenderStepped, function()
@@ -1759,12 +1632,14 @@ local m = UserInputService:GetMouseLocation()
 Tooltip.Position = UDim2.new(0, m.X + 15, 0, m.Y + 15)
 end
 end, nil)
--- Topbar
+
+--// Topbar
 local topbar = Instance.new("Frame")
 topbar.Size = UDim2.new(1, 0, 0, TOPBAR_H)
 topbar.BackgroundTransparency = 1
 topbar.ZIndex = 45
 topbar.Parent = main
+
 local titleRow = Instance.new("Frame")
 titleRow.Size = UDim2.new(1, -110, 0, 24)
 titleRow.Position = UDim2.new(0, 16, 0, 7)
@@ -1772,6 +1647,7 @@ titleRow.BackgroundTransparency = 1
 titleRow.ZIndex = 46
 titleRow.Active = false
 titleRow.Parent = topbar
+
 local titleLayout = Instance.new("UIListLayout")
 titleLayout.FillDirection = Enum.FillDirection.Horizontal
 titleLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1780,29 +1656,43 @@ titleLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 titleLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 titleLayout.Parent = titleRow
 
---// [V5.6] Dot hijau live + pembatas "|" sebelum title
+--// ==========================================================
+--// [V5.7 FIX #6] DOT HIJAU DI FRAME TERPISAH
+--// dotHolder = frame fixed 14x14 (tidak ikut scale).
+--// statusDot = anak di tengah holder, hanya dia yang di-pulse.
+--// Karena holder ukurannya tetap, UIListLayout tidak menghitung
+--// ulang posisi title/separator -> TEXT TIDAK IKUT BERGERAK.
+--// ==========================================================
+local dotHolder = Instance.new("Frame")
+dotHolder.Name = "StatusDotHolder"
+dotHolder.Size = UDim2.new(0, 14, 0, 14)
+dotHolder.BackgroundTransparency = 1
+dotHolder.BorderSizePixel = 0
+dotHolder.LayoutOrder = 1
+dotHolder.ZIndex = 47
+dotHolder.Parent = titleRow
+
 local statusDot = Instance.new("Frame")
 statusDot.Name = "StatusDot"
+statusDot.AnchorPoint = Vector2.new(0.5, 0.5)
+statusDot.Position = UDim2.new(0.5, 0, 0.5, 0)
 statusDot.Size = UDim2.new(0, 8, 0, 8)
 statusDot.BackgroundColor3 = Color3.fromRGB(46, 230, 110)
 statusDot.BackgroundTransparency = 0
 statusDot.BorderSizePixel = 0
-statusDot.LayoutOrder = 1
 statusDot.ZIndex = 47
-statusDot.Parent = titleRow
+statusDot.Parent = dotHolder
 Corner(statusDot, 99)
+
 local dotScale = Instance.new("UIScale")
 dotScale.Scale = 1
 dotScale.Parent = statusDot
 
--- [FIX] UIGlow dihapus karena bukan Instance valid di Roblox.
--- Animasi pulse di bawah ini sudah cukup untuk membuat efek live/berdenyut.
 task.spawn(function()
-while statusDot and statusDot.Parent do
-if statusDot.Parent then
+while dotHolder and dotHolder.Parent and statusDot and statusDot.Parent do
+if Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
 Tween(statusDot, 0.6, {BackgroundTransparency = 0.45})
 Tween(dotScale, 0.6, {Scale = 1.35})
-end
 task.wait(0.62)
 if not statusDot.Parent then return end
 Tween(statusDot, 0.6, {BackgroundTransparency = 0})
@@ -1877,6 +1767,7 @@ end
 local function getCloseTextColor()
 return (window and window.closeTextColor) or Theme.CloseText
 end
+
 local function iconButton(xoff, kind)
 local b = Instance.new("TextButton")
 b.Size = UDim2.new(0, 26, 0, 26)
@@ -1975,9 +1866,7 @@ if not Library._confirmOpen then
 Library._buttonPressLock = false
 end
 local hovered = false
-pcall(function()
-hovered = b:IsHovered()
-end)
+pcall(function() hovered = b:IsHovered() end)
 if kind == "close" then
 Tween(b, .16, {BackgroundColor3 = hovered and getCloseHoverColor() or Theme.Element})
 for _, l in ipairs(lines) do
@@ -1996,8 +1885,10 @@ end
 end)
 return b, {btn = b, lines = lines, overlay = overlay, scale = scale}
 end
+
 local minimizeBtn, minimizeBtnData = iconButton(-62, "min")
 local closeBtn, closeBtnData = iconButton(-32, "close")
+
 window = {
 accent = config.Accent or Library.Accent,
 closeColor = config.CloseColor or Library.CloseColor or Theme.Close,
@@ -2016,24 +1907,25 @@ _themeRefs = themeRefs,
 }
 window._closeButtonData = closeBtnData
 window._minimizeButtonData = minimizeBtnData
+
 if config.Accent and typeof(config.Accent) == "Color3" then
 Library.Accent = config.Accent
 ThemeManager.Dirty = true
 end
+
 function window:ApplyTheme()
 if self._destroyed then return end
 for _, ref in ipairs(themeRefs) do
 if ref.obj and ref.obj.Parent then
 local c = Theme[ref.key]
 if c then
-pcall(function()
-ref.obj[ref.prop] = c
-end)
+pcall(function() ref.obj[ref.prop] = c end)
 end
 end
 end
 refreshRGBColors()
 end
+
 function window:Destroy()
 if self._destroyed then return end
 self._destroyed = true
@@ -2041,9 +1933,7 @@ if self._closeConfirmCleanup then
 pcall(self._closeConfirmCleanup)
 end
 for _, conn in ipairs(self._connections) do
-pcall(function()
-conn:Disconnect()
-end)
+pcall(function() conn:Disconnect() end)
 end
 self._connections = {}
 self.listeners = {}
@@ -2062,9 +1952,7 @@ if item.Window == self then
 item._removed = true
 end
 end
-pcall(function()
-gui:Destroy()
-end)
+pcall(function() gui:Destroy() end)
 for i, w in ipairs(Library._windows) do
 if w == self then
 table.remove(Library._windows, i)
@@ -2075,17 +1963,21 @@ if #Library._windows == 0 then
 Library.Open = false
 end
 end
+
 table.insert(Library._windows, window)
+
 function window:onAccent(fn)
 table.insert(self.listeners, fn)
 fn(self.accent)
 end
+
 function window:SetCloseColor(color, hover, pressed, text)
 if typeof(color) == "Color3" then self.closeColor = color end
 if typeof(hover) == "Color3" then self.closeHoverColor = hover end
 if typeof(pressed) == "Color3" then self.closePressedColor = pressed end
 if typeof(text) == "Color3" then self.closeTextColor = text end
 end
+
 function window:AddTag(cfg)
 cfg = cfg or {}
 local lbl = Instance.new("TextLabel")
@@ -2105,19 +1997,16 @@ lbl.Parent = tagRow
 Corner(lbl, 99)
 Pad(lbl, 0, 10, 0, 10)
 if cfg.FollowAccent then
-window:onAccent(function(c)
-lbl.BackgroundColor3 = c
-end)
+window:onAccent(function(c) lbl.BackgroundColor3 = c end)
 end
 return lbl
 end
+
 local tagCount = 0
 local function addConfigTag(v)
 tagCount += 1
 local index = tagCount
-if type(v) == "string" then
-v = {Text = v}
-end
+if type(v) == "string" then v = {Text = v} end
 local bg = v.Color or v.BackgroundColor3
 local followAccent = false
 if not bg then
@@ -2142,10 +2031,11 @@ TextColor = tc,
 FollowAccent = followAccent,
 })
 end
+
 local tagsConfig = config.Tags
 if tagsConfig == nil then
 tagsConfig = {
-{Text = "V5.6", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
+{Text = "V5.7", Color = Color3.fromRGB(255, 204, 0), TextColor = Color3.fromRGB(0, 0, 0)},
 {Text = "Quick Bar", Color = Color3.fromRGB(46, 230, 110), TextColor = Color3.fromRGB(0, 0, 0)},
 }
 end
@@ -2158,7 +2048,8 @@ addConfigTag(v)
 end
 end
 end
--- Resize + Drag
+
+--// Resize + Drag
 local resizeHandle = Instance.new("TextButton")
 resizeHandle.Size = UDim2.new(0, 14, 0, 14)
 resizeHandle.Position = UDim2.new(1, -15, 1, -15)
@@ -2178,6 +2069,7 @@ d.ZIndex = 51
 d.Parent = resizeHandle
 registerThemeRef(d, "BackgroundColor3", "SubText")
 end
+
 local resizing, resizeStart, resizeOrig = false, nil, nil
 local function getInputPosition(inp)
 if inp.UserInputType == Enum.UserInputType.Touch
@@ -2187,6 +2079,7 @@ return inp.Position
 end
 return nil
 end
+
 Connect(resizeHandle.InputBegan, function(inp)
 if Library._confirmOpen or Library._buttonPressLock then return end
 if isPressInput(inp) then
@@ -2195,6 +2088,7 @@ resizeStart = getInputPosition(inp)
 resizeOrig = main.Size
 end
 end, window)
+
 Connect(UserInputService.InputChanged, function(inp)
 if Library._confirmOpen or Library._buttonPressLock then
 resizing = false
@@ -2205,14 +2099,13 @@ local pos = getInputPosition(inp)
 if pos and resizeStart then
 local d = pos - resizeStart
 main.Size = UDim2.new(
-0,
-math.clamp(resizeOrig.X.Offset + d.X, 460, 1100),
-0,
-math.clamp(resizeOrig.Y.Offset + d.Y, 340, 760)
+0, math.clamp(resizeOrig.X.Offset + d.X, 460, 1100),
+0, math.clamp(resizeOrig.Y.Offset + d.Y, 340, 760)
 )
 end
 end
 end, window)
+
 Connect(UserInputService.InputEnded, function(inp)
 if isPressInput(inp) then
 resizing = false
@@ -2221,6 +2114,7 @@ Library._buttonPressLock = false
 end
 end
 end, window)
+
 local dragging, dragStart, dragOrig
 Connect(topbar.InputBegan, function(inp)
 if Library._confirmOpen or Library._buttonPressLock then return end
@@ -2230,6 +2124,7 @@ dragStart = inp.Position
 dragOrig = window.offset
 end
 end, window)
+
 Connect(UserInputService.InputEnded, function(inp)
 if isPressInput(inp) then
 dragging = false
@@ -2238,6 +2133,7 @@ Library._buttonPressLock = false
 end
 end
 end, window)
+
 Connect(UserInputService.InputChanged, function(inp)
 if Library._confirmOpen or Library._buttonPressLock then
 dragging = false
@@ -2252,9 +2148,10 @@ window.offset = Vector2.new(x, y)
 main.Position = UDim2.new(0.5, x, 0.5, y)
 end
 end, window)
--- ==========================================================
--- SIDEBAR: Search sticky di atas + Tab SCROLLABLE
--- ==========================================================
+
+--// ==========================================================
+--// SIDEBAR: Search sticky + Tab SCROLLABLE
+--// ==========================================================
 local SIDE_PAD = 8
 local SEARCH_H = 34
 local sidebar = Instance.new("Frame")
@@ -2270,6 +2167,7 @@ registerThemeRef(sidebar, "BackgroundColor3", "Sidebar")
 local sideStroke = Stroke(sidebar, Theme.Border, 1.2)
 sideStroke.Transparency = 0.35
 registerThemeRef(sideStroke, "Color", "Border")
+
 local searchBar = Instance.new("Frame")
 searchBar.Name = "SearchBar"
 searchBar.Size = UDim2.new(1, -(SIDE_PAD * 2), 0, SEARCH_H)
@@ -2305,6 +2203,7 @@ searchInput.ZIndex = 44
 searchInput.Parent = searchBar
 registerThemeRef(searchInput, "TextColor3", "Text")
 registerThemeRef(searchInput, "PlaceholderColor3", "SubText")
+
 local tabScroll = Instance.new("ScrollingFrame")
 tabScroll.Name = "TabScroll"
 tabScroll.Size = UDim2.new(1, -(SIDE_PAD * 2), 1, -(SEARCH_H + SIDE_PAD * 2 + 6))
@@ -2319,9 +2218,7 @@ tabScroll.ScrollingDirection = Enum.ScrollingDirection.Y
 tabScroll.ElasticBehavior = Enum.ElasticBehavior.Always
 tabScroll.ZIndex = 42
 tabScroll.Parent = sidebar
-window:onAccent(function(c)
-tabScroll.ScrollBarImageColor3 = c
-end)
+window:onAccent(function(c) tabScroll.ScrollBarImageColor3 = c end)
 local sideList = Instance.new("UIListLayout")
 sideList.SortOrder = Enum.SortOrder.LayoutOrder
 sideList.Padding = UDim.new(0, 5)
@@ -2332,7 +2229,8 @@ sidePad.PaddingBottom = UDim.new(0, 14)
 sidePad.PaddingLeft = UDim.new(0, 0)
 sidePad.PaddingRight = UDim.new(0, 4)
 sidePad.Parent = tabScroll
--- Content
+
+--// Content
 local content = Instance.new("ScrollingFrame")
 content.Size = UDim2.new(1, -150, 1, -TOPBAR_H)
 content.Position = UDim2.new(0, 150, 0, TOPBAR_H)
@@ -2344,9 +2242,8 @@ content.AutomaticCanvasSize = Enum.AutomaticSize.Y
 content.CanvasSize = UDim2.new(0, 0, 0, 0)
 content.ZIndex = 41
 content.Parent = main
-window:onAccent(function(c)
-content.ScrollBarImageColor3 = c
-end)
+window:onAccent(function(c) content.ScrollBarImageColor3 = c end)
+
 local container = Instance.new("Frame")
 container.Size = UDim2.new(1, -24, 0, 0)
 container.Position = UDim2.new(0, 12, 0, 10)
@@ -2368,7 +2265,8 @@ spacer.Size = UDim2.new(1, 0, 0, 2)
 spacer.BackgroundTransparency = 1
 spacer.Parent = container
 local info = nil
--- Search Results (popup, parent = gui agar tidak ter-clip sidebar)
+
+--// Search Results popup
 local searchResults = Instance.new("ScrollingFrame")
 searchResults.Name = "SearchResults"
 searchResults.Size = UDim2.new(0, 220, 0, 0)
@@ -2392,6 +2290,7 @@ local searchResultList = Instance.new("UIListLayout")
 searchResultList.SortOrder = Enum.SortOrder.LayoutOrder
 searchResultList.Padding = UDim.new(0, 4)
 searchResultList.Parent = searchResults
+
 local function clearSearchResults()
 for _, c in ipairs(searchResults:GetChildren()) do
 if c:IsA("TextButton") or c.Name == "EmptyResult" then
@@ -2414,9 +2313,7 @@ st.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 st.Parent = f
 Tween(st, .7, {Transparency = 1})
 task.delay(.72, function()
-if st and st.Parent then
-st:Destroy()
-end
+if st and st.Parent then st:Destroy() end
 end)
 end
 local function scrollToFrame(f)
@@ -2475,9 +2372,7 @@ Tween(b, .14, {BackgroundTransparency = .18})
 end)
 b.MouseButton1Click:Connect(function()
 closeSearchResults()
-pcall(function()
-searchInput:ReleaseFocus()
-end)
+pcall(function() searchInput:ReleaseFocus() end)
 if item.Window and item.Window._destroyed then return end
 if item.Tab and item.Tab.Activate then
 item.Tab:Activate()
@@ -2527,10 +2422,8 @@ Connect(searchInput:GetPropertyChangedSignal("Text"), updateSearchResults, windo
 Connect(RunService.RenderStepped, function()
 if searchResults.Visible and searchBar and searchBar.Parent then
 searchResults.Position = UDim2.new(
-0,
-searchBar.AbsolutePosition.X,
-0,
-searchBar.AbsolutePosition.Y + searchBar.AbsoluteSize.Y + 4
+0, searchBar.AbsolutePosition.X,
+0, searchBar.AbsolutePosition.Y + searchBar.AbsoluteSize.Y + 4
 )
 end
 end, window)
@@ -2538,12 +2431,11 @@ Connect(UserInputService.InputBegan, function(inp, gp)
 if gp then return end
 if inp.KeyCode == Enum.KeyCode.Escape then
 closeSearchResults()
-pcall(function()
-searchInput:ReleaseFocus()
-end)
+pcall(function() searchInput:ReleaseFocus() end)
 end
 end, window)
--- Keybind List
+
+--// Keybind List
 local kbEnabled = true
 local kbRows = 0
 local windowOpen = true
@@ -2624,17 +2516,16 @@ kLbl.Font = Enum.Font.GothamBold
 kLbl.TextXAlignment = Enum.TextXAlignment.Right
 kLbl.TextYAlignment = Enum.TextYAlignment.Center
 kLbl.Parent = row
-window:onAccent(function(c)
-kLbl.TextColor3 = c
-end)
+window:onAccent(function(c) kLbl.TextColor3 = c end)
 refreshKbVis()
 return {
-Set = function(self, k)
-kLbl.Text = k
-end
+Set = function(self, k) kLbl.Text = k end
 }
 end
--- Tabs
+
+--// ==========================================================
+--// TABS
+--// ==========================================================
 function window:CreateTab(name, icon)
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(1, 0, 0, H_TAB)
@@ -2675,6 +2566,7 @@ tabLbl.TextTruncate = Enum.TextTruncate.AtEnd
 tabLbl.ZIndex = 43
 tabLbl.Parent = btn
 registerThemeRef(tabLbl, "TextColor3", "SubText")
+
 local tabContent = Instance.new("Frame")
 tabContent.Size = UDim2.new(1, 0, 0, 0)
 tabContent.BackgroundTransparency = 1
@@ -2686,6 +2578,7 @@ local tabList = Instance.new("UIListLayout")
 tabList.SortOrder = Enum.SortOrder.LayoutOrder
 tabList.Padding = UDim.new(0, 8)
 tabList.Parent = tabContent
+
 local tab = {
 content = tabContent,
 btn = btn,
@@ -2693,9 +2586,7 @@ ind = ind,
 window = window,
 name = name,
 }
-local function curAccent()
-return window.accent
-end
+local function curAccent() return window.accent end
 local function setActive(on)
 if on then
 Tween(btn, .2, {BackgroundColor3 = curAccent(), BackgroundTransparency = .84})
@@ -2735,9 +2626,7 @@ Tween(tabLbl, .2, {TextColor3 = Theme.SubText})
 Tween(btn, .2, {BackgroundColor3 = curAccent(), BackgroundTransparency = 1})
 end
 end)
-Connect(btn.MouseButton1Click, function()
-tab:Activate()
-end, window)
+Connect(btn.MouseButton1Click, function() tab:Activate() end, window)
 window:onAccent(function(c)
 ind.BackgroundColor3 = c
 if window.currentTab == tabContent then
@@ -2747,6 +2636,7 @@ end)
 if not window.currentTab then
 tab:Activate()
 end
+
 local function elementFrame(h)
 local f = Instance.new("Frame")
 f.Size = UDim2.new(1, 0, 0, h)
@@ -2759,6 +2649,7 @@ local s = Stroke(f, Theme.Border, Theme.ElementBorderThickness)
 registerThemeRef(s, "Color", "Border")
 return f, s
 end
+
 local function hoverBorder(f, s, colFn)
 f.MouseEnter:Connect(function()
 Tween(f, .18, {BackgroundColor3 = Theme.ElementHover})
@@ -2775,6 +2666,7 @@ Thickness = Theme.ElementBorderThickness,
 })
 end)
 end
+
 function tab:CreateSection(text)
 local holder = Instance.new("Frame")
 holder.Size = UDim2.new(1, 0, 0, H_SECTION)
@@ -2799,11 +2691,10 @@ lbl.TextXAlignment = Enum.TextXAlignment.Left
 lbl.TextYAlignment = Enum.TextYAlignment.Center
 lbl.Parent = holder
 registerThemeRef(lbl, "TextColor3", "SubText")
-window:onAccent(function(c)
-bar.BackgroundColor3 = c
-end)
+window:onAccent(function(c) bar.BackgroundColor3 = c end)
 return holder
 end
+
 function tab:CreateLabel(text)
 text = tostring(text or "")
 local lbl = Instance.new("TextLabel")
@@ -2819,9 +2710,7 @@ lbl.TextWrapped = true
 lbl.Parent = tabContent
 registerThemeRef(lbl, "TextColor3", "Text")
 local obj = {
-Set = function(self, t)
-lbl.Text = tostring(t or "")
-end
+Set = function(self, t) lbl.Text = tostring(t or "") end
 }
 registerElement(window, tab, name, lbl, {
 Name = text,
@@ -2829,7 +2718,8 @@ Keywords = {"label", "text", "info"},
 }, "label", obj)
 return obj
 end
---// Paragraph dengan DIVIDER/PEMBATAS
+
+--// Paragraph dengan DIVIDER
 function tab:CreateParagraph(cfg)
 cfg = cfg or {}
 local function toText(v)
@@ -2896,9 +2786,7 @@ icon.ImageColor3 = window.accent
 icon.LayoutOrder = 1
 icon.Parent = titleRow2
 window:onAccent(function(c)
-if icon.Parent then
-icon.ImageColor3 = c
-end
+if icon.Parent then icon.ImageColor3 = c end
 end)
 iconOffset = 26
 end
@@ -2966,9 +2854,7 @@ contentObj.LayoutOrder = 5
 contentObj.Visible = hasContent
 contentObj.Parent = f
 registerThemeRef(contentObj, "TextColor3", "SubText")
-hoverBorder(f, s, function()
-return window.accent
-end)
+hoverBorder(f, s, function() return window.accent end)
 local para = {}
 function para:Set(newCfg)
 if type(newCfg) == "table" then
@@ -2999,6 +2885,7 @@ end
 registerElement(window, tab, name, f, cfg, "paragraph", para)
 return para
 end
+
 function tab:CreateToggle(cfg)
 cfg = cfg or {}
 local col = cfg.Color
@@ -3030,7 +2917,7 @@ Corner(switch, 99)
 registerThemeRef(switch, "BackgroundColor3", "Border")
 local circle = Instance.new("Frame")
 circle.Size = UDim2.new(0, 14, 0, 14)
-circle.Position = UDim2.new(0, 3, 0.5, -7)
+circle.Position = UDim2.new(0, 3, 0, 3)
 circle.BackgroundColor3 = Theme.SubText
 circle.BorderSizePixel = 0
 circle.Parent = switch
@@ -3041,10 +2928,10 @@ local function accent() return col or window.accent end
 local function update()
 if enabled then
 Tween(switch, .2, {BackgroundColor3 = accent()})
-Tween(circle, .2, {Position = UDim2.new(1, -17, 0.5, -7), BackgroundColor3 = Color3.new(1, 1, 1)})
+Tween(circle, .2, {Position = UDim2.new(1, -17, 0, 3), BackgroundColor3 = Color3.new(1, 1, 1)})
 else
 Tween(switch, .2, {BackgroundColor3 = Theme.Border})
-Tween(circle, .2, {Position = UDim2.new(0, 3, 0.5, -7), BackgroundColor3 = Theme.SubText})
+Tween(circle, .2, {Position = UDim2.new(0, 3, 0, 3), BackgroundColor3 = Theme.SubText})
 end
 if cfg.Flag then
 Library.Flags[cfg.Flag] = enabled
@@ -3073,6 +2960,7 @@ end
 registerElement(window, tab, name, f, cfg, "toggle", obj)
 return obj
 end
+
 function tab:CreateSlider(cfg)
 cfg = cfg or {}
 local min, max = cfg.Min or 0, cfg.Max or 100
@@ -3191,15 +3079,23 @@ end, window)
 hoverBorder(f, s, function() return col or window.accent end)
 addTooltip(f, cfg.Tooltip)
 local obj = {
-Set = function(self, v)
-apply(v, true)
-end
+Set = function(self, v) apply(v, true) end
 }
 registerElement(window, tab, name, f, cfg, "slider", obj)
 return obj
 end
--- PART 2 END (V5.6 FIXED)
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 3
+
+--// ==========================================================
+--// PART 2/4 SELESAI
+--// JANGAN EXECUTE SENDIRI. LANJUTKAN DENGAN PART 3/4
+--// (CreateButton, Textbox, Input, Dropdown, MultiDropdown,
+--//  Keybind, ColorPicker, Mini Toggle, Quick Bar, Net Stats)
+--// ==========================================================
+
+--// ==========================================================
+--// PART 3/4 : CreateButton s/d Sidebar Net Stats
+--// SAMBUNGKAN SETELAH PART 2/4
+--// ==========================================================
 
 function tab:CreateButton(cfg)
 cfg = cfg or {}
@@ -3231,9 +3127,7 @@ arrow.Font = Enum.Font.GothamBold
 arrow.TextYAlignment = Enum.TextYAlignment.Center
 arrow.Parent = f
 window:onAccent(function(c)
-if not col then
-arrow.TextColor3 = c
-end
+if not col then arrow.TextColor3 = c end
 end)
 hoverBorder(f, s, function() return col or window.accent end)
 local click = Instance.new("TextButton")
@@ -3256,20 +3150,9 @@ ripple.BorderSizePixel = 0
 ripple.ZIndex = (f.ZIndex or 1) + 1
 ripple.Parent = f
 Corner(ripple, 99)
-Tween(
-ripple,
-.45,
-{
-Size = UDim2.new(1, 0, 1, 0),
-BackgroundTransparency = 1,
-},
-Enum.EasingStyle.Quart,
-Enum.EasingDirection.Out
-)
+Tween(ripple, .45, {Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 task.delay(.46, function()
-if ripple and ripple.Parent then
-ripple:Destroy()
-end
+if ripple and ripple.Parent then ripple:Destroy() end
 end)
 end
 Tween(f, .1, {Size = UDim2.new(1, -6, 0, H_ELEMENT - 2)}, Enum.EasingStyle.Back)
@@ -3278,14 +3161,13 @@ if f.Parent then
 Tween(f, .15, {Size = UDim2.new(1, 0, 0, H_ELEMENT)}, Enum.EasingStyle.Back)
 end
 end)
-if cfg.Callback then
-task.spawn(cfg.Callback)
-end
+if cfg.Callback then task.spawn(cfg.Callback) end
 end)
 addTooltip(f, cfg.Tooltip)
 registerElement(window, tab, name, f, cfg, "button", nil)
 return f
 end
+
 function tab:CreateTextbox(cfg)
 cfg = cfg or {}
 local col = cfg.Color
@@ -3323,35 +3205,24 @@ registerThemeRef(box, "PlaceholderColor3", "SubText")
 local boxStroke = Stroke(box, Theme.Border, 1)
 registerThemeRef(boxStroke, "Color", "Border")
 Pad(box, 0, 8, 0, 8)
-if cfg.Flag then
-Library.Flags[cfg.Flag] = box.Text
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = box.Text end
 window:onAccent(function(c)
-if not col then
-box.TextColor3 = c
-end
+if not col then box.TextColor3 = c end
 end)
 box:GetPropertyChangedSignal("Text"):Connect(function()
-if cfg.Flag then
-Library.Flags[cfg.Flag] = box.Text
-end
-if cfg.Callback then
-task.spawn(cfg.Callback, box.Text)
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = box.Text end
+if cfg.Callback then task.spawn(cfg.Callback, box.Text) end
 end)
 hoverBorder(f, s, function() return col or window.accent end)
 addTooltip(f, cfg.Tooltip)
 local obj = {
-Set = function(self, t)
-box.Text = tostring(t or "")
-end,
-Get = function()
-return box.Text
-end,
+Set = function(self, t) box.Text = tostring(t or "") end,
+Get = function() return box.Text end,
 }
 registerElement(window, tab, name, f, cfg, "textbox", obj)
 return obj
 end
+
 function tab:CreateInput(cfg)
 cfg = cfg or {}
 local col = cfg.Color
@@ -3390,24 +3261,16 @@ registerThemeRef(box, "PlaceholderColor3", "SubText")
 local boxStroke = Stroke(box, Theme.Border, 1)
 registerThemeRef(boxStroke, "Color", "Border")
 Pad(box, 0, 8, 0, 8)
-if cfg.Flag then
-Library.Flags[cfg.Flag] = value
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = value end
 local suppress = false
 window:onAccent(function(c)
-if not col then
-box.TextColor3 = c
-end
+if not col then box.TextColor3 = c end
 end)
 box:GetPropertyChangedSignal("Text"):Connect(function()
 if suppress then return end
 value = box.Text
-if cfg.Flag then
-Library.Flags[cfg.Flag] = value
-end
-if cfg.Callback then
-task.spawn(cfg.Callback, value)
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = value end
+if cfg.Callback then task.spawn(cfg.Callback, value) end
 end)
 box.FocusLost:Connect(function()
 if cfg.RemoveTextAfterFocusLost then
@@ -3422,17 +3285,14 @@ local obj = {
 Set = function(self, t)
 value = tostring(t or "")
 box.Text = value
-if cfg.Flag then
-Library.Flags[cfg.Flag] = value
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = value end
 end,
-Get = function()
-return value
-end,
+Get = function() return value end,
 }
 registerElement(window, tab, name, f, cfg, "input", obj)
 return obj
 end
+
 function tab:CreateDropdown(cfg)
 cfg = cfg or {}
 local options = cfg.Options or {}
@@ -3451,28 +3311,17 @@ local function fitText(textObj, fullText)
 if not textObj or not textObj.Parent then return end
 fullText = tostring(fullText or "")
 local w = textObj.AbsoluteSize.X
-if w <= 1 then
-textObj.Text = ""
-return
-end
+if w <= 1 then textObj.Text = "" return end
 w = w - 2
 local big = Vector2.new(999999, 999999)
 local b0 = TextService:GetTextSize(fullText, textObj.TextSize, textObj.Font, big)
-if b0.X <= w then
-textObj.Text = fullText
-return
-end
+if b0.X <= w then textObj.Text = fullText return end
 local lo, hi, best = 1, #fullText, ""
 while lo <= hi do
 local mid = math.floor((lo + hi) / 2)
 local cand = string.sub(fullText, 1, mid) .. "..."
 local bb = TextService:GetTextSize(cand, textObj.TextSize, textObj.Font, big)
-if bb.X <= w then
-best = cand
-lo = mid + 1
-else
-hi = mid - 1
-end
+if bb.X <= w then best = cand lo = mid + 1 else hi = mid - 1 end
 end
 if best == "" then best = "..." end
 textObj.Text = best
@@ -3514,9 +3363,7 @@ refreshVal()
 end)
 Connect(lbl:GetPropertyChangedSignal("AbsoluteSize"), refreshLbl, window)
 Connect(val:GetPropertyChangedSignal("AbsoluteSize"), refreshVal, window)
-if cfg.Flag then
-Library.Flags[cfg.Flag] = valueFull
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = valueFull end
 local arrow = Instance.new("TextLabel")
 arrow.Size = UDim2.new(0, 16, 0, 16)
 arrow.Position = UDim2.new(1, -26, 0, 11)
@@ -3558,9 +3405,7 @@ end
 local function setValue(t)
 valueFull = tostring(t or "")
 refreshVal()
-if cfg.Flag then
-Library.Flags[cfg.Flag] = valueFull
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = valueFull end
 end
 local function addOption(opt)
 opt = tostring(opt or "")
@@ -3589,14 +3434,10 @@ end)
 o.MouseButton1Click:Connect(function()
 setValue(opt)
 toggleOpen()
-if cfg.Callback then
-task.spawn(cfg.Callback, opt)
-end
+if cfg.Callback then task.spawn(cfg.Callback, opt) end
 end)
 end
-for _, opt in ipairs(options) do
-addOption(opt)
-end
+for _, opt in ipairs(options) do addOption(opt) end
 local head = Instance.new("TextButton")
 head.Size = UDim2.new(1, 0, 0, headerH)
 head.BackgroundTransparency = 1
@@ -3609,16 +3450,12 @@ addTooltip(f, cfg.Tooltip)
 local obj = {
 Refresh = function(self, newOpts)
 for _, c in ipairs(list:GetChildren()) do
-if c:IsA("TextButton") then
-c:Destroy()
-end
+if c:IsA("TextButton") then c:Destroy() end
 end
 options = newOpts or {}
 listH = math.min(#options * 30, 150)
 openH = headerH + gap + listH + 6
-for _, opt in ipairs(options) do
-addOption(opt)
-end
+for _, opt in ipairs(options) do addOption(opt) end
 refreshVal()
 if isOpen then
 Tween(f, .25, {Size = UDim2.new(1, 0, 0, openH)})
@@ -3627,26 +3464,21 @@ end
 end,
 Set = function(self, t)
 setValue(t)
-if cfg.Callback then
-task.spawn(cfg.Callback, valueFull)
-end
+if cfg.Callback then task.spawn(cfg.Callback, valueFull) end
 end,
-Get = function()
-return valueFull
-end,
+Get = function() return valueFull end,
 }
 registerElement(window, tab, name, f, cfg, "dropdown", obj)
 return obj
 end
+
 --// ==========================================================
 --// MULTI-DROPDOWN
 --// ==========================================================
 function tab:CreateMultiDropdown(cfg)
 cfg = cfg or {}
 local options = {}
-for _, v in ipairs(cfg.Options or {}) do
-table.insert(options, tostring(v))
-end
+for _, v in ipairs(cfg.Options or {}) do table.insert(options, tostring(v)) end
 local col = cfg.Color
 local TextService = game:GetService("TextService")
 local headerH = H_ELEMENT
@@ -3689,28 +3521,17 @@ local function fitText(textObj, fullText)
 if not textObj or not textObj.Parent then return end
 fullText = tostring(fullText or "")
 local w = textObj.AbsoluteSize.X
-if w <= 1 then
-textObj.Text = ""
-return
-end
+if w <= 1 then textObj.Text = "" return end
 w = w - 2
 local big = Vector2.new(999999, 999999)
 local b0 = TextService:GetTextSize(fullText, textObj.TextSize, textObj.Font, big)
-if b0.X <= w then
-textObj.Text = fullText
-return
-end
+if b0.X <= w then textObj.Text = fullText return end
 local lo, hi, best = 1, #fullText, ""
 while lo <= hi do
 local mid = math.floor((lo + hi) / 2)
 local cand = string.sub(fullText, 1, mid) .. "..."
 local bb = TextService:GetTextSize(cand, textObj.TextSize, textObj.Font, big)
-if bb.X <= w then
-best = cand
-lo = mid + 1
-else
-hi = mid - 1
-end
+if bb.X <= w then best = cand lo = mid + 1 else hi = mid - 1 end
 end
 if best == "" then best = "..." end
 textObj.Text = best
@@ -3743,9 +3564,7 @@ val.TextTruncate = Enum.TextTruncate.AtEnd
 val.Parent = f
 registerThemeRef(val, "TextColor3", "Text")
 local function formatValue()
-if cfg.Format then
-return tostring(cfg.Format(selected))
-end
+if cfg.Format then return tostring(cfg.Format(selected)) end
 local n = #selected
 if n == 0 then
 return cfg.Placeholder or "None"
@@ -3764,9 +3583,7 @@ refreshVal()
 end)
 Connect(lbl:GetPropertyChangedSignal("AbsoluteSize"), refreshLbl, window)
 Connect(val:GetPropertyChangedSignal("AbsoluteSize"), refreshVal, window)
-if cfg.Flag then
-Library.Flags[cfg.Flag] = table.clone(selected)
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = table.clone(selected) end
 local arrow = Instance.new("TextLabel")
 arrow.Size = UDim2.new(0, 16, 0, 16)
 arrow.Position = UDim2.new(1, -26, 0, 11)
@@ -3853,15 +3670,11 @@ Tween(row.row, .15, {BackgroundTransparency = 1})
 end
 end
 local function refreshAllVisuals()
-for opt in pairs(optionRows) do
-refreshRowVisual(opt)
-end
+for opt in pairs(optionRows) do refreshRowVisual(opt) end
 refreshVal()
 end
 local function commit(fire)
-if cfg.Flag then
-Library.Flags[cfg.Flag] = table.clone(selected)
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = table.clone(selected) end
 refreshVal()
 if fire and cfg.Callback and not Library._loading then
 task.spawn(cfg.Callback, table.clone(selected))
@@ -3872,10 +3685,7 @@ opt = tostring(opt)
 if selectedMap[opt] then
 selectedMap[opt] = nil
 for i = #selected, 1, -1 do
-if selected[i] == opt then
-table.remove(selected, i)
-break
-end
+if selected[i] == opt then table.remove(selected, i) break end
 end
 else
 selectedMap[opt] = true
@@ -3947,24 +3757,16 @@ lblOpt.TextYAlignment = Enum.TextYAlignment.Center
 lblOpt.TextTruncate = Enum.TextTruncate.AtEnd
 lblOpt.Parent = row
 row.MouseEnter:Connect(function()
-if not selectedMap[opt] then
-Tween(row, .14, {BackgroundTransparency = 0.9})
-end
+if not selectedMap[opt] then Tween(row, .14, {BackgroundTransparency = 0.9}) end
 end)
 row.MouseLeave:Connect(function()
-if not selectedMap[opt] then
-Tween(row, .14, {BackgroundTransparency = 1})
-end
+if not selectedMap[opt] then Tween(row, .14, {BackgroundTransparency = 1}) end
 end)
-row.MouseButton1Click:Connect(function()
-toggleOption(opt)
-end)
+row.MouseButton1Click:Connect(function() toggleOption(opt) end)
 optionRows[opt] = {row = row, box = box, check = check, lbl = lblOpt}
 refreshRowVisual(opt)
 end
-for i, opt in ipairs(options) do
-addOption(opt, i)
-end
+for i, opt in ipairs(options) do addOption(opt, i) end
 local isOpen = false
 local function toggleOpen()
 isOpen = not isOpen
@@ -3989,39 +3791,25 @@ head.Parent = f
 head.MouseButton1Click:Connect(toggleOpen)
 hoverBorder(f, s, function() return col or window.accent end)
 addTooltip(f, cfg.Tooltip)
-window:onAccent(function()
-refreshAllVisuals()
-end)
+window:onAccent(function() refreshAllVisuals() end)
 local obj = {
 Refresh = function(self, newOpts)
 for _, c in ipairs(list:GetChildren()) do
-if c:IsA("TextButton") then
-c:Destroy()
-end
+if c:IsA("TextButton") then c:Destroy() end
 end
 optionRows = {}
 options = {}
-for _, v in ipairs(newOpts or {}) do
-table.insert(options, tostring(v))
-end
+for _, v in ipairs(newOpts or {}) do table.insert(options, tostring(v)) end
 local newMap = {}
 local newArr = {}
-for _, opt in ipairs(options) do
-newMap[opt] = true
-end
+for _, opt in ipairs(options) do newMap[opt] = true end
 for _, opt in ipairs(selected) do
-if newMap[opt] then
-table.insert(newArr, opt)
-end
+if newMap[opt] then table.insert(newArr, opt) end
 end
 selected = newArr
 selectedMap = {}
-for _, opt in ipairs(selected) do
-selectedMap[opt] = true
-end
-for i, opt in ipairs(options) do
-addOption(opt, i)
-end
+for _, opt in ipairs(selected) do selectedMap[opt] = true end
+for i, opt in ipairs(options) do addOption(opt, i) end
 refreshAllVisuals()
 if isOpen then
 listH = math.min(#options * optH + actionH, maxList)
@@ -4035,16 +3823,13 @@ initSelected(t)
 refreshAllVisuals()
 commit(true)
 end,
-Get = function()
-return table.clone(selected)
-end,
-GetString = function(sep)
-return table.concat(selected, sep or ", ")
-end,
+Get = function() return table.clone(selected) end,
+GetString = function(sep) return table.concat(selected, sep or ", ") end,
 }
 registerElement(window, tab, name, f, cfg, "multidropdown", obj)
 return obj
 end
+
 function tab:CreateKeybind(cfg)
 cfg = cfg or {}
 local col = cfg.Color
@@ -4085,22 +3870,16 @@ end
 local hold = cfg.HoldToInteract or false
 local binding, holding = false, false
 badge.Text = (current ~= Enum.KeyCode.Unknown) and current.Name or "None"
-if cfg.Flag then
-Library.Flags[cfg.Flag] = current.Name
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = current.Name end
 local kbRow = window:AddKeybind(cfg.Name or cfg.Title or "Keybind", (current ~= Enum.KeyCode.Unknown) and current.Name or "None")
 local function setKey(k)
 current = k
 badge.Text = (current ~= Enum.KeyCode.Unknown) and current.Name or "None"
 kbRow:Set((current ~= Enum.KeyCode.Unknown) and current.Name or "None")
-if cfg.Flag then
-Library.Flags[cfg.Flag] = current.Name
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = current.Name end
 end
 window:onAccent(function(c)
-if not col and not binding then
-badge.TextColor3 = c
-end
+if not col and not binding then badge.TextColor3 = c end
 end)
 badge.MouseButton1Click:Connect(function()
 binding = true
@@ -4113,43 +3892,32 @@ if binding and inp.UserInputType == Enum.UserInputType.Keyboard then
 binding = false
 setKey(inp.KeyCode)
 badge.TextColor3 = col or window.accent
-if cfg.Callback then
-task.spawn(cfg.Callback, current)
-end
+if cfg.Callback then task.spawn(cfg.Callback, current) end
 elseif not binding and current ~= Enum.KeyCode.Unknown and inp.KeyCode == current then
 if hold then
 holding = true
-if cfg.Callback then
-task.spawn(cfg.Callback, true)
-end
+if cfg.Callback then task.spawn(cfg.Callback, true) end
 else
-if cfg.Callback then
-task.spawn(cfg.Callback, current)
-end
+if cfg.Callback then task.spawn(cfg.Callback, current) end
 end
 end
 end, window)
 Connect(UserInputService.InputEnded, function(inp)
 if holding and inp.KeyCode == current then
 holding = false
-if cfg.Callback then
-task.spawn(cfg.Callback, false)
-end
+if cfg.Callback then task.spawn(cfg.Callback, false) end
 end
 end, window)
 hoverBorder(f, s, function() return col or window.accent end)
 addTooltip(f, cfg.Tooltip)
 local obj = {
-SetKey = function(self, k)
-setKey(k)
-end,
-GetKey = function()
-return current
-end
+SetKey = function(self, k) setKey(k) end,
+GetKey = function() return current end,
 }
 registerElement(window, tab, name, f, cfg, "keybind", obj)
 return obj
 end
+
 --// COLOR PICKER HSV
 function tab:CreateColorPicker(cfg)
 cfg = cfg or {}
@@ -4158,28 +3926,17 @@ local function fitText(textObj, fullText)
 if not textObj or not textObj.Parent then return end
 fullText = tostring(fullText or "")
 local w = textObj.AbsoluteSize.X
-if w <= 1 then
-textObj.Text = ""
-return
-end
+if w <= 1 then textObj.Text = "" return end
 w = w - 2
 local big = Vector2.new(999999, 999999)
 local b0 = TextService:GetTextSize(fullText, textObj.TextSize, textObj.Font, big)
-if b0.X <= w then
-textObj.Text = fullText
-return
-end
+if b0.X <= w then textObj.Text = fullText return end
 local lo, hi, best = 1, #fullText, ""
 while lo <= hi do
 local mid = math.floor((lo + hi) / 2)
 local cand = string.sub(fullText, 1, mid) .. "..."
 local bb = TextService:GetTextSize(cand, textObj.TextSize, textObj.Font, big)
-if bb.X <= w then
-best = cand
-lo = mid + 1
-else
-hi = mid - 1
-end
+if bb.X <= w then best = cand lo = mid + 1 else hi = mid - 1 end
 end
 if best == "" then best = "..." end
 textObj.Text = best
@@ -4230,14 +3987,14 @@ local gridCell = 20
 local gridPad = 4
 local gridCols = 6
 local presets = {
-Color3.fromRGB(255, 70, 70),  Color3.fromRGB(255, 120, 60), Color3.fromRGB(255, 170, 50),
+Color3.fromRGB(255, 70, 70), Color3.fromRGB(255, 120, 60), Color3.fromRGB(255, 170, 50),
 Color3.fromRGB(255, 215, 60), Color3.fromRGB(220, 240, 60), Color3.fromRGB(150, 235, 70),
 Color3.fromRGB(80, 230, 110), Color3.fromRGB(50, 225, 160), Color3.fromRGB(50, 220, 210),
 Color3.fromRGB(60, 180, 240), Color3.fromRGB(70, 130, 255), Color3.fromRGB(110, 90, 255),
 Color3.fromRGB(150, 80, 255), Color3.fromRGB(190, 80, 250), Color3.fromRGB(230, 80, 220),
 Color3.fromRGB(255, 80, 170), Color3.fromRGB(255, 90, 130), Color3.fromRGB(255, 255, 255),
-Color3.fromRGB(200, 200, 210),Color3.fromRGB(150, 150, 160),Color3.fromRGB(110, 110, 120),
-Color3.fromRGB(70, 70, 80),   Color3.fromRGB(40, 40, 48),   Color3.fromRGB(15, 15, 20),
+Color3.fromRGB(200, 200, 210), Color3.fromRGB(150, 150, 160), Color3.fromRGB(110, 110, 120),
+Color3.fromRGB(70, 70, 80), Color3.fromRGB(40, 40, 48), Color3.fromRGB(15, 15, 20),
 }
 local gridRows = math.ceil(#presets / gridCols)
 local gridH = gridRows * (gridCell + gridPad) - gridPad
@@ -4333,9 +4090,7 @@ svPad.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
 svPointer.Position = UDim2.new(sat, 0, 1 - val, 0)
 huePointer.Position = UDim2.new(hue, 0, 0.5, 0)
 swatch.BackgroundColor3 = col
-if cfg.Flag then
-Library.Flags[cfg.Flag] = col
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = col end
 if fire and cfg.Callback and not Library._loading then
 task.spawn(cfg.Callback, col)
 end
@@ -4369,8 +4124,7 @@ end
 end)
 Connect(UserInputService.InputChanged, function(inp)
 if dragSV and isOpen then
-if inp.UserInputType == Enum.UserInputType.MouseMovement
-or inp.UserInputType == Enum.UserInputType.Touch then
+if inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch then
 svFromInput(inp)
 end
 end
@@ -4398,8 +4152,7 @@ end
 end)
 Connect(UserInputService.InputChanged, function(inp)
 if dragHue and isOpen then
-if inp.UserInputType == Enum.UserInputType.MouseMovement
-or inp.UserInputType == Enum.UserInputType.Touch then
+if inp.UserInputType == Enum.UserInputType.MouseMovement or inp.UserInputType == Enum.UserInputType.Touch then
 hueFromInput(inp)
 end
 end
@@ -4426,9 +4179,7 @@ hue, sat, val = hh, ss, vv
 applyVisuals(true)
 end)
 end
-if cfg.Flag then
-Library.Flags[cfg.Flag] = col
-end
+if cfg.Flag then Library.Flags[cfg.Flag] = col end
 swatch.MouseButton1Click:Connect(togglePicker)
 hoverBorder(f, s, function() return col end)
 addTooltip(f, cfg.Tooltip)
@@ -4439,19 +4190,18 @@ local hh, ss, vv = c:ToHSV()
 hue, sat, val = hh, ss, vv
 applyVisuals(true)
 end,
-Get = function()
-return col
-end,
+Get = function() return col end,
 }
 registerElement(window, tab, name, f, cfg, "colorpicker", obj)
 return obj
 end
+
 return tab
 end
 
--- ==========================================================
--- [V5.6 FIX] Mini Toggle & UI Elements
--- ==========================================================
+--// ==========================================================
+--// MINI TOGGLE & UI ELEMENTS
+--// ==========================================================
 local MINI_W, MINI_H = 168, 42
 local MINI_ICON = 22
 local MINI_LINE = 3
@@ -4566,15 +4316,12 @@ MiniToggle.Position = UDim2.new(0, mOrigX + d.X, 0, mOrigY + d.Y)
 end
 end, window)
 Connect(UserInputService.InputEnded, function(inp)
-if isPressInput(inp) then
-mDrag = false
-end
+if isPressInput(inp) then mDrag = false end
 end, window)
+
 function window:Toggle(force)
 if window._destroyed then return end
-if window._closeConfirmCleanup then
-pcall(window._closeConfirmCleanup)
-end
+if window._closeConfirmCleanup then pcall(window._closeConfirmCleanup) end
 closeSearchResults()
 local open = (force ~= nil) and force or not Library.Open
 Library.Open = open
@@ -4592,20 +4339,23 @@ end
 setMiniIcon(open)
 setMiniLabel(open)
 end
+
 MiniToggle.MouseButton1Click:Connect(function()
 if mMoved > 8 then return end
 window:Toggle()
 end)
+
 function window:SetInfoCard(vis)
 -- no-op: info sekarang ada di tab Home
 end
+
 minimizeBtn.MouseButton1Click:Connect(function()
 window:Toggle(false)
 end)
 
 --// ==========================================================
---// [V5.6 BARU] QUICK BAR (WalkSpeed / JumpPower / Inf Jump)
---// Floating, collapsible, draggable, follow theme
+--// QUICK BAR (WalkSpeed / JumpPower / Inf Jump)
+--// [V5.7 FIX #5] Knob presisi, tidak turun
 --// ==========================================================
 if config.QuickBar ~= false then
 local QB_W = 232
@@ -4679,29 +4429,24 @@ local qbOpen = true
 local function setQuickBarOpen(on, instant)
 qbOpen = on and true or false
 local bodyH = 0
-if qbOpen then
-bodyH = qbList.AbsoluteContentSize.Y + 8
-end
+if qbOpen then bodyH = qbList.AbsoluteContentSize.Y + 8 end
 local targetH = QB_HEADER_H + 2 + bodyH
 if instant then
 quickBar.Size = UDim2.new(0, QB_W, 0, targetH)
 qbBody.Visible = qbOpen
 else
-if qbOpen then
-qbBody.Visible = true
-end
+if qbOpen then qbBody.Visible = true end
 Tween(quickBar, 0.25, {Size = UDim2.new(0, QB_W, 0, targetH)})
 if not qbOpen then
 task.delay(0.26, function()
-if quickBar.Parent and not qbOpen then
-qbBody.Visible = false
-end
+if quickBar.Parent and not qbOpen then qbBody.Visible = false end
 end)
 end
 end
 Tween(qbChevron, 0.25, {Rotation = qbOpen and 90 or -90})
 end
--- Row: toggle kecil (FIXED: knob putih sekarang pas dengan padding 4px)
+
+--// [FIX #5] Toggle row: switch 32x16, knob 12x12, padding 2px absolut
 local function qbToggleRow(title, default, callback)
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, 0, 0, 24)
@@ -4713,7 +4458,7 @@ row.Parent = qbBody
 Corner(row, 6)
 registerThemeRef(row, "BackgroundColor3", "Element")
 local lbl = Instance.new("TextLabel")
-lbl.Size = UDim2.new(1, -46, 1, 0)
+lbl.Size = UDim2.new(1, -48, 1, 0)
 lbl.Position = UDim2.new(0, 8, 0, 0)
 lbl.BackgroundTransparency = 1
 lbl.Text = title
@@ -4726,8 +4471,8 @@ lbl.ZIndex = 73
 lbl.Parent = row
 registerThemeRef(lbl, "TextColor3", "Text")
 local sw = Instance.new("TextButton")
-sw.Size = UDim2.new(0, 30, 0, 15)
-sw.Position = UDim2.new(1, -38, 0.5, -7.5)
+sw.Size = UDim2.new(0, 32, 0, 16)
+sw.Position = UDim2.new(1, -40, 0.5, -8)
 sw.BackgroundColor3 = Theme.Border
 sw.BorderSizePixel = 0
 sw.Text = ""
@@ -4737,8 +4482,8 @@ sw.Parent = row
 Corner(sw, 99)
 registerThemeRef(sw, "BackgroundColor3", "Border")
 local knob = Instance.new("Frame")
-knob.Size = UDim2.new(0, 11, 0, 11)
-knob.Position = UDim2.new(0, 4, 0.5, -5.5) -- [FIX] Padding kiri 4px
+knob.Size = UDim2.new(0, 12, 0, 12)
+knob.Position = UDim2.new(0, 2, 0, 2)
 knob.BackgroundColor3 = Theme.SubText
 knob.BorderSizePixel = 0
 knob.ZIndex = 74
@@ -4749,10 +4494,10 @@ local on = default and true or false
 local function update()
 if on then
 Tween(sw, .2, {BackgroundColor3 = window.accent})
-Tween(knob, .2, {Position = UDim2.new(1, -15, 0.5, -5.5), BackgroundColor3 = Color3.new(1, 1, 1)}) -- [FIX] Padding kanan 4px (30-11-4=15)
+Tween(knob, .2, {Position = UDim2.new(1, -14, 0, 2), BackgroundColor3 = Color3.new(1, 1, 1)})
 else
 Tween(sw, .2, {BackgroundColor3 = Theme.Border})
-Tween(knob, .2, {Position = UDim2.new(0, 4, 0.5, -5.5), BackgroundColor3 = Theme.SubText})
+Tween(knob, .2, {Position = UDim2.new(0, 2, 0, 2), BackgroundColor3 = Theme.SubText})
 end
 end
 update()
@@ -4760,21 +4505,17 @@ window:onAccent(function() update() end)
 sw.MouseButton1Click:Connect(function()
 on = not on
 update()
-if callback then
-task.spawn(callback, on)
-end
+if callback then task.spawn(callback, on) end
 end)
 return {
 Set = function(self, v)
 on = v and true or false
 update()
-if callback then
-task.spawn(callback, on)
-end
+if callback then task.spawn(callback, on) end
 end,
 }
 end
--- Row: slider kecil
+
 local function qbSliderRow(title, min, max, default, callback)
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, 0, 0, 32)
@@ -4833,9 +4574,7 @@ value = math.clamp(math.floor(v + 0.5), min, max)
 local rel = (value - min) / math.max(0.0001, max - min)
 fill.Size = UDim2.new(rel, 0, 1, 0)
 val.Text = tostring(value)
-if fire and callback then
-task.spawn(callback, value)
-end
+if fire and callback then task.spawn(callback, value) end
 end
 apply(value, false)
 window:onAccent(function(c)
@@ -4865,17 +4604,13 @@ apply(min + (max - min) * rel, true)
 end
 end, window)
 Connect(UserInputService.InputEnded, function(inp)
-if isPressInput(inp) then
-sliding = false
-end
+if isPressInput(inp) then sliding = false end
 end, window)
 return {
-Set = function(self, v)
-apply(v, true)
-end,
+Set = function(self, v) apply(v, true) end,
 }
 end
--- Isi Quick Bar: Inf Jump + WalkSpeed + JumpPower
+
 qbToggleRow("Inf Jump", false, function(on)
 Library.Movement:SetInfJump(on)
 end)
@@ -4892,7 +4627,7 @@ qbSliderRow("JumpPower", 0, 500, 50, function(v)
 Library.Movement:SetJumpPower(v)
 end)
 setQuickBarOpen(true, true)
--- Drag Quick Bar lewat header
+
 local qbDrag, qbStart, qbMoved = false, nil, 0
 local qbOrigX, qbOrigY = 0, 92
 Connect(qbHeader.InputBegan, function(inp)
@@ -4912,9 +4647,7 @@ quickBar.Position = UDim2.new(0.5, qbOrigX + d.X, 0, qbOrigY + d.Y)
 end
 end, window)
 Connect(UserInputService.InputEnded, function(inp)
-if isPressInput(inp) then
-qbDrag = false
-end
+if isPressInput(inp) then qbDrag = false end
 end, window)
 qbHeader.MouseButton1Click:Connect(function()
 if qbMoved > 6 then return end
@@ -4929,8 +4662,7 @@ end
 end
 
 --// ==========================================================
---// [V5.6 BARU] FLOATING NET STATS BAR (Outside UI)
---// Draggable, collapsible, style sama seperti Quick Bar
+--// FLOATING NET STATS BAR (Outside UI)
 --// ==========================================================
 if config.NetStatsBar ~= false then
 local NSB_W = 180
@@ -5004,29 +4736,22 @@ local nsbOpen = true
 local function setNetStatsBarOpen(on, instant)
 nsbOpen = on and true or false
 local bodyH = 0
-if nsbOpen then
-bodyH = nsbList.AbsoluteContentSize.Y + 8
-end
+if nsbOpen then bodyH = nsbList.AbsoluteContentSize.Y + 8 end
 local targetH = NSB_HEADER_H + 2 + bodyH
 if instant then
 netStatsBar.Size = UDim2.new(0, NSB_W, 0, targetH)
 nsbBody.Visible = nsbOpen
 else
-if nsbOpen then
-nsbBody.Visible = true
-end
+if nsbOpen then nsbBody.Visible = true end
 Tween(netStatsBar, 0.25, {Size = UDim2.new(0, NSB_W, 0, targetH)})
 if not nsbOpen then
 task.delay(0.26, function()
-if netStatsBar.Parent and not nsbOpen then
-nsbBody.Visible = false
-end
+if netStatsBar.Parent and not nsbOpen then nsbBody.Visible = false end
 end)
 end
 end
 Tween(nsbChevron, 0.25, {Rotation = nsbOpen and 90 or -90})
 end
--- Row: Ping
 local nsbPingRow = Instance.new("Frame")
 nsbPingRow.Size = UDim2.new(1, 0, 0, 22)
 nsbPingRow.BackgroundColor3 = Theme.Element
@@ -5062,7 +4787,6 @@ nsbPingVal.TextYAlignment = Enum.TextYAlignment.Center
 nsbPingVal.ZIndex = 73
 nsbPingVal.Parent = nsbPingRow
 window:onAccent(function(c) nsbPingVal.TextColor3 = c end)
--- Row: FPS
 local nsbFpsRow = Instance.new("Frame")
 nsbFpsRow.Size = UDim2.new(1, 0, 0, 22)
 nsbFpsRow.BackgroundColor3 = Theme.Element
@@ -5099,7 +4823,6 @@ nsbFpsVal.ZIndex = 73
 nsbFpsVal.Parent = nsbFpsRow
 window:onAccent(function(c) nsbFpsVal.TextColor3 = c end)
 setNetStatsBarOpen(true, true)
--- Drag Net Stats Bar
 local nsbDrag, nsbStart, nsbMoved = false, nil, 0
 local nsbOrigX, nsbOrigY = 0, 130
 Connect(nsbHeader.InputBegan, function(inp)
@@ -5119,15 +4842,12 @@ netStatsBar.Position = UDim2.new(0.5, nsbOrigX + d.X, 0, nsbOrigY + d.Y)
 end
 end, window)
 Connect(UserInputService.InputEnded, function(inp)
-if isPressInput(inp) then
-nsbDrag = false
-end
+if isPressInput(inp) then nsbDrag = false end
 end, window)
 nsbHeader.MouseButton1Click:Connect(function()
 if nsbMoved > 6 then return end
 setNetStatsBarOpen(not nsbOpen)
 end)
--- Live update
 task.spawn(function()
 while netStatsBar.Parent do
 task.wait(1)
@@ -5145,7 +4865,7 @@ end
 end
 
 --// ==========================================================
---// [V5.6 BARU] NET STATS INSIDE UI (Sidebar Bottom)
+--// NET STATS INSIDE UI (Sidebar Bottom)
 --// ==========================================================
 local sidebarNetStats = Instance.new("Frame")
 sidebarNetStats.Name = "SidebarNetStats"
@@ -5193,41 +4913,37 @@ snsFps.Text = "FPS: " .. math.min(currentFps, 999)
 end
 end)
 
--- PART 3 END (V5.6 FIX)
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 4
+--// ==========================================================
+--// PART 3/4 SELESAI
+--// JANGAN EXECUTE SENDIRI. LANJUTKAN DENGAN PART 4/4
+--// (Close Confirm, Home Tab Fix #1-#4, Tools, Theme, Save/Load)
+--// ==========================================================
+
+--// ==========================================================
+--// PART 4/4 : Close Confirm + Home + Tools + Theme + Save/Load
+--// SAMBUNGKAN SETELAH PART 3/4. INI BAGIAN TERAKHIR.
+--// ==========================================================
 
 local CONFIRM_COOLDOWN = 3
 window.confirmTitle = config.ConfirmTitle or "System"
 window.confirmSubtitle = config.ConfirmSubtitle or "You are about to close this window. This action cannot be undone and all unsaved changes will be lost."
 function window:SetConfirmText(title, subtitle)
-if title ~= nil then
-self.confirmTitle = tostring(title)
+if title ~= nil then self.confirmTitle = tostring(title) end
+if subtitle ~= nil then self.confirmSubtitle = tostring(subtitle) end
 end
-if subtitle ~= nil then
-self.confirmSubtitle = tostring(subtitle)
-end
-end
+
 local confirmModal, confirmBlocker = nil, nil
 local function destroyCloseConfirm()
-if confirmBlocker and confirmBlocker.Parent then
-pcall(function()
-confirmBlocker:Destroy()
-end)
-end
-if confirmModal and confirmModal.Parent then
-pcall(function()
-confirmModal:Destroy()
-end)
-end
+if confirmBlocker and confirmBlocker.Parent then pcall(function() confirmBlocker:Destroy() end) end
+if confirmModal and confirmModal.Parent then pcall(function() confirmModal:Destroy() end) end
 confirmModal = nil
 confirmBlocker = nil
 Library._confirmOpen = false
 Library._buttonPressLock = false
-if window and not window._destroyed then
-window._closeConfirmCleanup = nil
-end
+if window and not window._destroyed then window._closeConfirmCleanup = nil end
 end
 window._closeConfirmCleanup = destroyCloseConfirm
+
 local function showCloseConfirmation()
 destroyCloseConfirm()
 Library._confirmOpen = true
@@ -5237,25 +4953,17 @@ resizing = false
 closeSearchResults()
 local cd = window._closeButtonData
 if cd and cd.btn and cd.btn.Parent then
-pcall(function()
-Tween(cd.btn, .15, {BackgroundColor3 = Theme.Element})
-end)
+pcall(function() Tween(cd.btn, .15, {BackgroundColor3 = Theme.Element}) end)
 if cd.lines then
-for _, l in ipairs(cd.lines) do
-pcall(function()
-Tween(l, .15, {BackgroundColor3 = Theme.SubText})
-end)
-end
+for _, l in ipairs(cd.lines) do pcall(function() Tween(l, .15, {BackgroundColor3 = Theme.SubText}) end) end
 end
 end
 local closeColor = window.closeColor or Theme.Close
 local closeHover = window.closeHoverColor or Theme.CloseHover
-local closePressed = window.closePressedColor or Theme.ClosePressed
 local closeText = window.closeTextColor or Theme.CloseText
 confirmBlocker = Instance.new("Frame")
 confirmBlocker.Name = "CloseConfirmBlocker"
 confirmBlocker.Size = UDim2.new(1, 0, 1, 0)
-confirmBlocker.Position = UDim2.new(0, 0, 0, 0)
 confirmBlocker.BackgroundTransparency = 1
 confirmBlocker.BorderSizePixel = 0
 confirmBlocker.ZIndex = 9998
@@ -5282,7 +4990,6 @@ Tween(modalScale, .22, {Scale = 1}, Enum.EasingStyle.Back, Enum.EasingDirection.
 Tween(confirmModal, .18, {BackgroundTransparency = 0})
 Tween(modalStroke, .22, {Transparency = 0.18})
 local header = Instance.new("Frame")
-header.Name = "Header"
 header.Size = UDim2.new(1, -28, 0, 40)
 header.Position = UDim2.new(0, 14, 0, 14)
 header.BackgroundTransparency = 1
@@ -5293,10 +5000,8 @@ headerLayout.FillDirection = Enum.FillDirection.Horizontal
 headerLayout.SortOrder = Enum.SortOrder.LayoutOrder
 headerLayout.Padding = UDim.new(0, 10)
 headerLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-headerLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 headerLayout.Parent = header
 local headIcon = Instance.new("ImageLabel")
-headIcon.Name = "HeadIcon"
 headIcon.Size = UDim2.new(0, 22, 0, 22)
 headIcon.BackgroundTransparency = 1
 headIcon.ImageColor3 = closeColor
@@ -5304,23 +5009,21 @@ headIcon.LayoutOrder = 1
 headIcon.ZIndex = 10001
 headIcon.Parent = header
 setIcon(headIcon, "x-circle")
-local titleLbl = Instance.new("TextLabel")
-titleLbl.Name = "Title"
-titleLbl.Size = UDim2.new(1, -32, 0, 22)
-titleLbl.BackgroundTransparency = 1
-titleLbl.Text = tostring(window.confirmTitle or "System")
-titleLbl.TextColor3 = Theme.ConfirmText
-titleLbl.TextTransparency = 1
-titleLbl.TextSize = 17
-titleLbl.Font = Enum.Font.GothamBlack
-titleLbl.TextXAlignment = Enum.TextXAlignment.Left
-titleLbl.TextYAlignment = Enum.TextYAlignment.Center
-titleLbl.LayoutOrder = 2
-titleLbl.ZIndex = 10001
-titleLbl.Parent = header
-Tween(titleLbl, .22, {TextTransparency = 0})
+local cTitle = Instance.new("TextLabel")
+cTitle.Size = UDim2.new(1, -32, 0, 22)
+cTitle.BackgroundTransparency = 1
+cTitle.Text = tostring(window.confirmTitle or "System")
+cTitle.TextColor3 = Theme.ConfirmText
+cTitle.TextTransparency = 1
+cTitle.TextSize = 17
+cTitle.Font = Enum.Font.GothamBlack
+cTitle.TextXAlignment = Enum.TextXAlignment.Left
+cTitle.TextYAlignment = Enum.TextYAlignment.Center
+cTitle.LayoutOrder = 2
+cTitle.ZIndex = 10001
+cTitle.Parent = header
+Tween(cTitle, .22, {TextTransparency = 0})
 local divider = Instance.new("Frame")
-divider.Name = "Divider"
 divider.Size = UDim2.new(1, -28, 0, 1)
 divider.Position = UDim2.new(0, 14, 0, 58)
 divider.BackgroundColor3 = closeColor
@@ -5337,22 +5040,21 @@ NumberSequenceKeypoint.new(0.88, 0),
 NumberSequenceKeypoint.new(1, 1),
 }
 divGrad.Parent = divider
-local subtitleLbl = Instance.new("TextLabel")
-subtitleLbl.Name = "Subtitle"
-subtitleLbl.Size = UDim2.new(1, -28, 0, 56)
-subtitleLbl.Position = UDim2.new(0, 14, 0, 68)
-subtitleLbl.BackgroundTransparency = 1
-subtitleLbl.Text = tostring(window.confirmSubtitle or "")
-subtitleLbl.TextColor3 = Theme.ConfirmSubText
-subtitleLbl.TextTransparency = 1
-subtitleLbl.TextSize = 12
-subtitleLbl.Font = Enum.Font.Gotham
-subtitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-subtitleLbl.TextYAlignment = Enum.TextYAlignment.Top
-subtitleLbl.TextWrapped = true
-subtitleLbl.ZIndex = 10000
-subtitleLbl.Parent = confirmModal
-Tween(subtitleLbl, .26, {TextTransparency = 0})
+local cSub = Instance.new("TextLabel")
+cSub.Size = UDim2.new(1, -28, 0, 56)
+cSub.Position = UDim2.new(0, 14, 0, 68)
+cSub.BackgroundTransparency = 1
+cSub.Text = tostring(window.confirmSubtitle or "")
+cSub.TextColor3 = Theme.ConfirmSubText
+cSub.TextTransparency = 1
+cSub.TextSize = 12
+cSub.Font = Enum.Font.Gotham
+cSub.TextXAlignment = Enum.TextXAlignment.Left
+cSub.TextYAlignment = Enum.TextYAlignment.Top
+cSub.TextWrapped = true
+cSub.ZIndex = 10000
+cSub.Parent = confirmModal
+Tween(cSub, .26, {TextTransparency = 0})
 local btnContainer = Instance.new("Frame")
 btnContainer.Size = UDim2.new(1, -28, 0, 40)
 btnContainer.Position = UDim2.new(0, 14, 1, -54)
@@ -5376,15 +5078,9 @@ noBtn.AutoButtonColor = false
 noBtn.ZIndex = 10001
 noBtn.Parent = btnContainer
 Corner(noBtn, 7)
-noBtn.MouseEnter:Connect(function()
-Tween(noBtn, .15, {BackgroundColor3 = Theme.NeutralHover})
-end)
-noBtn.MouseLeave:Connect(function()
-Tween(noBtn, .15, {BackgroundColor3 = Theme.Neutral})
-end)
-noBtn.MouseButton1Click:Connect(function()
-destroyCloseConfirm()
-end)
+noBtn.MouseEnter:Connect(function() Tween(noBtn, .15, {BackgroundColor3 = Theme.NeutralHover}) end)
+noBtn.MouseLeave:Connect(function() Tween(noBtn, .15, {BackgroundColor3 = Theme.Neutral}) end)
+noBtn.MouseButton1Click:Connect(function() destroyCloseConfirm() end)
 local yesBtn = Instance.new("TextButton")
 yesBtn.Size = UDim2.new(0, 100, 0, 36)
 yesBtn.BackgroundColor3 = closeColor
@@ -5397,23 +5093,13 @@ yesBtn.ZIndex = 10001
 yesBtn.Parent = btnContainer
 Corner(yesBtn, 7)
 local canClickYes = false
-yesBtn.MouseEnter:Connect(function()
-if canClickYes then
-Tween(yesBtn, .15, {BackgroundColor3 = closeHover})
-end
-end)
-yesBtn.MouseLeave:Connect(function()
-if canClickYes then
-Tween(yesBtn, .15, {BackgroundColor3 = closeColor})
-end
-end)
+yesBtn.MouseEnter:Connect(function() if canClickYes then Tween(yesBtn, .15, {BackgroundColor3 = closeHover}) end end)
+yesBtn.MouseLeave:Connect(function() if canClickYes then Tween(yesBtn, .15, {BackgroundColor3 = closeColor}) end end)
 task.spawn(function()
 yesBtn.BackgroundColor3 = Theme.Disabled
 yesBtn.TextColor3 = Theme.DisabledText
 for i = CONFIRM_COOLDOWN, 1, -1 do
-if not yesBtn.Parent then
-break
-end
+if not yesBtn.Parent then break end
 yesBtn.Text = "WAIT (" .. i .. ")"
 task.wait(1)
 end
@@ -5430,68 +5116,39 @@ destroyCloseConfirm()
 window:Destroy()
 else
 Tween(yesBtn, .07, {Rotation = -5})
-task.delay(.07, function()
-if yesBtn.Parent then
-Tween(yesBtn, .07, {Rotation = 5})
-end
-end)
-task.delay(.14, function()
-if yesBtn.Parent then
-Tween(yesBtn, .07, {Rotation = 0})
-end
-end)
+task.delay(.07, function() if yesBtn.Parent then Tween(yesBtn, .07, {Rotation = 5}) end end)
+task.delay(.14, function() if yesBtn.Parent then Tween(yesBtn, .07, {Rotation = 0}) end end)
 end
 end)
 Connect(main:GetPropertyChangedSignal("Visible"), function()
-if not main.Visible then
-destroyCloseConfirm()
-end
+if not main.Visible then destroyCloseConfirm() end
 end, window)
 Connect(main:GetPropertyChangedSignal("Size"), function()
-if main.Size.X.Offset < 80 or main.Size.Y.Offset < 80 then
-destroyCloseConfirm()
-end
+if main.Size.X.Offset < 80 or main.Size.Y.Offset < 80 then destroyCloseConfirm() end
 end, window)
 end
-closeBtn.MouseButton1Click:Connect(function()
-showCloseConfirmation()
-end)
+closeBtn.MouseButton1Click:Connect(function() showCloseConfirmation() end)
+
 Connect(UserInputService.InputBegan, function(inp, gp)
 if gp then return end
 if Library._confirmOpen then return end
-if inp.KeyCode == Library.ToggleKey then
-window:Toggle()
-end
+if inp.KeyCode == Library.ToggleKey then window:Toggle() end
 end, window)
 setMiniIcon(true)
 setMiniLabel(true)
+
 local function performAutoLoad(delayTime)
-if not Library.AutoLoad.Enabled or Library._autoLoaded then
-return
-end
+if not Library.AutoLoad.Enabled or Library._autoLoaded then return end
 Library._autoLoaded = true
 task.delay(delayTime or 0, function()
-if Library._destroyed or window._destroyed then
-return
-end
+if Library._destroyed or window._destroyed then return end
 local files = listSaveFiles()
-if #files == 0 then
-return
-end
+if #files == 0 then return end
 local target = Library.AutoLoad.File
-if not target or target == "" then
-target = "autosave"
-end
+if not target or target == "" then target = "autosave" end
 local found = false
-for _, f in ipairs(files) do
-if f == target then
-found = true
-break
-end
-end
-if not found then
-target = files[1]
-end
+for _, f in ipairs(files) do if f == target then found = true break end end
+if not found then target = files[1] end
 local ok = Library:LoadFromFile(target)
 if ok then
 Library._saveFile = target
@@ -5501,14 +5158,13 @@ end)
 end
 
 --// ==========================================================
---// [V5.6 BARU & FIXED] HOME TAB - Info card style DEK DEV HUB
---// Operator / Place (dengan divider) / FPS / Ping / Session / Key Status / Website
---// Semua card FOLLOW THEME (background + border + accent)
+--// HOME TAB  [V5.7 FIX #1 #2 #3 #4]
 --// ==========================================================
 if config.InfoTab ~= false then
 local homeTab = window:CreateTab(config.InfoTabName or "Home", "home")
 homeTab.btn.LayoutOrder = -100
 homeTab.content.LayoutOrder = -100
+
 local function infoRow(height)
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, 0, 0, height)
@@ -5521,6 +5177,7 @@ lay.Padding = UDim.new(0, 8)
 lay.Parent = row
 return row
 end
+
 local function infoCard(parent, titleText, iconName, height, scaleX, offsetX)
 local card = Instance.new("Frame")
 card.Size = UDim2.new(scaleX or 0.5, offsetX or -4, 0, height)
@@ -5535,11 +5192,7 @@ registerThemeRef(st, "Color", "Border")
 local ic = makeIcon(card, iconName, UDim2.new(0, 14, 0, 14), UDim2.new(0, 10, 0, 9), window.accent)
 if ic then
 ic.ZIndex = 2
-window:onAccent(function(c)
-if ic.Parent then
-ic.ImageColor3 = c
-end
-end)
+window:onAccent(function(c) if ic.Parent then ic.ImageColor3 = c end end)
 end
 local t = Instance.new("TextLabel")
 t.Size = UDim2.new(1, -34, 0, 16)
@@ -5563,10 +5216,12 @@ body.ZIndex = 2
 body.Parent = card
 return card, body
 end
-local function infoButtonRow(parent, yOffset)
+
+--// [FIX #1] Button row pakai posisi ABSOLUT Y (bukan bottom-offset)
+local function infoButtonRow(parent, posY, height)
 local r = Instance.new("Frame")
-r.Size = UDim2.new(1, 0, 0, 22)
-r.Position = UDim2.new(0, 0, 1, yOffset)
+r.Size = UDim2.new(1, 0, 0, height or 24)
+r.Position = UDim2.new(0, 0, 0, posY)
 r.BackgroundTransparency = 1
 r.ZIndex = 3
 r.Parent = parent
@@ -5577,6 +5232,7 @@ lay.Padding = UDim.new(0, 6)
 lay.Parent = r
 return r
 end
+
 local function infoButton(parent, text, order, callback)
 local b = Instance.new("TextButton")
 b.Size = UDim2.new(0.5, -3, 1, 0)
@@ -5595,19 +5251,12 @@ registerThemeRef(b, "BackgroundColor3", "Background")
 registerThemeRef(b, "TextColor3", "Text")
 local bs = Stroke(b, Theme.Border, 1)
 registerThemeRef(bs, "Color", "Border")
-b.MouseEnter:Connect(function()
-Tween(b, .15, {BackgroundColor3 = Theme.ElementHover})
-end)
-b.MouseLeave:Connect(function()
-Tween(b, .15, {BackgroundColor3 = Theme.Background})
-end)
-b.MouseButton1Click:Connect(function()
-if callback then
-task.spawn(callback)
-end
-end)
+b.MouseEnter:Connect(function() Tween(b, .15, {BackgroundColor3 = Theme.ElementHover}) end)
+b.MouseLeave:Connect(function() Tween(b, .15, {BackgroundColor3 = Theme.Background}) end)
+b.MouseButton1Click:Connect(function() if callback then task.spawn(callback) end end)
 return b
 end
+
 local function infoLabel(parent, posY, height, textSize, font, themeKey, truncate)
 local l = Instance.new("TextLabel")
 l.Size = UDim2.new(1, 0, 0, height)
@@ -5618,14 +5267,13 @@ l.TextSize = textSize
 l.Font = font
 l.TextXAlignment = Enum.TextXAlignment.Left
 l.TextYAlignment = Enum.TextYAlignment.Center
-if truncate then
-l.TextTruncate = Enum.TextTruncate.AtEnd
-end
+if truncate then l.TextTruncate = Enum.TextTruncate.AtEnd end
 l.ZIndex = 3
 l.Parent = parent
 registerThemeRef(l, "TextColor3", themeKey or "Text")
 return l
 end
+
 local function makeSparkline(parent, barCount)
 barCount = barCount or 22
 local holder = Instance.new("Frame")
@@ -5652,19 +5300,13 @@ Corner(bar, 1)
 bars[i] = bar
 end
 window:onAccent(function(c)
-for _, bar in ipairs(bars) do
-if bar.Parent then
-bar.BackgroundColor3 = c
-end
-end
+for _, bar in ipairs(bars) do if bar.Parent then bar.BackgroundColor3 = c end end
 end)
 local history = {}
 local spark = {}
 function spark:Push(value, maxV)
 table.insert(history, tonumber(value) or 0)
-if #history > barCount then
-table.remove(history, 1)
-end
+if #history > barCount then table.remove(history, 1) end
 maxV = math.max(tonumber(maxV) or 1, 1)
 for i = 1, barCount do
 local idx = #history - barCount + i
@@ -5676,9 +5318,14 @@ end
 return spark, holder
 end
 
--- ROW 1: Operator + Place
-local row1 = infoRow(118)
-local opCard, opBody = infoCard(row1, "Operator", "user", 118, 0.5, -4)
+local function contrastOn(bg)
+local b = (bg.R + bg.G + bg.B) / 3
+return b > 0.6 and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+end
+
+--// ROW 1: Operator + Place  [FIX #1] tinggi 150, layout presisi
+local row1 = infoRow(150)
+local opCard, opBody = infoCard(row1, "Operator", "user", 150, 0.5, -4)
 local avatar = Instance.new("ImageLabel")
 avatar.Size = UDim2.new(0, 44, 0, 44)
 avatar.Position = UDim2.new(0, 0, 0, 0)
@@ -5704,7 +5351,8 @@ local opId = infoLabel(opBody, 31, 13, 10, Enum.Font.Gotham, "SubText", true)
 opId.Position = UDim2.new(0, 52, 0, 31)
 opId.Size = UDim2.new(1, -52, 0, 13)
 opId.Text = "UserId " .. tostring(LocalPlayer.UserId)
-local opBtnRow = infoButtonRow(opBody, -22)
+-- body tinggi = 150-30 = 120 ; tombol di dasar (120-24 = 96)
+local opBtnRow = infoButtonRow(opBody, 96, 24)
 infoButton(opBtnRow, "Copy UserId", 1, function()
 local ok = copyToClipboard(tostring(LocalPlayer.UserId))
 Library:Notify(ok and ("UserId copied: " .. LocalPlayer.UserId) or "Clipboard tidak tersedia di executor ini.", 3, "Operator", ok and "check-circle" or "x-circle")
@@ -5714,27 +5362,20 @@ local ok = copyToClipboard(LocalPlayer.Name)
 Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard tidak tersedia di executor ini.", 3, "Operator", ok and "check-circle" or "x-circle")
 end)
 
--- [FIX] Place Card: Info dirapikan + Divider ditambahkan
--- [FIX] Place Card: Mengambil info Place secara manual (Tanpa GameChecker)
-local plCard, plBody = infoCard(row1, "Place", "map-pin", 118, 0.5, -4)
-
--- Mengambil info Place secara manual karena detectGameInfo() sudah dihapus
+--// PLACE CARD  [FIX #1] info di atas, divider, lalu 2 baris tombol (tidak tertumpuk)
+local plCard, plBody = infoCard(row1, "Place", "map-pin", 150, 0.5, -4)
 local placeName = "Unknown Place"
 local placeId = game.PlaceId or 0
 pcall(function()
-    local productInfo = game:GetService("MarketplaceService"):GetProductInfo(placeId)
-    if productInfo and productInfo.Name then
-        placeName = productInfo.Name
-    end
+local productInfo = game:GetService("MarketplaceService"):GetProductInfo(placeId)
+if productInfo and productInfo.Name then placeName = productInfo.Name end
 end)
-
 local plName = infoLabel(plBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
 plName.Text = placeName
 local plId = infoLabel(plBody, 18, 13, 10, Enum.Font.Gotham, "SubText", true)
 plId.Text = "PlaceId " .. tostring(placeId)
 local plJob = infoLabel(plBody, 33, 13, 10, Enum.Font.Gotham, "SubText", true)
 plJob.Text = "JobId " .. tostring(game.JobId or "Unknown")
-
 local plDivider = Instance.new("Frame")
 plDivider.Size = UDim2.new(1, 0, 0, 1)
 plDivider.Position = UDim2.new(0, 0, 0, 52)
@@ -5742,20 +5383,18 @@ plDivider.BackgroundColor3 = Theme.Border
 plDivider.BorderSizePixel = 0
 plDivider.Parent = plBody
 registerThemeRef(plDivider, "BackgroundColor3", "Border")
-
-local plBtnRowA = infoButtonRow(plBody, -50)
+-- baris A absolut Y=58 (di bawah divider 52), baris B Y=86
+local plBtnRowA = infoButtonRow(plBody, 58, 24)
 infoButton(plBtnRowA, "Rejoin Server", 1, function()
 Library:Notify("Rejoining server...", 3, "Place", "refresh-cw")
 local ok, err = rejoinServer()
-if not ok then
-Library:Notify("Rejoin gagal: " .. tostring(err), 4, "Place", "x-circle")
-end
+if not ok then Library:Notify("Rejoin gagal: " .. tostring(err), 4, "Place", "x-circle") end
 end)
 infoButton(plBtnRowA, "Copy Job ID", 2, function()
 local ok = copyToClipboard(tostring(game.JobId))
 Library:Notify(ok and "Job ID copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
 end)
-local plBtnRowB = infoButtonRow(plBody, -24)
+local plBtnRowB = infoButtonRow(plBody, 86, 24)
 infoButton(plBtnRowB, "Copy PlaceId", 1, function()
 local ok = copyToClipboard(tostring(game.PlaceId))
 Library:Notify(ok and ("PlaceId copied: " .. game.PlaceId) or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
@@ -5765,107 +5404,114 @@ local ok = copyToClipboard(joinScriptText())
 Library:Notify(ok and "Join script copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
 end)
 
--- ROW 2: Frame Rate + Network Ping + Session
+--// ROW 2: Frame Rate + Network Ping + Session
 local row2 = infoRow(86)
 local fpsCard, fpsBody = infoCard(row2, "Frame Rate", "activity", 86, 1 / 3, -6)
 local fpsValue = infoLabel(fpsBody, 2, 20, 16, Enum.Font.GothamBlack, "Text", false)
 fpsValue.Text = "-- FPS"
-window:onAccent(function(c)
-if fpsValue.Parent then
-fpsValue.TextColor3 = c
-end
-end)
+window:onAccent(function(c) if fpsValue.Parent then fpsValue.TextColor3 = c end end)
 local fpsSpark, fpsHolder = makeSparkline(fpsBody, 22)
 fpsHolder.Position = UDim2.new(0, 0, 1, -16)
 local pingCard, pingBody = infoCard(row2, "Network Ping", "wifi", 86, 1 / 3, -6)
 local pingValue = infoLabel(pingBody, 2, 20, 16, Enum.Font.GothamBlack, "Text", false)
 pingValue.Text = "-- ms"
-window:onAccent(function(c)
-if pingValue.Parent then
-pingValue.TextColor3 = c
-end
-end)
+window:onAccent(function(c) if pingValue.Parent then pingValue.TextColor3 = c end end)
 local pingSpark, pingHolder = makeSparkline(pingBody, 22)
 pingHolder.Position = UDim2.new(0, 0, 1, -16)
 local sesCard, sesBody = infoCard(row2, "Session & Server", "clock", 86, 1 / 3, -6)
 local sesValue = infoLabel(sesBody, 0, 18, 14, Enum.Font.GothamBold, "Text", false)
-sesValue.Text = "0h 00m"
+sesValue.Text = "0h 00m 00s"
 local sesPlayers = infoLabel(sesBody, 20, 13, 10, Enum.Font.Gotham, "SubText", true)
 sesPlayers.Text = "Players: --/--"
 local sesServer = infoLabel(sesBody, 34, 13, 10, Enum.Font.Gotham, "SubText", true)
 sesServer.Text = "Server up: --"
 
--- ROW 3: Key Status
-local row3 = infoRow(58)
-local keyCard, keyBody = infoCard(row3, "Key Status", "badge-check", 58, 1, 0)
-local keyStatusCfg = (type(config.KeyStatus) == "table" and config.KeyStatus) or {}
-local keyTitle = infoLabel(keyBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
-keyTitle.Text = keyStatusCfg.Title or "No key required"
-window:onAccent(function(c)
-if keyTitle.Parent then
-keyTitle.TextColor3 = c
-end
-end)
--- [FIX] Key Status text wrapped agar tidak keluar frame
-local keySub = infoLabel(keyBody, 18, 14, 10, Enum.Font.Gotham, "SubText", true)
-keySub.TextWrapped = true
-keySub.Text = keyStatusCfg.Subtitle or "This map is free"
+--// [FIX #3] KEY STATUS DIHAPUS TOTAL (tidak ada row3 / keyCard / paragraph)
 
--- ROW 4: Website (Baru)
-local row4 = infoRow(42)
-local webCard, webBody = infoCard(row4, "Website", "globe", 42, 1, 0)
+--// ROW 3 (dulu row4): WEBSITE  [FIX #4] tombol COPY LINK besar & berfungsi
+local WEB_URL = "https://u721rd.mimo.run/Ro-NetriumV4.html"
+local row4 = infoRow(64)
+local webCard, webBody = infoCard(row4, "Website", "globe", 64, 1, 0)
+-- body tinggi = 64-30 = 34
 local webInput = Instance.new("TextBox")
-webInput.Size = UDim2.new(1, -40, 1, 0)
+webInput.Size = UDim2.new(1, -120, 1, 0)
 webInput.Position = UDim2.new(0, 0, 0, 0)
 webInput.BackgroundColor3 = Theme.Background
 webInput.BorderSizePixel = 0
-webInput.Text = "https://u721rd.mimo.run/Ro-NetriumV4.html"
+webInput.Text = WEB_URL
 webInput.TextColor3 = Theme.SubText
 webInput.TextSize = 11
 webInput.Font = Enum.Font.Gotham
 webInput.TextXAlignment = Enum.TextXAlignment.Left
 webInput.TextYAlignment = Enum.TextYAlignment.Center
 webInput.ClearTextOnFocus = false
+webInput.TextEditable = false
 webInput.Parent = webBody
-Corner(webInput, 4)
+Corner(webInput, 6)
 registerThemeRef(webInput, "BackgroundColor3", "Background")
 registerThemeRef(webInput, "TextColor3", "SubText")
-
+Pad(webInput, 0, 10, 0, 10)
+-- Tombol khusus: accent-filled, besar, tetap di dalam body/card
 local webCopyBtn = Instance.new("TextButton")
-webCopyBtn.Size = UDim2.new(0, 36, 1, 0)
-webCopyBtn.Position = UDim2.new(1, -36, 0, 0)
-webCopyBtn.BackgroundColor3 = Theme.Element
+webCopyBtn.Size = UDim2.new(0, 112, 1, 0)
+webCopyBtn.Position = UDim2.new(1, -112, 0, 0)
+webCopyBtn.BackgroundColor3 = window.accent
 webCopyBtn.BorderSizePixel = 0
-webCopyBtn.Text = "Copy"
-webCopyBtn.TextColor3 = Theme.Text
-webCopyBtn.TextSize = 11
-webCopyBtn.Font = Enum.Font.GothamBold
+webCopyBtn.Text = ""
 webCopyBtn.AutoButtonColor = false
+webCopyBtn.ZIndex = 4
 webCopyBtn.Parent = webBody
-Corner(webCopyBtn, 4)
-registerThemeRef(webCopyBtn, "BackgroundColor3", "Element")
-registerThemeRef(webCopyBtn, "TextColor3", "Text")
+Corner(webCopyBtn, 6)
+local webCopyScale = Instance.new("UIScale")
+webCopyScale.Scale = 1
+webCopyScale.Parent = webCopyBtn
+local webCopyIcon = makeIcon(webCopyBtn, "copy", UDim2.new(0, 14, 0, 14), UDim2.new(0, 10, 0.5, -7), contrastOn(window.accent))
+if webCopyIcon then webCopyIcon.ZIndex = 5 end
+local webCopyLabel = Instance.new("TextLabel")
+webCopyLabel.Size = UDim2.new(1, -30, 1, 0)
+webCopyLabel.Position = UDim2.new(0, 28, 0, 0)
+webCopyLabel.BackgroundTransparency = 1
+webCopyLabel.Text = "COPY LINK"
+webCopyLabel.TextColor3 = contrastOn(window.accent)
+webCopyLabel.TextSize = 11
+webCopyLabel.Font = Enum.Font.GothamBold
+webCopyLabel.TextXAlignment = Enum.TextXAlignment.Center
+webCopyLabel.TextYAlignment = Enum.TextYAlignment.Center
+webCopyLabel.ZIndex = 5
+webCopyLabel.Parent = webCopyBtn
+window:onAccent(function(c)
+webCopyBtn.BackgroundColor3 = c
+local tc = contrastOn(c)
+webCopyLabel.TextColor3 = tc
+if webCopyIcon then webCopyIcon.ImageColor3 = tc end
+end)
 webCopyBtn.MouseEnter:Connect(function()
-Tween(webCopyBtn, .15, {BackgroundColor3 = Theme.ElementHover})
+Tween(webCopyBtn, .15, {BackgroundColor3 = window.accent:Lerp(Color3.new(1, 1, 1), 0.15)})
 end)
 webCopyBtn.MouseLeave:Connect(function()
-Tween(webCopyBtn, .15, {BackgroundColor3 = Theme.Element})
+Tween(webCopyBtn, .15, {BackgroundColor3 = window.accent})
 end)
+local webCopying = false
 webCopyBtn.MouseButton1Click:Connect(function()
-local ok = copyToClipboard("https://u721rd.mimo.run/Ro-NetriumV4.html")
+if webCopying then return end
+webCopying = true
+Tween(webCopyScale, .08, {Scale = 0.92}, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+task.delay(.09, function() if webCopyScale.Parent then Tween(webCopyScale, .12, {Scale = 1}) end end)
+local ok = copyToClipboard(WEB_URL)
 Library:Notify(ok and "Website link copied!" or "Clipboard tidak tersedia.", 3, "Website", ok and "check-circle" or "x-circle")
+webCopyLabel.Text = ok and "COPIED!" or "FAILED"
+task.delay(1.2, function()
+if webCopyLabel.Parent then webCopyLabel.Text = "COPY LINK" end
+webCopying = false
+end)
 end)
 
--- Live update loop (FPS / Ping / Session / sparkline)
+--// Live update loop  [FIX #2] Session berjalan (formatDuration ada di PART 1)
 task.spawn(function()
 while homeTab.content.Parent do
 task.wait(1)
-if window._destroyed or Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then
-return
-end
-if not fpsValue.Parent then
-return
-end
+if window._destroyed or Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
+if not fpsValue.Parent then return end
 fpsValue.Text = math.min(currentFps, 999) .. " FPS"
 pingValue.Text = currentPing .. " ms"
 fpsSpark:Push(currentFps, math.max(120, currentFps))
@@ -5873,43 +5519,31 @@ pingSpark:Push(currentPing, math.max(200, currentPing))
 sesValue.Text = formatDuration(os.clock() - (Library.SessionStart or 0))
 local pc = #Players:GetPlayers()
 local mp = 0
-pcall(function()
-mp = Players.MaxPlayers
-end)
+pcall(function() mp = Players.MaxPlayers end)
 sesPlayers.Text = "Players: " .. pc .. "/" .. ((mp and mp > 0) and mp or pc)
 local up = 0
-pcall(function()
-up = workspace.DistributedGameTime
-end)
+pcall(function() up = workspace.DistributedGameTime end)
 sesServer.Text = "Server up: " .. formatDuration(up)
 end
 end)
 end
 
--- PART 4 END (V5.6 FIX)
--- JANGAN JALANKAN SENDIRI. LANJUTKAN DENGAN PART 5
-
--- Built-in Tools Tab
+--// ==========================================================
+--// TOOLS TAB
+--// ==========================================================
 if config.ToolsTab ~= false then
 local ToolsTab = window:CreateTab("Tools", "wrench")
 ToolsTab.btn.LayoutOrder = 9997
 ToolsTab.content.LayoutOrder = 9997
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
---// [V5.5] Movement DIPINDAH ke Quick Bar (floating)
+
 ToolsTab:CreateSection("Movement")
 ToolsTab:CreateParagraph({
 Title = "Movement Tools",
 Content = "WalkSpeed, JumpPower dan Infinite Jump sekarang ada di QUICK BAR (bar melayang di atas window). Bisa di-collapse dan di-drag lewat headernya.",
 Icon = "gauge",
 })
--- =========================================================
--- TOOLS TAB - EXTERNAL SCRIPTS
--- =========================================================
+
 ToolsTab:CreateSection("External Scripts")
 ToolsTab:CreateParagraph({
 Title = "System Information",
@@ -5942,13 +5576,9 @@ Placeholder = "None selected",
 Flag = "ToolsScriptMulti",
 Tooltip = "Select one or more external scripts",
 Callback = function(list)
-if type(list) == "string" then
-selectedToolScripts = { list }
-elseif type(list) == "table" then
-selectedToolScripts = list
-else
-selectedToolScripts = {}
-end
+if type(list) == "string" then selectedToolScripts = { list }
+elseif type(list) == "table" then selectedToolScripts = list
+else selectedToolScripts = {} end
 end,
 })
 ToolsTab:CreateButton({
@@ -5966,75 +5596,34 @@ task.spawn(function()
 for i, scriptName in ipairs(selectedToolScripts) do
 local url = TOOL_SCRIPT_URLS[scriptName]
 if url then
-if type(executeRemoteScript) == "function" then
 executeRemoteScript(url, scriptName)
 else
-local ok, source = pcall(function()
-return game:HttpGet(url)
-end)
-if ok and source and source ~= "" then
-local chunk, loadErr = loadstring(source)
-if chunk then
-task.spawn(chunk)
-else
-Library:Notify(
-"Load error: " .. tostring(scriptName) .. "\n" .. tostring(loadErr),
-5,
-"Error",
-"x-circle"
-)
+Library:Notify("URL not found: " .. tostring(scriptName), 5, "Error", "x-circle")
 end
-else
-Library:Notify(
-"Failed to fetch: " .. tostring(scriptName),
-5,
-"Error",
-"x-circle"
-)
-end
-end
-else
-Library:Notify(
-"URL not found: " .. tostring(scriptName),
-5,
-"Error",
-"x-circle"
-)
-end
-if i < count then
-task.wait(1.2)
-end
+if i < count then task.wait(1.2) end
 end
 Library:Notify("All selected scripts executed.", 4, "Done", "check-circle")
 end)
 end,
 })
+
 ToolsTab:CreateSection("More Tools")
--- =========================================================
--- TOOLS TAB - PLAYER JOIN/LEAVE NOTIFICATION
--- =========================================================
+
+--// Join/Leave notification
 _G.JoinLeaveEnabled = false
 local function removeOldJoinLeaveGui()
 local parents = { PlayerGui }
 if typeof(gethui) == "function" then
 local ok, hui = pcall(gethui)
-if ok and hui then
-table.insert(parents, hui)
+if ok and hui then table.insert(parents, hui) end
 end
-end
-local okCore, CoreGui = pcall(function()
-return game:GetService("CoreGui")
-end)
-if okCore and CoreGui then
-table.insert(parents, CoreGui)
-end
+local okCore, CoreGui = pcall(function() return game:GetService("CoreGui") end)
+if okCore and CoreGui then table.insert(parents, CoreGui) end
 for _, parent in ipairs(parents) do
 if parent then
 for _, child in ipairs(parent:GetChildren()) do
 if child:IsA("ScreenGui") and child.Name == "JoinLeaveNotificationGui" then
-pcall(function()
-child:Destroy()
-end)
+pcall(function() child:Destroy() end)
 end
 end
 end
@@ -6050,9 +5639,7 @@ NotificationGui.DisplayOrder = 999999
 local notifParent = PlayerGui
 if typeof(gethui) == "function" then
 local ok, hui = pcall(gethui)
-if ok and hui then
-notifParent = hui
-end
+if ok and hui then notifParent = hui end
 end
 NotificationGui.Parent = notifParent
 local activeNotifications = {}
@@ -6061,20 +5648,12 @@ local isProcessingQueue = false
 local processNotificationQueue
 local showPlayerNotification
 local function getAvatarUrl(userId)
-if not userId or userId == 0 then
-return "rbxasset://textures/ui/GuiImagePlaceholder.png"
-end
-return "https://www.roblox.com/headshot-thumbnail/image?userId="
-.. userId
-.. "&width=150&height=150&format=png"
+if not userId or userId == 0 then return "rbxasset://textures/ui/GuiImagePlaceholder.png" end
+return "https://www.roblox.com/headshot-thumbnail/image?userId=" .. userId .. "&width=150&height=150&format=png"
 end
 local function getCurrentTime()
-local success, time = pcall(function()
-return os.date("*t")
-end)
-if success and time then
-return string.format("%02d:%02d:%02d", time.hour, time.min, time.sec)
-end
+local success, time = pcall(function() return os.date("*t") end)
+if success and time then return string.format("%02d:%02d:%02d", time.hour, time.min, time.sec) end
 return "00:00:00"
 end
 local function updateNotificationPositions()
@@ -6082,12 +5661,7 @@ for i, frame in ipairs(activeNotifications) do
 if frame.Parent then
 local count = #activeNotifications
 local yOffset = -(100 + (count - i) * 90)
-local targetPosition = UDim2.new(1, -340, 1, yOffset)
-TweenService:Create(
-frame,
-TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-{ Position = targetPosition }
-):Play()
+TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = UDim2.new(1, -340, 1, yOffset) }):Play()
 end
 end
 end
@@ -6139,27 +5713,15 @@ nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextXAlignment = Enum.TextXAlignment.Left
 nameLabel.Parent = notifFrame
 local currentPlayers = #Players:GetPlayers()
-if not isJoining then
-currentPlayers = math.max(0, currentPlayers - 1)
-end
+if not isJoining then currentPlayers = math.max(0, currentPlayers - 1) end
 local maxPlayers = 99
-local success, result = pcall(function()
-return game.MaxPlayers
-end)
-if success and type(result) == "number" and result > 0 then
-maxPlayers = result
-end
-local infoText = string.format(
-"Players: %d/%d | Time: %s",
-currentPlayers,
-maxPlayers,
-getCurrentTime()
-)
+local success, result = pcall(function() return Players.MaxPlayers end)
+if success and type(result) == "number" and result > 0 then maxPlayers = result end
 local infoLabel = Instance.new("TextLabel")
 infoLabel.Size = UDim2.new(1, -75, 0, 18)
 infoLabel.Position = UDim2.new(0, 72, 0, 50)
 infoLabel.BackgroundTransparency = 1
-infoLabel.Text = infoText
+infoLabel.Text = string.format("Players: %d/%d | Time: %s", currentPlayers, maxPlayers, getCurrentTime())
 infoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 infoLabel.TextSize = 11
 infoLabel.Font = Enum.Font.Gotham
@@ -6168,17 +5730,8 @@ infoLabel.Parent = notifFrame
 table.insert(activeNotifications, notifFrame)
 updateNotificationPositions()
 task.delay(4, function()
-if not notifFrame.Parent then
-return
-end
-TweenService:Create(
-notifFrame,
-TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-{
-Position = UDim2.new(1, 20, 1, 20),
-BackgroundTransparency = 1,
-}
-):Play()
+if not notifFrame.Parent then return end
+TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.new(1, 20, 1, 20), BackgroundTransparency = 1 }):Play()
 TweenService:Create(avatarImage, TweenInfo.new(0.5), { ImageTransparency = 1 }):Play()
 TweenService:Create(titleLabel, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
 TweenService:Create(nameLabel, TweenInfo.new(0.5), { TextTransparency = 1 }):Play()
@@ -6186,18 +5739,13 @@ TweenService:Create(infoLabel, TweenInfo.new(0.5), { TextTransparency = 1 }):Pla
 task.wait(0.5)
 notifFrame:Destroy()
 for idx, frame in ipairs(activeNotifications) do
-if frame == notifFrame then
-table.remove(activeNotifications, idx)
-break
-end
+if frame == notifFrame then table.remove(activeNotifications, idx) break end
 end
 updateNotificationPositions()
 end)
 end
 processNotificationQueue = function()
-if isProcessingQueue or #notificationQueue == 0 then
-return
-end
+if isProcessingQueue or #notificationQueue == 0 then return end
 isProcessingQueue = true
 local data = table.remove(notificationQueue, 1)
 if type(showPlayerNotification) == "function" then
@@ -6205,36 +5753,18 @@ showPlayerNotification(data.playerName, data.userId, data.isJoining)
 end
 task.delay(0.5, function()
 isProcessingQueue = false
-if type(processNotificationQueue) == "function" then
-processNotificationQueue()
-end
+if type(processNotificationQueue) == "function" then processNotificationQueue() end
 end)
 end
 Players.PlayerAdded:Connect(function(player)
-if not _G.JoinLeaveEnabled then
-return
-end
-table.insert(notificationQueue, {
-playerName = player.Name,
-userId = player.UserId,
-isJoining = true,
-})
-if type(processNotificationQueue) == "function" then
+if not _G.JoinLeaveEnabled then return end
+table.insert(notificationQueue, { playerName = player.Name, userId = player.UserId, isJoining = true })
 processNotificationQueue()
-end
 end)
 Players.PlayerRemoving:Connect(function(player)
-if not _G.JoinLeaveEnabled then
-return
-end
-table.insert(notificationQueue, {
-playerName = player.Name,
-userId = player.UserId,
-isJoining = false,
-})
-if type(processNotificationQueue) == "function" then
+if not _G.JoinLeaveEnabled then return end
+table.insert(notificationQueue, { playerName = player.Name, userId = player.UserId, isJoining = false })
 processNotificationQueue()
-end
 end)
 ToolsTab:CreateToggle({
 Name = "Player Notification",
@@ -6247,117 +5777,68 @@ _G.JoinLeaveEnabled = value
 if value then
 local pName = (LocalPlayer and LocalPlayer.Name) or "Unknown"
 local pId = (LocalPlayer and LocalPlayer.UserId) or 0
-table.insert(notificationQueue, {
-playerName = pName .. " (You)",
-userId = pId,
-isJoining = true,
-})
-if type(processNotificationQueue) == "function" then
+table.insert(notificationQueue, { playerName = pName .. " (You)", userId = pId, isJoining = true })
 processNotificationQueue()
-end
 end
 end,
 })
--- =========================================================
--- TOOLS TAB - ESP PLAYER
--- =========================================================
+
+--// ESP Player
 local espEnabled = false
 local espObjects = {}
 local espCharacterConnections = {}
 local updateConnection = nil
 local function collectKeys(tbl)
 local keys = {}
-for key in pairs(tbl) do
-table.insert(keys, key)
-end
+for key in pairs(tbl) do table.insert(keys, key) end
 return keys
 end
 local function getTeamColor(player)
 local team = nil
-pcall(function()
-team = player.Team
-end)
+pcall(function() team = player.Team end)
 local teamName = (team and team.Name) or ""
 local teamColorMap = {
-["Fugitive"] = Color3.fromRGB(255, 50, 50),
-["Prison"] = Color3.fromRGB(255, 150, 0),
-["Police"] = Color3.fromRGB(0, 100, 255),
-["Civilian"] = Color3.fromRGB(50, 255, 50),
-["Hostage"] = Color3.fromRGB(255, 0, 255),
-["Choosing"] = Color3.fromRGB(0, 255, 255),
-["ADMIN"] = Color3.fromRGB(255, 215, 0),
-["Red"] = Color3.fromRGB(255, 50, 50),
-["Blue"] = Color3.fromRGB(50, 100, 255),
-["Green"] = Color3.fromRGB(50, 255, 50),
-["Yellow"] = Color3.fromRGB(255, 255, 50),
-["Purple"] = Color3.fromRGB(200, 50, 255),
-["White"] = Color3.fromRGB(255, 255, 255),
-["Black"] = Color3.fromRGB(50, 50, 50),
+["Fugitive"] = Color3.fromRGB(255, 50, 50), ["Prison"] = Color3.fromRGB(255, 150, 0),
+["Police"] = Color3.fromRGB(0, 100, 255), ["Civilian"] = Color3.fromRGB(50, 255, 50),
+["Hostage"] = Color3.fromRGB(255, 0, 255), ["Choosing"] = Color3.fromRGB(0, 255, 255),
+["ADMIN"] = Color3.fromRGB(255, 215, 0), ["Red"] = Color3.fromRGB(255, 50, 50),
+["Blue"] = Color3.fromRGB(50, 100, 255), ["Green"] = Color3.fromRGB(50, 255, 50),
+["Yellow"] = Color3.fromRGB(255, 255, 50), ["Purple"] = Color3.fromRGB(200, 50, 255),
+["White"] = Color3.fromRGB(255, 255, 255), ["Black"] = Color3.fromRGB(50, 50, 50),
 }
 for name, color in pairs(teamColorMap) do
-if string.lower(teamName) == string.lower(name) then
-return color
-end
+if string.lower(teamName) == string.lower(name) then return color end
 end
 local teamColor = nil
-pcall(function()
-teamColor = team and team.TeamColor and team.TeamColor.Color
-end)
+pcall(function() teamColor = team and team.TeamColor and team.TeamColor.Color end)
 return teamColor or Color3.fromRGB(255, 255, 255)
 end
 local function clearPlayerESP(player)
 local data = espObjects[player]
 if data then
-pcall(function()
-if data.billboard then
-data.billboard:Destroy()
-end
-end)
-pcall(function()
-if data.highlight then
-data.highlight:Destroy()
-end
-end)
+pcall(function() if data.billboard then data.billboard:Destroy() end end)
+pcall(function() if data.highlight then data.highlight:Destroy() end end)
 espObjects[player] = nil
 end
 local conn = espCharacterConnections[player]
-if conn then
-pcall(function()
-conn:Disconnect()
-end)
-espCharacterConnections[player] = nil
-end
+if conn then pcall(function() conn:Disconnect() end) espCharacterConnections[player] = nil end
 end
 local function clearAllESP()
-for _, player in ipairs(collectKeys(espObjects)) do
-clearPlayerESP(player)
-end
-for _, player in ipairs(collectKeys(espCharacterConnections)) do
-clearPlayerESP(player)
-end
+for _, player in ipairs(collectKeys(espObjects)) do clearPlayerESP(player) end
+for _, player in ipairs(collectKeys(espCharacterConnections)) do clearPlayerESP(player) end
 espObjects = {}
 end
 local function createESP(targetPlayer)
-if targetPlayer == LocalPlayer then
-return
-end
+if targetPlayer == LocalPlayer then return end
 local function setupESP(char)
-if not char then
-return
-end
+if not char then return end
 local head = char:WaitForChild("Head", 5)
 local hum = char:WaitForChild("Humanoid", 5)
 local hrp = char:WaitForChild("HumanoidRootPart", 5)
-if not head or not hum or not hrp then
-return
-end
+if not head or not hum or not hrp then return end
 local teamColor = getTeamColor(targetPlayer)
-if head:FindFirstChild("PlayerESP_GUI") then
-head.PlayerESP_GUI:Destroy()
-end
-if char:FindFirstChild("PlayerESP_HL") then
-char.PlayerESP_HL:Destroy()
-end
+if head:FindFirstChild("PlayerESP_GUI") then head.PlayerESP_GUI:Destroy() end
+if char:FindFirstChild("PlayerESP_HL") then char.PlayerESP_HL:Destroy() end
 local highlight = Instance.new("Highlight")
 highlight.Name = "PlayerESP_HL"
 pcall(function()
@@ -6381,12 +5862,10 @@ billboard.Parent = head
 local nameLabel = Instance.new("TextLabel")
 nameLabel.Name = "NameLabel"
 nameLabel.Size = UDim2.new(1, 0, 0, 14)
-nameLabel.Position = UDim2.new(0, 0, 0, 0)
 nameLabel.BackgroundTransparency = 1
 nameLabel.Text = targetPlayer.Name
 nameLabel.TextColor3 = teamColor
 nameLabel.TextStrokeTransparency = 0
-nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextSize = 12
 nameLabel.Parent = billboard
@@ -6398,7 +5877,6 @@ distanceLabel.BackgroundTransparency = 1
 distanceLabel.Text = "[0m]"
 distanceLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 distanceLabel.TextStrokeTransparency = 0
-distanceLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 distanceLabel.Font = Enum.Font.GothamBold
 distanceLabel.TextSize = 11
 distanceLabel.Parent = billboard
@@ -6429,7 +5907,6 @@ hpLabel.BackgroundTransparency = 1
 hpLabel.Text = "HP: 100/100"
 hpLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 hpLabel.TextStrokeTransparency = 0
-hpLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 hpLabel.Font = Enum.Font.GothamBold
 hpLabel.TextSize = 11
 hpLabel.Parent = billboard
@@ -6441,40 +5918,24 @@ teamLabel.BackgroundTransparency = 1
 teamLabel.Text = "[" .. ((targetPlayer.Team and targetPlayer.Team.Name) or "No Team") .. "]"
 teamLabel.TextColor3 = teamColor
 teamLabel.TextStrokeTransparency = 0
-teamLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 teamLabel.Font = Enum.Font.Gotham
 teamLabel.TextSize = 10
 teamLabel.Parent = billboard
 espObjects[targetPlayer] = {
-billboard = billboard,
-highlight = highlight,
-hpFill = hpFill,
-hpLabel = hpLabel,
-distanceLabel = distanceLabel,
-nameLabel = nameLabel,
-teamLabel = teamLabel,
-humanoid = hum,
-hrp = hrp,
-character = char,
+billboard = billboard, highlight = highlight, hpFill = hpFill, hpLabel = hpLabel,
+distanceLabel = distanceLabel, nameLabel = nameLabel, teamLabel = teamLabel,
+humanoid = hum, hrp = hrp, character = char,
 }
 end
-if targetPlayer.Character then
-setupESP(targetPlayer.Character)
-end
+if targetPlayer.Character then setupESP(targetPlayer.Character) end
 if not espCharacterConnections[targetPlayer] then
 espCharacterConnections[targetPlayer] = targetPlayer.CharacterAdded:Connect(function(char)
-if espEnabled then
-task.wait(0.5)
-setupESP(char)
-end
+if espEnabled then task.wait(0.5) setupESP(char) end
 end)
 end
 end
 local function startUpdateLoop()
-if updateConnection then
-updateConnection:Disconnect()
-updateConnection = nil
-end
+if updateConnection then updateConnection:Disconnect() updateConnection = nil end
 updateConnection = RunService.RenderStepped:Connect(function()
 local myChar = LocalPlayer.Character
 local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
@@ -6505,13 +5966,9 @@ end
 if myHRP and hrp and hrp.Parent and distLabel then
 local distance = (myHRP.Position - hrp.Position).Magnitude
 distLabel.Text = string.format("[%dm]", math.floor(distance))
-if distance < 15 then
-distLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
-elseif distance < 40 then
-distLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
-else
-distLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-end
+if distance < 15 then distLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+elseif distance < 40 then distLabel.TextColor3 = Color3.fromRGB(255, 200, 0)
+else distLabel.TextColor3 = Color3.fromRGB(255, 255, 255) end
 end
 end)
 end
@@ -6521,36 +5978,25 @@ local function toggleESP(state)
 espEnabled = state
 if state then
 for _, player in ipairs(Players:GetPlayers()) do
-if player ~= LocalPlayer then
-createESP(player)
-end
+if player ~= LocalPlayer then createESP(player) end
 end
 startUpdateLoop()
 else
-if updateConnection then
-updateConnection:Disconnect()
-updateConnection = nil
-end
+if updateConnection then updateConnection:Disconnect() updateConnection = nil end
 clearAllESP()
 end
 end
 Players.PlayerAdded:Connect(function(player)
-if espEnabled and player ~= LocalPlayer then
-createESP(player)
-end
+if espEnabled and player ~= LocalPlayer then createESP(player) end
 end)
-Players.PlayerRemoving:Connect(function(player)
-clearPlayerESP(player)
-end)
+Players.PlayerRemoving:Connect(function(player) clearPlayerESP(player) end)
 ToolsTab:CreateToggle({
 Name = "ESP Player",
 Default = false,
 Flag = "ESPPlayerToggle",
 Icon = "eye",
 Tooltip = "Activate ESP players with HP, distance, and team",
-Callback = function(value)
-toggleESP(value)
-end,
+Callback = function(value) toggleESP(value) end,
 })
 ToolsTab:CreateButton({
 Name = "Korblox & Headless",
@@ -6564,15 +6010,16 @@ executeRemoteScript(
 end,
 })
 end
--- Built-in Theme Tab
+
+--// ==========================================================
+--// THEME TAB
+--// ==========================================================
 if config.ThemeTab ~= false then
 local themeTab = window:CreateTab("Theme & Settings", "palette")
 themeTab.btn.LayoutOrder = 9998
 themeTab.content.LayoutOrder = 9998
 local presetNames = {}
-for k in pairs(Theme.Presets) do
-table.insert(presetNames, k)
-end
+for k in pairs(Theme.Presets) do table.insert(presetNames, k) end
 table.sort(presetNames)
 themeTab:CreateSection("Theme Engine")
 themeTab:CreateDropdown({
@@ -6594,125 +6041,70 @@ Name = "RGB Rainbow",
 Flag = "ZethHub_Rainbow",
 Default = Library.Rainbow,
 Icon = "activity",
-Callback = function(v)
-Library:SetRainbow(v)
-end,
+Callback = function(v) Library:SetRainbow(v) end,
 })
 themeTab:CreateColorPicker({
 Name = "Accent Color",
 Default = Library.Accent,
 Flag = "ZethHub_Accent",
 Icon = "droplet",
-Callback = function(c)
-Library:SetAccent(c)
-end,
+Callback = function(c) Library:SetAccent(c) end,
 })
 themeTab:CreateSlider({
-Name = "Rainbow Speed",
-Min = 0.02,
-Max = 0.5,
-Default = Theme.RainbowSpeed,
-Step = 0.01,
-Flag = "ZethHub_RainbowSpeed",
-Icon = "activity",
-Format = function(v)
-return string.format("%.2f", v)
-end,
-Callback = function(v)
-Theme.RainbowSpeed = v
-end,
+Name = "Rainbow Speed", Min = 0.02, Max = 0.5, Default = Theme.RainbowSpeed, Step = 0.01,
+Flag = "ZethHub_RainbowSpeed", Icon = "activity",
+Format = function(v) return string.format("%.2f", v) end,
+Callback = function(v) Theme.RainbowSpeed = v end,
 })
 themeTab:CreateSlider({
-Name = "Main Border Thickness",
-Min = 1,
-Max = 6,
-Default = Theme.MainBorderThickness,
-Step = 0.1,
-Flag = "ZethHub_MainBorderThickness",
-Icon = "border-all",
-Format = function(v)
-return string.format("%.1f", v)
-end,
+Name = "Main Border Thickness", Min = 1, Max = 6, Default = Theme.MainBorderThickness, Step = 0.1,
+Flag = "ZethHub_MainBorderThickness", Icon = "border-all",
+Format = function(v) return string.format("%.1f", v) end,
 Callback = function(v)
 Theme.MainBorderThickness = v
-if mainStroke then
-mainStroke.Thickness = v
-end
-if mainGlow then
-mainGlow.Thickness = v + 2.2
-end
+if mainStroke then mainStroke.Thickness = v end
+if mainGlow then mainGlow.Thickness = v + 2.2 end
 end,
 })
 themeTab:CreateSlider({
-Name = "Element Border Thickness",
-Min = 0.5,
-Max = 4,
-Default = Theme.ElementBorderThickness,
-Step = 0.1,
-Flag = "ZethHub_ElementBorderThickness",
-Icon = "border-inner",
-Format = function(v)
-return string.format("%.1f", v)
-end,
+Name = "Element Border Thickness", Min = 0.5, Max = 4, Default = Theme.ElementBorderThickness, Step = 0.1,
+Flag = "ZethHub_ElementBorderThickness", Icon = "border-inner",
+Format = function(v) return string.format("%.1f", v) end,
 Callback = function(v)
 Theme.ElementBorderThickness = v
 Theme.BorderThickness = v
 end,
 })
 themeTab:CreateToggle({
-Name = "Moving Particles",
-Flag = "ZethHub_Particles",
-Default = Library.Effects.Particles,
-Icon = "sparkles",
+Name = "Moving Particles", Flag = "ZethHub_Particles", Default = Library.Effects.Particles, Icon = "sparkles",
 Callback = function(v)
 Library.Effects.Particles = v
-if particleLayer then
-particleLayer.Visible = v
-end
+if particleLayer then particleLayer.Visible = v end
 end,
 })
 themeTab:CreateToggle({
-Name = "Border Glow",
-Flag = "ZethHub_Glow",
-Default = Library.Effects.Glow and Theme.BorderGlow,
-Icon = "sun",
+Name = "Border Glow", Flag = "ZethHub_Glow", Default = Library.Effects.Glow and Theme.BorderGlow, Icon = "sun",
 Callback = function(v)
 Theme.BorderGlow = v
 Library.Effects.Glow = v
-if mainGlow then
-mainGlow.Visible = v
-end
+if mainGlow then mainGlow.Visible = v end
 end,
 })
 themeTab:CreateSlider({
-Name = "Animation Speed",
-Min = 0.25,
-Max = 2,
-Default = Library.AnimationSpeed,
-Step = 0.05,
-Flag = "ZethHub_AnimationSpeed",
-Icon = "gauge",
-Format = function(v)
-return string.format("%.2fx", v)
-end,
-Callback = function(v)
-Library.AnimationSpeed = v
-end,
+Name = "Animation Speed", Min = 0.25, Max = 2, Default = Library.AnimationSpeed, Step = 0.05,
+Flag = "ZethHub_AnimationSpeed", Icon = "gauge",
+Format = function(v) return string.format("%.2fx", v) end,
+Callback = function(v) Library.AnimationSpeed = v end,
 })
 themeTab:CreateSection("Settings")
 themeTab:CreateButton({
-Name = "Go Back to Zeutron Hub",
-Icon = "home",
+Name = "Go Back to Zeutron Hub", Icon = "home",
 Callback = function()
 Library:Notify("Zeutron Hub Maintenance is not possible", 3, "Navigation", "x")
-task.wait(1)
-pcall(function()
-end)
 end,
 })
 themeTab:CreateButton({
-Name = "Destroy Interface",
-Icon = "trash-2",
+Name = "Destroy Interface", Icon = "trash-2",
 Callback = function()
 Library:Notify("Self-destructing in 7 seconds...", 7, "Warning", "shield-alert")
 task.wait(7)
@@ -6720,49 +6112,42 @@ if type(Library.Destroy) == "function" then
 Library:Destroy()
 else
 for _, w in ipairs(Library._windows or {}) do
-if type(w.Destroy) == "function" then
-w:Destroy()
-end
+if type(w.Destroy) == "function" then w:Destroy() end
 end
 end
 end,
 })
 end
--- Built-in Save / Load Tab
+
+--// ==========================================================
+--// SAVE / LOAD TAB
+--// ==========================================================
 if config.SaveLoad ~= false then
 local systemTab = window:CreateTab("Save / Load", "database")
 systemTab.btn.LayoutOrder = 9999
 systemTab.content.LayoutOrder = 9999
 systemTab:CreateSection("File Manager")
 local fileNameInput = systemTab:CreateInput({
-Name = "File Name",
-Flag = "ZethHub_FileName",
+Name = "File Name", Flag = "ZethHub_FileName",
 CurrentValue = Library._saveFile or "autosave",
-PlaceholderText = "autosave",
-Icon = "file-text",
+PlaceholderText = "autosave", Icon = "file-text",
 })
 local fileDropdown = systemTab:CreateDropdown({
-Name = "Saved Files",
-Options = getSaveOptions(),
-Flag = "ZethHub_SelectedSave",
-Icon = "folder",
+Name = "Saved Files", Options = getSaveOptions(),
+Flag = "ZethHub_SelectedSave", Icon = "folder",
 })
 systemTab:CreateButton({
-Name = "Refresh Saves",
-Icon = "refresh-cw",
+Name = "Refresh Saves", Icon = "refresh-cw",
 Callback = function()
 fileDropdown:Refresh(getSaveOptions())
 Library:Notify("Daftar save diperbarui.", 3, "Save/Load", "refresh-cw")
 end,
 })
 systemTab:CreateButton({
-Name = "Save Current Config",
-Icon = "download",
+Name = "Save Current Config", Icon = "download",
 Callback = function()
 local fname = fileNameInput:Get()
-if fname == "" then
-fname = Library._saveFile or "autosave"
-end
+if fname == "" then fname = Library._saveFile or "autosave" end
 local ok, err = Library:SaveToFile(fname)
 if ok then
 Library._saveFile = fname
@@ -6775,13 +6160,10 @@ end
 end,
 })
 systemTab:CreateButton({
-Name = "Load Selected File",
-Icon = "upload",
+Name = "Load Selected File", Icon = "upload",
 Callback = function()
 local fname = fileDropdown:Get()
-if not fname or fname == "" or fname == "(no saves)" then
-fname = fileNameInput:Get()
-end
+if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
 if not fname or fname == "" or fname == "(no saves)" then
 Library:Notify("Pilih file save terlebih dahulu.", 4, "Load", "info")
 return
@@ -6796,8 +6178,7 @@ end
 end,
 })
 systemTab:CreateButton({
-Name = "Delete Selected File",
-Icon = "trash-2",
+Name = "Delete Selected File", Icon = "trash-2",
 Callback = function()
 local fname = fileDropdown:Get()
 if not fname or fname == "" or fname == "(no saves)" then
@@ -6815,47 +6196,37 @@ end,
 })
 systemTab:CreateSection("Automation")
 systemTab:CreateToggle({
-Name = "Auto Save",
-Flag = "ZethHub_AutoSave",
-Default = Library.AutoSave.Enabled,
-Icon = "timer",
-Callback = function(v)
-Library.AutoSave.Enabled = v
-end,
+Name = "Auto Save", Flag = "ZethHub_AutoSave", Default = Library.AutoSave.Enabled, Icon = "timer",
+Callback = function(v) Library.AutoSave.Enabled = v end,
 })
 systemTab:CreateSlider({
-Name = "Auto Save Interval (sec)",
-Min = 10,
-Max = 600,
-Default = Library.AutoSave.Interval,
-Step = 1,
-Flag = "ZethHub_AutoSaveInterval",
-Icon = "clock",
-Callback = function(v)
-Library.AutoSave.Interval = v
-end,
+Name = "Auto Save Interval (sec)", Min = 10, Max = 600, Default = Library.AutoSave.Interval, Step = 1,
+Flag = "ZethHub_AutoSaveInterval", Icon = "clock",
+Callback = function(v) Library.AutoSave.Interval = v end,
 })
 systemTab:CreateToggle({
-Name = "Auto Load On Start",
-Flag = "ZethHub_AutoLoad",
-Default = Library.AutoLoad.Enabled,
-Icon = "power",
+Name = "Auto Load On Start", Flag = "ZethHub_AutoLoad", Default = Library.AutoLoad.Enabled, Icon = "power",
 Callback = function(v)
 Library.AutoLoad.Enabled = v
-if v then
-performAutoLoad(0.3)
-end
+if v then performAutoLoad(0.3) end
 end,
 })
 end
+
 if Library.AutoLoad.Enabled then
 performAutoLoad(1.5)
 end
+
 return window
 end
+
 if type(Env) == "table" then
 Env.ZethHubLibrary = Library
 end
 return Library
--- PART 5 END (FINAL)
--- GABUNGKAN PART 1 s/d PART 5 MENJADI SATU SCRIPT LALU EXECUTE
+
+--// ==========================================================
+--// PART 4/4 SELESAI  •  SCRIPT LENGKAP (V5.7)
+--// GABUNGKAN URUT: PART 1/3 + PART 2/4 + PART 3/4 + PART 4/4
+--// JADI SATU SCRIPT, LALU EXECUTE.
+--// ==========================================================
