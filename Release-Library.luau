@@ -5426,8 +5426,6 @@ sesPlayers.Text = "Players: --/--"
 local sesServer = infoLabel(sesBody, 34, 13, 10, Enum.Font.Gotham, "SubText", true)
 sesServer.Text = "Server up: --"
 
---// [FIX #3] KEY STATUS DIHAPUS TOTAL (tidak ada row3 / keyCard / paragraph)
-
 --// ROW 3 (dulu row4): WEBSITE  [FIX #4] tombol COPY LINK besar & berfungsi
 local WEB_URL = "https://u721rd.mimo.run/Ro-NetriumV4.html"
 local row4 = infoRow(64)
@@ -5540,7 +5538,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 ToolsTab:CreateSection("Movement")
 ToolsTab:CreateParagraph({
 Title = "Movement Tools",
-Content = "WalkSpeed, JumpPower dan Infinite Jump sekarang ada di QUICK BAR (bar melayang di atas window). Bisa di-collapse dan di-drag lewat headernya.",
+Content = "WalkSpeed, JumpPower, and Infinite Jump are now in the QUICK BAR (floating bar above the window). It can be collapsed and dragged via its header.",
 Icon = "gauge",
 })
 
@@ -5630,18 +5628,18 @@ end
 end
 end
 removeOldJoinLeaveGui()
-local NotificationGui = Instance.new("ScreenGui")
-NotificationGui.Name = "JoinLeaveNotificationGui"
-NotificationGui.ResetOnSpawn = false
-NotificationGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-NotificationGui.IgnoreGuiInset = true
-NotificationGui.DisplayOrder = 999999
+local Notification_Gui = Instance.new("ScreenGui")
+Notification_Gui.Name = "JoinLeaveNotificationGui"
+Notification_Gui.ResetOnSpawn = false
+Notification_Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+Notification_Gui.IgnoreGuiInset = true
+Notification_Gui.DisplayOrder = 999999
 local notifParent = PlayerGui
 if typeof(gethui) == "function" then
 local ok, hui = pcall(gethui)
 if ok and hui then notifParent = hui end
 end
-NotificationGui.Parent = notifParent
+Notification_Gui.Parent = notifParent
 local activeNotifications = {}
 local notificationQueue = {}
 local isProcessingQueue = false
@@ -5674,7 +5672,7 @@ notifFrame.Size = UDim2.new(0, 320, 0, 80)
 notifFrame.Position = UDim2.new(1, 20, 1, 20)
 notifFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 notifFrame.BorderSizePixel = 0
-notifFrame.Parent = NotificationGui
+notifFrame.Parent = Notification_Gui
 local corner = Instance.new("UICorner")
 corner.CornerRadius = UDim.new(0, 10)
 corner.Parent = notifFrame
@@ -6026,11 +6024,11 @@ themeTab:CreateDropdown({
 Name = "Theme Preset",
 Options = presetNames,
 Default = ThemeManager.Mode == "RGB Rainbow" and "RGB Rainbow" or "Solid",
-Flag = "ZethHub_ThemePreset",
+Flag = "RoNet_ThemePreset",
 Icon = "palette",
 Callback = function(v)
 Library:SetTheme(v)
-local rb = Library._elements["ZethHub_Rainbow"]
+local rb = Library._elements["RoNet_Rainbow"]
 if rb and rb.Object and not Library._loading then
 rb.Object:Set(ThemeManager.Mode == "RGB Rainbow")
 end
@@ -6038,7 +6036,7 @@ end,
 })
 themeTab:CreateToggle({
 Name = "RGB Rainbow",
-Flag = "ZethHub_Rainbow",
+Flag = "RoNet_Rainbow",
 Default = Library.Rainbow,
 Icon = "activity",
 Callback = function(v) Library:SetRainbow(v) end,
@@ -6046,19 +6044,19 @@ Callback = function(v) Library:SetRainbow(v) end,
 themeTab:CreateColorPicker({
 Name = "Accent Color",
 Default = Library.Accent,
-Flag = "ZethHub_Accent",
+Flag = "RoNet_Accent",
 Icon = "droplet",
 Callback = function(c) Library:SetAccent(c) end,
 })
 themeTab:CreateSlider({
 Name = "Rainbow Speed", Min = 0.02, Max = 0.5, Default = Theme.RainbowSpeed, Step = 0.01,
-Flag = "ZethHub_RainbowSpeed", Icon = "activity",
+Flag = "RoNet_RainbowSpeed", Icon = "activity",
 Format = function(v) return string.format("%.2f", v) end,
 Callback = function(v) Theme.RainbowSpeed = v end,
 })
 themeTab:CreateSlider({
 Name = "Main Border Thickness", Min = 1, Max = 6, Default = Theme.MainBorderThickness, Step = 0.1,
-Flag = "ZethHub_MainBorderThickness", Icon = "border-all",
+Flag = "RoNet_MainBorderThickness", Icon = "border-all",
 Format = function(v) return string.format("%.1f", v) end,
 Callback = function(v)
 Theme.MainBorderThickness = v
@@ -6068,7 +6066,7 @@ end,
 })
 themeTab:CreateSlider({
 Name = "Element Border Thickness", Min = 0.5, Max = 4, Default = Theme.ElementBorderThickness, Step = 0.1,
-Flag = "ZethHub_ElementBorderThickness", Icon = "border-inner",
+Flag = "RoNet_ElementBorderThickness", Icon = "border-inner",
 Format = function(v) return string.format("%.1f", v) end,
 Callback = function(v)
 Theme.ElementBorderThickness = v
@@ -6076,14 +6074,14 @@ Theme.BorderThickness = v
 end,
 })
 themeTab:CreateToggle({
-Name = "Moving Particles", Flag = "ZethHub_Particles", Default = Library.Effects.Particles, Icon = "sparkles",
+Name = "Moving Particles", Flag = "RoNet_Particles", Default = Library.Effects.Particles, Icon = "sparkles",
 Callback = function(v)
 Library.Effects.Particles = v
 if particleLayer then particleLayer.Visible = v end
 end,
 })
 themeTab:CreateToggle({
-Name = "Border Glow", Flag = "ZethHub_Glow", Default = Library.Effects.Glow and Theme.BorderGlow, Icon = "sun",
+Name = "Border Glow", Flag = "RoNet_Glow", Default = Library.Effects.Glow and Theme.BorderGlow, Icon = "sun",
 Callback = function(v)
 Theme.BorderGlow = v
 Library.Effects.Glow = v
@@ -6092,15 +6090,15 @@ end,
 })
 themeTab:CreateSlider({
 Name = "Animation Speed", Min = 0.25, Max = 2, Default = Library.AnimationSpeed, Step = 0.05,
-Flag = "ZethHub_AnimationSpeed", Icon = "gauge",
+Flag = "RoNet_AnimationSpeed", Icon = "gauge",
 Format = function(v) return string.format("%.2fx", v) end,
 Callback = function(v) Library.AnimationSpeed = v end,
 })
 themeTab:CreateSection("Settings")
 themeTab:CreateButton({
-Name = "Go Back to Zeutron Hub", Icon = "home",
+Name = "Go Back to Ro-Net Hub", Icon = "home",
 Callback = function()
-Library:Notify("Zeutron Hub Maintenance is not possible", 3, "Navigation", "x")
+Library:Notify("Ro-Net Hub Maintenance is not possible", 3, "Navigation", "x")
 end,
 })
 themeTab:CreateButton({
@@ -6128,19 +6126,19 @@ systemTab.btn.LayoutOrder = 9999
 systemTab.content.LayoutOrder = 9999
 systemTab:CreateSection("File Manager")
 local fileNameInput = systemTab:CreateInput({
-Name = "File Name", Flag = "ZethHub_FileName",
+Name = "File Name", Flag = "RoNet_FileName",
 CurrentValue = Library._saveFile or "autosave",
 PlaceholderText = "autosave", Icon = "file-text",
 })
 local fileDropdown = systemTab:CreateDropdown({
 Name = "Saved Files", Options = getSaveOptions(),
-Flag = "ZethHub_SelectedSave", Icon = "folder",
+Flag = "RoNet_SelectedSave", Icon = "folder",
 })
 systemTab:CreateButton({
 Name = "Refresh Saves", Icon = "refresh-cw",
 Callback = function()
 fileDropdown:Refresh(getSaveOptions())
-Library:Notify("Daftar save diperbarui.", 3, "Save/Load", "refresh-cw")
+Library:Notify("Save list updated.", 3, "Save/Load", "refresh-cw")
 end,
 })
 systemTab:CreateButton({
@@ -6153,9 +6151,9 @@ if ok then
 Library._saveFile = fname
 fileDropdown:Refresh(getSaveOptions())
 fileDropdown:Set(fname)
-Library:Notify("Berhasil menyimpan: " .. fname, 4, "Saved", "check-circle")
+Library:Notify("Successfully saved: " .. fname, 4, "Saved", "check-circle")
 else
-Library:Notify(err or "Gagal menyimpan file.", 4, "Error", "x-circle")
+Library:Notify(err or "Failed to save file.", 4, "Error", "x-circle")
 end
 end,
 })
@@ -6165,15 +6163,15 @@ Callback = function()
 local fname = fileDropdown:Get()
 if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
 if not fname or fname == "" or fname == "(no saves)" then
-Library:Notify("Pilih file save terlebih dahulu.", 4, "Load", "info")
+Library:Notify("Please select a save file first.", 4, "Load", "info")
 return
 end
 local ok, err = Library:LoadFromFile(fname)
 if ok then
 fileNameInput:Set(fname)
-Library:Notify("Berhasil load: " .. fname, 4, "Loaded", "check-circle")
+Library:Notify("Successfully loaded: " .. fname, 4, "Loaded", "check-circle")
 else
-Library:Notify(err or "Gagal load file.", 4, "Error", "x-circle")
+Library:Notify(err or "Failed to load file.", 4, "Error", "x-circle")
 end
 end,
 })
@@ -6182,30 +6180,30 @@ Name = "Delete Selected File", Icon = "trash-2",
 Callback = function()
 local fname = fileDropdown:Get()
 if not fname or fname == "" or fname == "(no saves)" then
-Library:Notify("Tidak ada file yang dipilih.", 4, "Delete", "info")
+Library:Notify("No file selected.", 4, "Delete", "info")
 return
 end
 local ok, err = Library:DeleteSave(fname)
 if ok then
 fileDropdown:Refresh(getSaveOptions())
-Library:Notify("File dihapus: " .. fname, 4, "Deleted", "trash-2")
+Library:Notify("File deleted: " .. fname, 4, "Deleted", "trash-2")
 else
-Library:Notify(err or "Gagal menghapus file.", 4, "Error", "x-circle")
+Library:Notify(err or "Failed to delete file.", 4, "Error", "x-circle")
 end
 end,
 })
 systemTab:CreateSection("Automation")
 systemTab:CreateToggle({
-Name = "Auto Save", Flag = "ZethHub_AutoSave", Default = Library.AutoSave.Enabled, Icon = "timer",
+Name = "Auto Save", Flag = "RoNet_AutoSave", Default = Library.AutoSave.Enabled, Icon = "timer",
 Callback = function(v) Library.AutoSave.Enabled = v end,
 })
 systemTab:CreateSlider({
 Name = "Auto Save Interval (sec)", Min = 10, Max = 600, Default = Library.AutoSave.Interval, Step = 1,
-Flag = "ZethHub_AutoSaveInterval", Icon = "clock",
+Flag = "RoNet_AutoSaveInterval", Icon = "clock",
 Callback = function(v) Library.AutoSave.Interval = v end,
 })
 systemTab:CreateToggle({
-Name = "Auto Load On Start", Flag = "ZethHub_AutoLoad", Default = Library.AutoLoad.Enabled, Icon = "power",
+Name = "Auto Load On Start", Flag = "RoNet_AutoLoad", Default = Library.AutoLoad.Enabled, Icon = "power",
 Callback = function(v)
 Library.AutoLoad.Enabled = v
 if v then performAutoLoad(0.3) end
@@ -6221,7 +6219,7 @@ return window
 end
 
 if type(Env) == "table" then
-Env.ZethHubLibrary = Library
+Env.RoNetLibrary = Library
 end
 return Library
 
