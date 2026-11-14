@@ -4919,11 +4919,6 @@ end)
 --// (Close Confirm, Home Tab Fix #1-#4, Tools, Theme, Save/Load)
 --// ==========================================================
 
---// ==========================================================
---// PART 4/4 : Close Confirm + Home + Tools + Theme + Save/Load
---// SAMBUNGKAN SETELAH PART 3/4. INI BAGIAN TERAKHIR.
---// ==========================================================
-
 local CONFIRM_COOLDOWN = 3
 window.confirmTitle = config.ConfirmTitle or "System"
 window.confirmSubtitle = config.ConfirmSubtitle or "You are about to close this window. This action cannot be undone and all unsaved changes will be lost."
@@ -5355,11 +5350,11 @@ opId.Text = "UserId " .. tostring(LocalPlayer.UserId)
 local opBtnRow = infoButtonRow(opBody, 96, 24)
 infoButton(opBtnRow, "Copy UserId", 1, function()
 local ok = copyToClipboard(tostring(LocalPlayer.UserId))
-Library:Notify(ok and ("UserId copied: " .. LocalPlayer.UserId) or "Clipboard tidak tersedia di executor ini.", 3, "Operator", ok and "check-circle" or "x-circle")
+Library:Notify(ok and ("UserId copied: " .. LocalPlayer.UserId) or "Clipboard is not available in this executor", 3, "Operator", ok and "check-circle" or "x-circle")
 end)
 infoButton(opBtnRow, "Copy Name", 2, function()
 local ok = copyToClipboard(LocalPlayer.Name)
-Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard tidak tersedia di executor ini.", 3, "Operator", ok and "check-circle" or "x-circle")
+Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard is not available in this executor", 3, "Operator", ok and "check-circle" or "x-circle")
 end)
 
 --// PLACE CARD  [FIX #1] info di atas, divider, lalu 2 baris tombol (tidak tertumpuk)
@@ -5388,20 +5383,20 @@ local plBtnRowA = infoButtonRow(plBody, 58, 24)
 infoButton(plBtnRowA, "Rejoin Server", 1, function()
 Library:Notify("Rejoining server...", 3, "Place", "refresh-cw")
 local ok, err = rejoinServer()
-if not ok then Library:Notify("Rejoin gagal: " .. tostring(err), 4, "Place", "x-circle") end
+if not ok then Library:Notify("Rejoin Failed: " .. tostring(err), 4, "Place", "x-circle") end
 end)
 infoButton(plBtnRowA, "Copy Job ID", 2, function()
 local ok = copyToClipboard(tostring(game.JobId))
-Library:Notify(ok and "Job ID copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
+Library:Notify(ok and "Job ID copied." or "Clipboard not available", 3, "Place", ok and "check-circle" or "x-circle")
 end)
 local plBtnRowB = infoButtonRow(plBody, 86, 24)
 infoButton(plBtnRowB, "Copy PlaceId", 1, function()
 local ok = copyToClipboard(tostring(game.PlaceId))
-Library:Notify(ok and ("PlaceId copied: " .. game.PlaceId) or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
+Library:Notify(ok and ("PlaceId copied: " .. game.PlaceId) or "Clipboard not available", 3, "Place", ok and "check-circle" or "x-circle")
 end)
 infoButton(plBtnRowB, "Copy Join Script", 2, function()
 local ok = copyToClipboard(joinScriptText())
-Library:Notify(ok and "Join script copied." or "Clipboard tidak tersedia.", 3, "Place", ok and "check-circle" or "x-circle")
+Library:Notify(ok and "Join script copied." or "Clipboard not available", 3, "Place", ok and "check-circle" or "x-circle")
 end)
 
 --// ROW 2: Frame Rate + Network Ping + Session
@@ -5496,7 +5491,7 @@ webCopying = true
 Tween(webCopyScale, .08, {Scale = 0.92}, Enum.EasingStyle.Back, Enum.EasingDirection.In)
 task.delay(.09, function() if webCopyScale.Parent then Tween(webCopyScale, .12, {Scale = 1}) end end)
 local ok = copyToClipboard(WEB_URL)
-Library:Notify(ok and "Website link copied!" or "Clipboard tidak tersedia.", 3, "Website", ok and "check-circle" or "x-circle")
+Library:Notify(ok and "Website link copied!" or "Clipboard not available.", 3, "Website", ok and "check-circle" or "x-circle")
 webCopyLabel.Text = ok and "COPIED!" or "FAILED"
 task.delay(1.2, function()
 if webCopyLabel.Parent then webCopyLabel.Text = "COPY LINK" end
