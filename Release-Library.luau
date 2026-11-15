@@ -6006,12 +6006,12 @@ function Library:CreateWindow(config)
 		--// Tidak membuat file baru (pakai Save Current Config untuk file baru).
 		systemTab:CreateButton({
 			Name = "Overwrite Config", Icon = "pencil",
-			Tooltip = "Update file terpilih dengan semua setting saat ini (toggle, slider, theme, quick bar, dll)",
+			Tooltip = "Update selected files with all current settings (toggle, slider, theme, quick bar, etc)",
 			Callback = function()
 				local fname = fileDropdown:Get()
 				if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
 				if not fname or fname == "" or fname == "(no saves)" then
-					Library:Notify("Select a config file to overwrite.", 4, "Overwrite", "info")
+					Library:Notify("Select a config file to overwrite", 4, "Overwrite", "info")
 					return
 				end
 				fname = sanitizeFileName(fname)
