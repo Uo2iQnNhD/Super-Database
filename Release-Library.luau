@@ -3096,7 +3096,10 @@ function Library:CreateWindow(config)
 --// ==========================================================
 
 --// ==========================================================
---// PART 2/2 : Elemen lanjutan + Quick Bar(Flags) + Net Performance
+--// PART 2/2 FULL (V5.8 + FIX)
+--// [FIX 1] Copy UserId / Copy Name naik ke Y=86 (sejajar Place card)
+--// [FIX 2] + Button Overwrite Config di Save / Load
+--// Elemen lanjutan + Quick Bar(Flags) + Net Performance
 --// + Close Confirm follow theme + Home(Server Hop/Reset) + Tools
 --// + Theme(37 preset + Grid/Crystal/Dot) + Save/Load + Export/Import
 --// + Library:Destroy  •  ZETHUB V5.8
@@ -5011,7 +5014,7 @@ function Library:CreateWindow(config)
 		end)
 	end
 	--// ==========================================================
-	--// HOME TAB [V5.8: + Server Hop & Reset Player di atas Copy row]
+	--// HOME TAB [V5.8 + FIX 1: Copy row naik ke Y=86]
 	--// ==========================================================
 	if config.InfoTab ~= false then
 		local homeTab = window:CreateTab(config.InfoTabName or "Home", "home")
@@ -5191,11 +5194,14 @@ function Library:CreateWindow(config)
 		opId.Position = UDim2.new(0, 52, 0, 31)
 		opId.Size = UDim2.new(1, -52, 0, 13)
 		opId.Text = "UserId " .. tostring(LocalPlayer.UserId)
-		--// [V5.8] BARIS BARU: Server Hop + Reset Player (di atas Copy row)
+		--// [V5.8] Server Hop + Reset Player
 		local opActionRow = infoButtonRow(opBody, 58, 24)
 		infoButton(opActionRow, "Server Hop", 1, function() serverHop() end)
 		infoButton(opActionRow, "Reset Player", 2, function() resetPlayer() end)
-		local opBtnRow = infoButtonRow(opBody, 96, 24)
+		--// [FIX 1] Copy UserId / Copy Name NAIK: Y=96 -> Y=86
+		--// Sejajar dengan baris Copy PlaceId / Copy Join Script di card Place.
+		--// Ada jarak 10px dari dasar card, tidak mepet bawah lagi.
+		local opBtnRow = infoButtonRow(opBody, 86, 24)
 		infoButton(opBtnRow, "Copy UserId", 1, function()
 			local ok = copyToClipboard(tostring(LocalPlayer.UserId))
 			Library:Notify(ok and ("UserId copied: " .. LocalPlayer.UserId) or "Clipboard is not available in this executor", 3, "Operator", ok and "check-circle" or "x-circle")
@@ -5955,7 +5961,7 @@ function Library:CreateWindow(config)
 		})
 	end
 	--// ==========================================================
-	--// SAVE / LOAD TAB [V5.8: + Export / Import Config]
+	--// SAVE / LOAD TAB [V5.8 + FIX 2: Overwrite Config]
 	--// ==========================================================
 	if config.SaveLoad ~= false then
 		local systemTab = window:CreateTab("Save / Load", "database")
@@ -5992,6 +5998,40 @@ function Library:CreateWindow(config)
 					Library:Notify("Successfully saved: " .. fname, 4, "Saved", "check-circle")
 				else
 					Library:Notify(err or "Failed to save file.", 4, "Error", "x-circle")
+				end
+			end,
+		})
+		--// [FIX 2] OVERWRITE CONFIG
+		--// Meng-update file config yang sudah ada dengan SEMUA setting saat ini.
+		--// Tidak membuat file baru (pakai Save Current Config untuk file baru).
+		systemTab:CreateButton({
+			Name = "Overwrite Config", Icon = "pencil",
+			Tooltip = "Update file terpilih dengan semua setting saat ini (toggle, slider, theme, quick bar, dll)",
+			Callback = function()
+				local fname = fileDropdown:Get()
+				if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
+				if not fname or fname == "" or fname == "(no saves)" then
+					Library:Notify("Select a config file to overwrite.", 4, "Overwrite", "info")
+					return
+				end
+				fname = sanitizeFileName(fname)
+				local exists = false
+				for _, f in ipairs(listSaveFiles()) do
+					if f == fname then exists = true break end
+				end
+				if not exists then
+					Library:Notify("File '" .. fname .. "' not found. Use Save Current Config to create it.", 5, "Overwrite", "x-circle")
+					return
+				end
+				local ok, err = Library:SaveToFile(fname)
+				if ok then
+					Library._saveFile = fname
+					fileNameInput:Set(fname)
+					fileDropdown:Refresh(getSaveOptions())
+					fileDropdown:Set(fname)
+					Library:Notify("Config overwritten: " .. fname .. " (all settings updated).", 4, "Overwrite", "check-circle")
+				else
+					Library:Notify(err or "Failed to overwrite config.", 4, "Overwrite", "x-circle")
 				end
 			end,
 		})
@@ -6166,6 +6206,8 @@ if type(Env) == "table" then
 end
 return Library
 --// ==========================================================
---// PART 2/2 SELESAI • SCRIPT LENGKAP V5.8
+--// PART 2/2 SELESAI • SCRIPT LENGKAP V5.8 + FIX
+--// [FIX 1] Copy UserId / Copy Name: Y=96 -> Y=86 (naik, sejajar Place card)
+--// [FIX 2] + Overwrite Config (update file lama dengan setting terbaru)
 --// GABUNGKAN: PART 1/2 + PART 2/2 = SATU SCRIPT, LALU EXECUTE.
 --// ==========================================================
