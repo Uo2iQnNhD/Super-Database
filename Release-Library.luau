@@ -1,7 +1,8 @@
 --[[ Ro-Netrium Updated by Zaycapcay ]]
 --[[ Version 5.8 ]]
 --[[ ZETHUB - Library V5.8 ]]
---[[ PART 1/2 : Core + Theme(37) + Icons + Helpers + Movement + Effects(Grid/Crystal/Dot) + Save/Load/Export/Import + Notify + Window s/d Slider ]]
+--[[ PART 1/2 LENGKAP (FIX PARTIKEL SUDAH TERPASANG) ]]
+--[[ Core + Theme(37) + Icons + Helpers + Movement + Effects(Grid/Crystal/Dot) + Save/Load/Export/Import + Notify + Window s/d Slider ]]
 --[[ GABUNGKAN PART 1/2 + PART 2/2 JADI SATU SCRIPT LALU EXECUTE ]]
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -852,7 +853,9 @@ function Library:SetTheme(name)
 	return true
 end
 --// ==========================================================
---// [V5.8] PARTICLE BACKGROUND: DOT + CRYSTAL (follow theme)
+--// [V5.8 FIX] PARTICLE BACKGROUND: DOT + CRYSTAL (follow theme)
+--// Posisi NORMALIZED (0..1) + auto re-seed saat hide/show.
+--// Partikel tidak menumpuk di pojok kiri-atas lagi.
 --// ==========================================================
 local function createParticleBackground(parent, count, owner)
 	local layer = Instance.new("Frame")
@@ -876,11 +879,12 @@ local function createParticleBackground(parent, count, owner)
 	local particles = {}
 	for _ = 1, count do
 		local size = math.random(2, 6)
+		local nx, ny = math.random(), math.random()
 		local p = Instance.new("Frame")
 		p.Name = "Dot"
 		p.AnchorPoint = Vector2.new(0.5, 0.5)
 		p.Size = UDim2.new(0, size, 0, size)
-		p.Position = UDim2.new(math.random(), 0, math.random(), 0)
+		p.Position = UDim2.new(nx, 0, ny, 0)
 		p.BackgroundColor3 = Library.Accent
 		p.BackgroundTransparency = math.random(55, 88) / 100
 		p.BorderSizePixel = 0
@@ -889,15 +893,16 @@ local function createParticleBackground(parent, count, owner)
 		p.Parent = dotLayer
 		Corner(p, 99)
 		table.insert(particles, {
-			f = p, x = nil, y = nil, initialized = false,
-			vx = (math.random() - 0.5) * 18, vy = (math.random() - 0.5) * 18,
+			f = p, nx = nx, ny = ny,
+			vx = (math.random() - 0.5) * 18,
+			vy = (math.random() - 0.5) * 18,
 			baseT = p.BackgroundTransparency,
 			phase = math.random() * math.pi * 2,
 			speed = 0.8 + math.random() * 1.2,
 			hueOffset = math.random(),
 		})
 	end
-	--// CRYSTAL LAYER (diamond berputar + gradient theme)
+	--// CRYSTAL LAYER
 	local crystalLayer = Instance.new("Frame")
 	crystalLayer.Name = "CrystalParticles"
 	crystalLayer.Size = UDim2.new(1, 0, 1, 0)
@@ -910,10 +915,12 @@ local function createParticleBackground(parent, count, owner)
 	local crystals = {}
 	for _ = 1, crystalCount do
 		local size = math.random(6, 12)
+		local nx, ny = math.random(), math.random()
 		local c = Instance.new("Frame")
 		c.Name = "Crystal"
 		c.AnchorPoint = Vector2.new(0.5, 0.5)
 		c.Size = UDim2.new(0, size, 0, size)
+		c.Position = UDim2.new(nx, 0, ny, 0)
 		c.BackgroundColor3 = Color3.new(1, 1, 1)
 		c.BackgroundTransparency = math.random(30, 55) / 100
 		c.BorderSizePixel = 0
@@ -922,7 +929,7 @@ local function createParticleBackground(parent, count, owner)
 		c.Active = false
 		c.Parent = crystalLayer
 		Corner(c, 2)
-		registerRGB(c) --// gradient otomatis mengikuti theme/rainbow
+		registerRGB(c)
 		local st = Instance.new("UIStroke")
 		st.Color = Color3.new(1, 1, 1)
 		st.Thickness = 1
@@ -938,20 +945,39 @@ local function createParticleBackground(parent, count, owner)
 		facet.ZIndex = 40
 		facet.Parent = c
 		table.insert(crystals, {
-			f = c, x = nil, y = nil, initialized = false,
-			vx = (math.random() - 0.5) * 10, vy = (math.random() - 0.5) * 10 - 4,
+			f = c, nx = nx, ny = ny,
+			vx = (math.random() - 0.5) * 10,
+			vy = (math.random() - 0.5) * 10 - 4,
 			rot = 45, spin = (math.random() - 0.5) * 24,
 			baseT = c.BackgroundTransparency,
 			phase = math.random() * math.pi * 2,
 			speed = 0.6 + math.random() * 0.8,
 		})
 	end
+	local wasHidden = false
 	local lastColorUpdate = 0
+	local function reseed()
+		for _, d in ipairs(particles) do
+			d.nx, d.ny = math.random(), math.random()
+		end
+		for _, d in ipairs(crystals) do
+			d.nx, d.ny = math.random(), math.random()
+		end
+	end
 	Connect(RunService.RenderStepped, function(dt)
 		if not layer or not layer.Parent then return end
-		dt = tonumber(dt) or 0.016
+		dt = math.min(tonumber(dt) or 0.016, 0.05)
 		local size = layer.AbsoluteSize
-		if size.X <= 1 or size.Y <= 1 then return end
+		--// Saat UI hide (ukuran ~0): bekukan, jangan wrap ke pojok.
+		if size.X <= 2 or size.Y <= 2 then
+			wasHidden = true
+			return
+		end
+		--// Saat UI muncul kembali: sebar merata.
+		if wasHidden then
+			wasHidden = false
+			reseed()
+		end
 		local t = os.clock()
 		local updateColor = false
 		if t - lastColorUpdate > 0.10 then
@@ -961,16 +987,11 @@ local function createParticleBackground(parent, count, owner)
 		if dotLayer.Visible then
 			for _, d in ipairs(particles) do
 				if d.f and d.f.Parent then
-					if not d.initialized then
-						d.x = math.random() * size.X
-						d.y = math.random() * size.Y
-						d.initialized = true
-					end
-					d.x += d.vx * dt
-					d.y += d.vy * dt
-					if d.x < -12 then d.x = size.X + 12 elseif d.x > size.X + 12 then d.x = -12 end
-					if d.y < -12 then d.y = size.Y + 12 elseif d.y > size.Y + 12 then d.y = -12 end
-					d.f.Position = UDim2.new(0, d.x, 0, d.y)
+					d.nx += (d.vx * dt) / size.X
+					d.ny += (d.vy * dt) / size.Y
+					if d.nx < -0.04 then d.nx = 1.04 elseif d.nx > 1.04 then d.nx = -0.04 end
+					if d.ny < -0.04 then d.ny = 1.04 elseif d.ny > 1.04 then d.ny = -0.04 end
+					d.f.Position = UDim2.new(d.nx, 0, d.ny, 0)
 					local pulse = 0.5 + 0.5 * math.sin(t * d.speed + d.phase)
 					d.f.BackgroundTransparency = math.clamp(d.baseT - pulse * 0.18, 0.05, 0.95)
 					if updateColor then
@@ -986,17 +1007,12 @@ local function createParticleBackground(parent, count, owner)
 		if crystalLayer.Visible then
 			for _, d in ipairs(crystals) do
 				if d.f and d.f.Parent then
-					if not d.initialized then
-						d.x = math.random() * size.X
-						d.y = math.random() * size.Y
-						d.initialized = true
-					end
-					d.x += d.vx * dt
-					d.y += d.vy * dt
+					d.nx += (d.vx * dt) / size.X
+					d.ny += (d.vy * dt) / size.Y
 					d.rot += d.spin * dt
-					if d.x < -16 then d.x = size.X + 16 elseif d.x > size.X + 16 then d.x = -16 end
-					if d.y < -16 then d.y = size.Y + 16 elseif d.y > size.Y + 16 then d.y = -16 end
-					d.f.Position = UDim2.new(0, d.x, 0, d.y)
+					if d.nx < -0.05 then d.nx = 1.05 elseif d.nx > 1.05 then d.nx = -0.05 end
+					if d.ny < -0.05 then d.ny = 1.05 elseif d.ny > 1.05 then d.ny = -0.05 end
+					d.f.Position = UDim2.new(d.nx, 0, d.ny, 0)
 					d.f.Rotation = d.rot
 					local pulse = 0.5 + 0.5 * math.sin(t * d.speed + d.phase)
 					d.f.BackgroundTransparency = math.clamp(d.baseT - pulse * 0.15, 0.1, 0.8)
@@ -1151,8 +1167,6 @@ local function registerElement(windowRef, tabRef, tabName, frameRef, cfgRef, ele
 end
 --// ==========================================================
 --// [V5.8] SAVE / LOAD / EXPORT / IMPORT SYSTEM
---// Menyimpan SEMUA flag (toggle, slider, dropdown, keybind,
---// colorpicker, textbox, quick bar) + snapshot THEME & EFFECTS.
 --// ==========================================================
 local SAVE_FOLDER = "ZethHub/Saves"
 local function sanitizeFileName(name)
@@ -1227,7 +1241,6 @@ local function decodeValue(v)
 	end
 	return v
 end
---// [V5.8] Payload lengkap: Values + Theme snapshot
 local function buildPayload(name)
 	local values = {}
 	for flag, val in pairs(Library.Flags) do values[flag] = encodeValue(val) end
@@ -1262,7 +1275,6 @@ function Library:SaveToFile(name)
 	if not okEnc then return false, "Gagal encode JSON." end
 	return writeSaveRaw(name, encoded)
 end
---// [V5.8] EXPORT: kembalikan JSON string config lengkap
 function Library:ExportConfig()
 	local ok, encoded = pcall(function()
 		return HttpService:JSONEncode(buildPayload(Library._saveFile))
@@ -1270,7 +1282,6 @@ function Library:ExportConfig()
 	if ok then return encoded end
 	return nil, "Gagal encode config."
 end
---// [V5.8] APPLY PAYLOAD (dipakai Load & Import)
 local function applyPayload(data)
 	if type(data) ~= "table" then return false, "Data config tidak valid." end
 	Library._loading = true
@@ -1300,7 +1311,6 @@ local function applyPayload(data)
 			end)
 		end
 	end
-	--// [V5.8] Terapkan theme secara berurutan (preset -> rainbow -> accent)
 	local t = data.Theme
 	local savedAccent
 	if type(t) == "table" then
@@ -1326,7 +1336,6 @@ local function applyPayload(data)
 			Library.Effects.Glow = t.Glow and true or false
 			Theme.BorderGlow = Library.Effects.Glow
 		end
-		--// Sinkronkan visual elemen theme tab
 		local sync = {
 			RoNet_ThemePreset = ThemeManager.PresetName,
 			RoNet_Rainbow = Library.Rainbow,
@@ -1344,7 +1353,6 @@ local function applyPayload(data)
 			local el = Library._elements[flag]
 			if el and el.Object then pcall(function() el.Object:Set(val) end) end
 		end
-		--// Pastikan hasil akhir konsisten (callback sync bisa menimpa)
 		if t.Rainbow ~= nil then Library:SetRainbow(t.Rainbow and true or false) end
 		if typeof(savedAccent) == "Color3" and not Library.Rainbow then
 			Library:SetAccent(savedAccent)
@@ -1367,7 +1375,6 @@ function Library:LoadFromFile(name)
 	Library._saveFile = name
 	return true
 end
---// [V5.8] IMPORT: terima JSON string (clipboard / textbox)
 function Library:ImportConfig(text)
 	if type(text) ~= "string" or text:gsub("%s", "") == "" then
 		return false, "Config kosong."
@@ -1644,7 +1651,7 @@ function Library:CreateWindow(config)
 	config = config or {}
 	local title = config.Title or "Ro-Netrium"
 	local subtitle = config.Subtitle or "Powered By Zaycapcay"
-	local OPEN_SIZE = UDim2.new(0, 620, 0, 420) --// [V5.8] 560 -> 620
+	local OPEN_SIZE = UDim2.new(0, 620, 0, 420)
 	local openSize = OPEN_SIZE
 	local gui = Instance.new("ScreenGui")
 	gui.Name = "Ro-NetriumV4"
@@ -1851,7 +1858,6 @@ function Library:CreateWindow(config)
 	tagLayout.Parent = tagRow
 	local window
 	--// [V5.8] CLOSE BUTTON FOLLOW THEME (default = accent)
-	--// Override manual tetap bisa via config.CloseColor / window:SetCloseColor
 	local function getCloseColor()
 		if window and window.closeColor then return window.closeColor end
 		return (window and window.accent) or Library.Accent
@@ -1885,7 +1891,6 @@ function Library:CreateWindow(config)
 		local lines = {}
 		local overlay
 		if kind == "close" then
-			--// [V5.8] Stroke close mengikuti theme (rainbow/accent)
 			local cs = Stroke(b, config.CloseColor or Library.Accent, 1.2)
 			cs.Transparency = 0.5
 			if not config.CloseColor then registerRGB(cs) end
@@ -1981,7 +1986,7 @@ function Library:CreateWindow(config)
 	local closeBtn, closeBtnData = iconButton(-32, "close")
 	window = {
 		accent = config.Accent or Library.Accent,
-		closeColor = config.CloseColor, --// nil = follow theme
+		closeColor = config.CloseColor,
 		closeHoverColor = config.CloseHoverColor,
 		closePressedColor = config.ClosePressedColor,
 		closeTextColor = config.CloseTextColor,
@@ -2188,7 +2193,7 @@ function Library:CreateWindow(config)
 					0, math.clamp(resizeOrig.X.Offset + d.X, 500, 1100),
 					0, math.clamp(resizeOrig.Y.Offset + d.Y, 340, 760)
 				)
-				openSize = main.Size --// [V5.8] ukuran tersimpan saat minimize
+				openSize = main.Size
 			end
 		end
 	end, window)
@@ -3086,13 +3091,8 @@ function Library:CreateWindow(config)
 		end
 
 --// ==========================================================
---// PART 1/2 SELESAI
---// JANGAN EXECUTE SENDIRI. LANJUTKAN DENGAN PART 2/2:
---// (CreateButton, Textbox, Input, Dropdown, MultiDropdown,
---//  Keybind, ColorPicker, Mini Toggle, Quick Bar + Flags,
---//  Net Performance, Close Confirm follow theme, Home Tab
---//  + Server Hop/Reset Player, Tools, Theme, Save/Load
---//  + Export/Import, Library:Destroy)
+--// PART 1/2 SELESAI (FIX PARTIKEL TERPASANG)
+--// LANJUTKAN TEMPEL PART 2/2 DI BAWAH BARIS INI, LALU EXECUTE.
 --// ==========================================================
 
 --// ==========================================================
