@@ -5104,9 +5104,8 @@ function Library:CreateWindow(config)
 		nsbHeader.AutoButtonColor = false
 		nsbHeader.ZIndex = 71
 		nsbHeader.Parent = netStatsBar
-		local nsbIcon = makeIconSiap! Ini **PART 2/2 LENGKAP (V5.9)** — langsung sambung di bawah Part 1/2, lalu execute sekali.
+		local nsbIcon = makeIcon
 
-```lua
 --// ==========================================================
 --// PART 2/2 : Elemen lanjutan + Action Confirm + Quick Bar(Flags+Layout)
 --// + Net Performance(Layout) + Close Confirm(Particle BG) + Mini(Layout)
