@@ -9,8 +9,8 @@
 
 local CONFIG = {
     GuiName   = "RoNetriumGameChecker",
-    Brand     = "Ro-Netrium",
-    Title     = "GAME CHECKER",
+    Brand     = "Ro-Netrium Superior",
+    Title     = "Ro-Netrium",
     Subtitle  = "Verifying environment & game support",
     Icon      = "rbxassetid://7734056411", -- shield-check
     Background= Color3.fromRGB(10, 10, 12),
@@ -18,8 +18,8 @@ local CONFIG = {
     Text      = Color3.fromRGB(255, 255, 255),
     SubText   = Color3.fromRGB(170, 170, 178),
     RainbowSpeed = 0.14,
-    CheckDuration = 5.0,   -- detik 0 -> 90 (cepat)
-    FinishDuration = 1, -- detik 90 -> 100
+    CheckDuration = 7.0,   -- detik 0 -> 90 (cepat)
+    FinishDuration = 3, -- detik 90 -> 100
     InfoTimeout = 4.0,     -- max tunggu fetch info
     HoldAt100 = 0.35,
     FadeTime  = 0.4,
