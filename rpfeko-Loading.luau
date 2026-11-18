@@ -1,43 +1,48 @@
 --[[ ============================================================
-    GAME CHECKER LOADING SCREEN (STANDALONE / OUTSIDE LIBRARY)
-    Method: NumberValue + TweenService progress (event-driven)
-    Flow  : 0% -> 100% -> execute Detection -> destroy UI
+    RO-NETRIUM • GAME CHECKER LOADING SCREEN (STANDALONE)
+    - RGB Rainbow theme + rainbow loading bar
+    - Crystal / dot / spark / orb particles + shimmer sweep
+    - Fast place check (gated at 90% until info ready)
+    - Executor + Server ID line
+    - 100% -> execute Detection -> destroy UI
 ============================================================ ]]
 
 local CONFIG = {
-    GuiName   = "ZethGameChecker",
+    GuiName   = "RoNetriumGameChecker",
+    Brand     = "Ro-Netrium",
     Title     = "GAME CHECKER",
-    Subtitle  = "Verifying environment & place support",
+    Subtitle  = "Verifying environment & game support",
     Icon      = "rbxassetid://7734056411", -- shield-check
-    Accent    = Color3.fromRGB(46, 230, 110),
-    Background= Color3.fromRGB(12, 12, 14),
+    Background= Color3.fromRGB(10, 10, 12),
     Element   = Color3.fromRGB(22, 22, 26),
     Text      = Color3.fromRGB(255, 255, 255),
-    SubText   = Color3.fromRGB(165, 165, 172),
-    Duration  = 4.5,   -- detik untuk progress 0 -> 100
-    HoldAt100 = 0.45,  -- jeda sebentar di 100% sebelum execute
-    FadeTime  = 0.4,   -- durasi fade out sebelum UI dihapus
+    SubText   = Color3.fromRGB(170, 170, 178),
+    RainbowSpeed = 0.14,
+    CheckDuration = 5.0,   -- detik 0 -> 90 (cepat)
+    FinishDuration = 1, -- detik 90 -> 100
+    InfoTimeout = 4.0,     -- max tunggu fetch info
+    HoldAt100 = 0.35,
+    FadeTime  = 0.4,
     ScriptURL = "https://raw.githubusercontent.com/Zyptrue/xTicAYRgProtection/refs/heads/main/Detection",
 }
 
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local MarketplaceService = game:GetService("MarketplaceService")
 local LocalPlayer = Players.LocalPlayer
 
---// [1] Bersihkan GUI checker lama (anti duplicate saat re-execute)
+--// [1] Purge GUI lama
 local function purgeOld()
     local parents = {}
     pcall(function() table.insert(parents, game:GetService("CoreGui")) end)
     pcall(function() table.insert(parents, LocalPlayer:WaitForChild("PlayerGui")) end)
-    if typeof(gethui) == "function" then
-        pcall(function() table.insert(parents, gethui()) end)
-    end
-    for _, parent in ipairs(parents) do
-        if parent then
-            for _, child in ipairs(parent:GetChildren()) do
-                if child.Name == CONFIG.GuiName then
-                    pcall(function() child:Destroy() end)
+    if typeof(gethui) == "function" then pcall(function() table.insert(parents, gethui()) end) end
+    for _, p in ipairs(parents) do
+        if p then
+            for _, c in ipairs(p:GetChildren()) do
+                if c.Name == CONFIG.GuiName or c.Name == "ZethGameChecker" then
+                    pcall(function() c:Destroy() end)
                 end
             end
         end
@@ -45,39 +50,53 @@ local function purgeOld()
 end
 purgeOld()
 
---// [2] Helper UI
-local function corner(obj, r)
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, r or 8)
-    c.Parent = obj
-    return c
+--// [2] Helpers
+local function corner(o, r)
+    local c = Instance.new("UICorner"); c.CornerRadius = UDim.new(0, r or 8); c.Parent = o; return c
 end
-local function stroke(obj, col, th)
-    local s = Instance.new("UIStroke")
-    s.Color = col
-    s.Thickness = th or 1
-    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-    s.Parent = obj
-    return s
+local function stroke(o, col, th)
+    local s = Instance.new("UIStroke"); s.Color = col; s.Thickness = th or 1
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border; s.Parent = o; return s
 end
-local function label(parent, size, pos, text, textSize, font, color, align)
+local function label(parent, size, pos, text, ts, font, color, align)
     local l = Instance.new("TextLabel")
-    l.Size = size
-    l.Position = pos
-    l.BackgroundTransparency = 1
-    l.Text = text
-    l.TextSize = textSize
-    l.Font = font
-    l.TextColor3 = color
+    l.Size = size; l.Position = pos; l.BackgroundTransparency = 1
+    l.Text = text; l.TextSize = ts; l.Font = font; l.TextColor3 = color
     l.TextXAlignment = align or Enum.TextXAlignment.Left
     l.TextYAlignment = Enum.TextYAlignment.Center
     l.TextTruncate = Enum.TextTruncate.AtEnd
-    l.ZIndex = 3
-    l.Parent = parent
-    return l
+    l.ZIndex = 7; l.Parent = parent; return l
+end
+local function rainbowSeq()
+    return ColorSequence.new{
+        ColorSequenceKeypoint.new(0.00, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 150, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 120)),
+        ColorSequenceKeypoint.new(0.50, Color3.fromRGB(0, 200, 255)),
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(80, 80, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(255, 0, 200)),
+        ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 0, 0)),
+    }
+end
+local function hueColor(offset)
+    return Color3.fromHSV((os.clock() * CONFIG.RainbowSpeed + (offset or 0)) % 1, 1, 1)
+end
+local function getExecutorName()
+    if typeof(identifyexecutor) == "function" then
+        local ok, n = pcall(identifyexecutor)
+        if ok and type(n) == "string" and n ~= "" then return n end
+    end
+    if typeof(getexecutorname) == "function" then
+        local ok, n = pcall(getexecutorname)
+        if ok and type(n) == "string" and n ~= "" then return n end
+    end
+    if syn then return "Synapse X" end
+    if fluxus then return "Fluxus" end
+    if KRNL_LOADED then return "Krnl" end
+    return "Unknown Executor"
 end
 
---// [3] Build Loading Screen
+--// [3] GUI
 local gui = Instance.new("ScreenGui")
 gui.Name = CONFIG.GuiName
 gui.ResetOnSpawn = false
@@ -85,52 +104,128 @@ gui.DisplayOrder = 99999
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.IgnoreGuiInset = true
 pcall(function() gui.Parent = game:GetService("CoreGui") end)
-if not gui.Parent then
-    pcall(function() gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
-end
+if not gui.Parent then pcall(function() gui.Parent = LocalPlayer:WaitForChild("PlayerGui") end) end
 
 local dim = Instance.new("Frame")
-dim.Name = "Dim"
 dim.Size = UDim2.new(1, 0, 1, 0)
 dim.BackgroundColor3 = Color3.new(0, 0, 0)
-dim.BackgroundTransparency = 0.45
+dim.BackgroundTransparency = 0.5
 dim.BorderSizePixel = 0
 dim.ZIndex = 1
 dim.Parent = gui
 
+--// [4] Particle background (crystal + dot + spark + orb)
+local layer = Instance.new("Frame")
+layer.Name = "Particles"
+layer.Size = UDim2.new(1, 0, 1, 0)
+layer.BackgroundTransparency = 1
+layer.BorderSizePixel = 0
+layer.ClipsDescendants = true
+layer.ZIndex = 2
+layer.Parent = gui
+
+local particles = {}
+local function addParticle(kind)
+    local f = Instance.new("Frame")
+    f.BorderSizePixel = 0
+    f.AnchorPoint = Vector2.new(0.5, 0.5)
+    f.ZIndex = 2
+    f.Active = false
+    local d = { f = f, kind = kind, hue = math.random(), phase = math.random() * 6.28, speed = 0.6 + math.random() * 1.4 }
+    if kind == "crystal" then
+        local s = math.random(6, 14)
+        f.Size = UDim2.new(0, s, 0, s)
+        f.Rotation = 45
+        corner(f, 2)
+        f.BackgroundTransparency = 0.55 + math.random() * 0.25
+        d.vx = (math.random() - 0.5) * 22
+        d.vy = (math.random() - 0.5) * 22
+        d.spin = (math.random() - 0.5) * 60
+    elseif kind == "dot" then
+        local s = math.random(2, 5)
+        f.Size = UDim2.new(0, s, 0, s)
+        corner(f, 99)
+        f.BackgroundTransparency = 0.4 + math.random() * 0.35
+        d.vx = (math.random() - 0.5) * 30
+        d.vy = (math.random() - 0.5) * 30
+        d.spin = 0
+    elseif kind == "spark" then
+        local s = math.random(2, 3)
+        f.Size = UDim2.new(0, s, 0, s)
+        corner(f, 99)
+        f.BackgroundTransparency = 0.35
+        d.vx = (math.random() - 0.5) * 10
+        d.vy = -(30 + math.random() * 40)
+        d.spin = 0
+    else -- orb
+        local s = math.random(18, 30)
+        f.Size = UDim2.new(0, s, 0, s)
+        corner(f, 99)
+        f.BackgroundTransparency = 0.88
+        d.vx = (math.random() - 0.5) * 12
+        d.vy = (math.random() - 0.5) * 12
+        d.spin = 0
+    end
+    d.baseT = f.BackgroundTransparency
+    d.x = nil; d.y = nil
+    f.Parent = layer
+    table.insert(particles, d)
+end
+for _ = 1, 14 do addParticle("crystal") end
+for _ = 1, 18 do addParticle("dot") end
+for _ = 1, 12 do addParticle("spark") end
+for _ = 1, 6  do addParticle("orb") end
+
+--// [5] Card (fixed layout, no overflow)
 local card = Instance.new("Frame")
 card.Name = "CheckerCard"
 card.AnchorPoint = Vector2.new(0.5, 0.5)
 card.Position = UDim2.new(0.5, 0, 0.5, 0)
-card.Size = UDim2.new(0, 470, 0, 240)
+card.Size = UDim2.new(0, 500, 0, 204)
 card.BackgroundColor3 = CONFIG.Background
 card.BorderSizePixel = 0
-card.ZIndex = 2
+card.ClipsDescendants = true
+card.ZIndex = 5
 card.Parent = gui
 corner(card, 12)
-stroke(card, CONFIG.Accent, 2)
+local cardStroke = stroke(card, Color3.new(1, 1, 1), 2)
+local cardGlow = stroke(card, Color3.new(1, 1, 1), 5)
+cardGlow.Transparency = 0.72
 pcall(function()
-    local shadow = Instance.new("UIDropShadow")
-    shadow.Color = Color3.new(0, 0, 0)
-    shadow.Transparency = 0.5
-    shadow.Size = UDim2.new(0, 26, 0, 26)
-    shadow.Offset = Vector2.new(0, 8)
-    shadow.Parent = card
+    local sh = Instance.new("UIDropShadow")
+    sh.Color = Color3.new(0, 0, 0); sh.Transparency = 0.5
+    sh.Size = UDim2.new(0, 26, 0, 26); sh.Offset = Vector2.new(0, 8)
+    sh.Parent = card
 end)
+
+-- Shimmer sweep
+local shimmer = Instance.new("Frame")
+shimmer.Name = "Shimmer"
+shimmer.Size = UDim2.new(0, 70, 1, 0)
+shimmer.Position = UDim2.new(-0.2, 0, 0, 0)
+shimmer.BackgroundColor3 = Color3.new(1, 1, 1)
+shimmer.BorderSizePixel = 0
+shimmer.ZIndex = 6
+shimmer.Parent = card
+local shimGrad = Instance.new("UIGradient")
+shimGrad.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.5, 0.88),
+    NumberSequenceKeypoint.new(1, 1),
+}
+shimGrad.Parent = shimmer
 
 local icon = Instance.new("ImageLabel")
 icon.Size = UDim2.new(0, 40, 0, 40)
 icon.Position = UDim2.new(0, 18, 0, 18)
 icon.BackgroundTransparency = 1
 icon.Image = CONFIG.Icon
-icon.ImageColor3 = CONFIG.Accent
-icon.ZIndex = 3
+icon.ImageColor3 = Color3.new(1, 1, 1)
+icon.ZIndex = 7
 icon.Parent = card
 
-label(card, UDim2.new(1, -150, 0, 22), UDim2.new(0, 68, 0, 20),
-    CONFIG.Title, 17, Enum.Font.GothamBlack, CONFIG.Text)
-label(card, UDim2.new(1, -150, 0, 16), UDim2.new(0, 68, 0, 44),
-    CONFIG.Subtitle, 11, Enum.Font.Gotham, CONFIG.SubText)
+label(card, UDim2.new(1, -160, 0, 22), UDim2.new(0, 68, 0, 20), CONFIG.Title, 17, Enum.Font.GothamBlack, CONFIG.Text)
+label(card, UDim2.new(1, -160, 0, 16), UDim2.new(0, 68, 0, 44), CONFIG.Subtitle, 11, Enum.Font.Gotham, CONFIG.SubText)
 
 local badge = Instance.new("TextLabel")
 badge.Size = UDim2.new(0, 130, 0, 24)
@@ -141,151 +236,197 @@ badge.Text = "CHECKING..."
 badge.TextColor3 = CONFIG.SubText
 badge.TextSize = 10
 badge.Font = Enum.Font.GothamBold
-badge.ZIndex = 3
+badge.ZIndex = 7
 badge.Parent = card
 corner(badge, 99)
 
-local gameName = label(card, UDim2.new(1, -36, 0, 20), UDim2.new(0, 18, 0, 82),
-    "Detecting place...", 14, Enum.Font.GothamBold, CONFIG.Text)
-local gameMeta = label(card, UDim2.new(1, -36, 0, 16), UDim2.new(0, 18, 0, 104),
-    "PlaceId -  |  Universe -  |  by -", 10, Enum.Font.Gotham, CONFIG.SubText)
+local gameName = label(card, UDim2.new(1, -36, 0, 20), UDim2.new(0, 18, 0, 78), "Detecting place...", 14, Enum.Font.GothamBold, CONFIG.Text)
+local meta1 = label(card, UDim2.new(1, -36, 0, 14), UDim2.new(0, 18, 0, 100), "PlaceId -  |  Universe -", 10, Enum.Font.Gotham, CONFIG.SubText)
+local meta2 = label(card, UDim2.new(1, -36, 0, 14), UDim2.new(0, 18, 0, 116), "Executor: -  |  Server ID: -", 10, Enum.Font.Gotham, CONFIG.SubText)
 
-local stepLbl = label(card, UDim2.new(1, -100, 0, 16), UDim2.new(0, 18, 1, -44),
-    "Starting...", 11, Enum.Font.GothamMedium, CONFIG.SubText)
-local pctLbl = label(card, UDim2.new(0, 64, 0, 16), UDim2.new(1, -82, 1, -44),
-    "0%", 11, Enum.Font.GothamBold, CONFIG.Accent, Enum.TextXAlignment.Right)
+local divider = Instance.new("Frame")
+divider.Size = UDim2.new(1, -36, 0, 1)
+divider.Position = UDim2.new(0, 18, 0, 138)
+divider.BackgroundColor3 = Color3.new(1, 1, 1)
+divider.BackgroundTransparency = 0.55
+divider.BorderSizePixel = 0
+divider.ZIndex = 7
+divider.Parent = card
+corner(divider, 99)
+
+local stepLbl = label(card, UDim2.new(1, -100, 0, 16), UDim2.new(0, 18, 0, 150), "Starting...", 11, Enum.Font.GothamMedium, CONFIG.SubText)
+local pctLbl = label(card, UDim2.new(0, 64, 0, 16), UDim2.new(1, -82, 0, 150), "0%", 11, Enum.Font.GothamBold, Color3.new(1, 1, 1), Enum.TextXAlignment.Right)
 
 local track = Instance.new("Frame")
-track.Size = UDim2.new(1, -36, 0, 5)
-track.Position = UDim2.new(0, 18, 1, -24)
+track.Size = UDim2.new(1, -36, 0, 6)
+track.Position = UDim2.new(0, 18, 0, 172)
 track.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 track.BackgroundTransparency = 0.2
 track.BorderSizePixel = 0
 track.ClipsDescendants = true
-track.ZIndex = 3
+track.ZIndex = 7
 track.Parent = card
 corner(track, 99)
 
 local fill = Instance.new("Frame")
 fill.Size = UDim2.new(0, 0, 1, 0)
-fill.BackgroundColor3 = CONFIG.Accent
+fill.BackgroundColor3 = Color3.new(1, 1, 1)
 fill.BorderSizePixel = 0
-fill.ZIndex = 4
+fill.ZIndex = 8
 fill.Parent = track
 corner(fill, 99)
+local fillGrad = Instance.new("UIGradient")
+fillGrad.Color = rainbowSeq()
+fillGrad.Parent = fill
 
---// [4] Data game (di-fetch saat progress melewati 40%)
-local infoFetched = false
-local function fetchGameInfo()
-    local placeId, universeId = 0, 0
-    pcall(function() placeId = game.PlaceId end)
-    pcall(function() universeId = game.GameId end)
+--// [6] Info fetch (paralel, cepat, gated)
+local placeId, universeId = 0, 0
+pcall(function() placeId = game.PlaceId end)
+pcall(function() universeId = game.GameId end)
+local jobId = tostring(game.JobId or "")
+local serverShort = (jobId ~= "" and string.sub(jobId, 1, 8) .. "…") or "Private/Studio"
+meta1.Text = "PlaceId " .. placeId .. "  |  Universe " .. universeId
+meta2.Text = "Executor: " .. getExecutorName() .. "  |  Server ID: " .. serverShort
+
+local infoReady = false
+task.spawn(function()
     local name, creator = "Unknown Place", "Unknown"
-    local ok, product = pcall(function()
-        return MarketplaceService:GetProductInfo(placeId)
-    end)
+    local ok, product = pcall(function() return MarketplaceService:GetProductInfo(placeId) end)
     if ok and type(product) == "table" then
-        if type(product.Name) == "string" and product.Name ~= "" then
-            name = product.Name
-        end
-        if type(product.Creator) == "table" and type(product.Creator.Name) == "string" then
-            creator = product.Creator.Name
-        end
+        if type(product.Name) == "string" and product.Name ~= "" then name = product.Name end
+        if type(product.Creator) == "table" and type(product.Creator.Name) == "string" then creator = product.Creator.Name end
     end
     if gameName.Parent then
         gameName.Text = name
-        gameMeta.Text = "PlaceId " .. tostring(placeId) .. "  |  Universe " .. tostring(universeId) .. "  |  by " .. creator
+        meta1.Text = "PlaceId " .. placeId .. "  |  Universe " .. universeId .. "  |  by " .. creator
     end
-end
+    infoReady = true
+end)
 
---// [5] Step text berdasarkan threshold persen
+--// [7] Steps
 local steps = {
-    { at = 0,   text = "Initializing executor environment" },
-    { at = 20,  text = "Connecting to Roblox services" },
-    { at = 40,  text = "Detecting current place" },
-    { at = 65,  text = "Verifying game support" },
-    { at = 85,  text = "Preparing protection module" },
-    { at = 100, text = "Complete" },
+    { at = 0,  text = "Initializing executor environment" },
+    { at = 20, text = "Connecting to Roblox services" },
+    { at = 40, text = "Detecting current place" },
+    { at = 65, text = "Verifying game support" },
+    { at = 85, text = "Preparing protection module" },
 }
 local function stepFor(v)
     local cur = steps[1].text
-    for _, s in ipairs(steps) do
-        if v >= s.at then cur = s.text end
-    end
+    for _, s in ipairs(steps) do if v >= s.at then cur = s.text end end
     return cur
 end
 
---// [6] METHOD BARU: progress = NumberValue di-tween, UI update via Changed
+--// [8] Rainbow + particle + shimmer engine (single loop)
+local engineConn
+engineConn = RunService.RenderStepped:Connect(function(dt)
+    if not gui.Parent then
+        if engineConn then engineConn:Disconnect() end
+        return
+    end
+    dt = tonumber(dt) or 0.016
+    local t = os.clock()
+    -- rainbow accents
+    local c0 = hueColor(0)
+    cardStroke.Color = c0
+    cardGlow.Color = hueColor(0.15)
+    cardGlow.Transparency = 0.66 + 0.1 * math.sin(t * 2)
+    icon.ImageColor3 = c0
+    pctLbl.TextColor3 = c0
+    divider.BackgroundColor3 = hueColor(0.3)
+    fillGrad.Offset = Vector2.new((t * 0.25) % 1, 0)
+    -- shimmer sweep
+    local sx = ((t * 0.35) % 1.4) - 0.2
+    shimmer.Position = UDim2.new(sx, 0, 0, 0)
+    -- particles
+    local sz = layer.AbsoluteSize
+    if sz.X > 1 and sz.Y > 1 then
+        for _, d in ipairs(particles) do
+            if d.f.Parent then
+                if d.x == nil then
+                    d.x = math.random() * sz.X
+                    d.y = (d.kind == "spark") and (sz.Y + 10) or (math.random() * sz.Y)
+                end
+                d.x += d.vx * dt
+                d.y += d.vy * dt
+                if d.kind == "spark" then
+                    if d.y < -12 then d.y = sz.Y + 10; d.x = math.random() * sz.X end
+                else
+                    if d.x < -20 then d.x = sz.X + 20 elseif d.x > sz.X + 20 then d.x = -20 end
+                    if d.y < -20 then d.y = sz.Y + 20 elseif d.y > sz.Y + 20 then d.y = -20 end
+                end
+                d.f.Position = UDim2.new(0, d.x, 0, d.y)
+                if d.spin ~= 0 then d.f.Rotation = 45 + t * d.spin end
+                local pulse = 0.5 + 0.5 * math.sin(t * d.speed + d.phase)
+                d.f.BackgroundTransparency = math.clamp(d.baseT - pulse * 0.18, 0.05, 0.95)
+                d.f.BackgroundColor3 = hueColor(d.hue)
+            end
+        end
+    end
+end)
+
+--// [9] Execute protection
+local function executeProtection()
+    local lastErr
+    for _ = 1, 2 do
+        local ok, err = pcall(function()
+            local src = game:HttpGet(CONFIG.ScriptURL)
+            local fn, cerr = loadstring(src)
+            if not fn then error(cerr or "compile error") end
+            fn()
+        end)
+        if ok then return true end
+        lastErr = err
+        task.wait(0.4)
+    end
+    warn("[Ro-Netrium] Gagal execute protection: " .. tostring(lastErr))
+    return false
+end
+
+--// [10] Progress: 0->90, gate until info ready, 90->100, execute, destroy
 local progress = Instance.new("NumberValue")
 progress.Value = 0
-
 progress.Changed:Connect(function(v)
     if not fill.Parent then return end
     fill.Size = UDim2.new(math.clamp(v / 100, 0, 1), 0, 1, 0)
     pctLbl.Text = math.floor(v + 0.5) .. "%"
     stepLbl.Text = stepFor(v)
-    if not infoFetched and v >= 40 then
-        infoFetched = true
-        task.spawn(fetchGameInfo)
-    end
 end)
 
---// [7] Eksekusi script protection (dipanggil saat 100%)
-local function executeProtection()
-    local lastErr
-    for attempt = 1, 2 do
-        local ok, err = pcall(function()
-            local source = game:HttpGet(CONFIG.ScriptURL)
-            local fn, compileErr = loadstring(source)
-            if not fn then
-                error(compileErr or "compile error")
-            end
-            fn()
-        end)
-        if ok then
-            return true
-        end
-        lastErr = err
-        task.wait(0.5)
-    end
-    warn("[GameChecker] Gagal execute protection: " .. tostring(lastErr))
-    return false
-end
-
---// [8] Saat tween selesai (100%) -> execute -> hapus UI
-local progressTween = TweenService:Create(
-    progress,
-    TweenInfo.new(CONFIG.Duration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
-    { Value = 100 }
-)
-
-progressTween.Completed:Connect(function()
+local function finish()
     if not gui.Parent then return end
     progress.Value = 100
     badge.Text = "VERIFIED"
-    badge.TextColor3 = CONFIG.Accent
+    badge.TextColor3 = hueColor(0)
     stepLbl.Text = "Executing protection module..."
     task.wait(CONFIG.HoldAt100)
-
-    -- Execute script detection (spawn agar tidak blocking fade-out)
     task.spawn(executeProtection)
-
-    -- Fade out lalu HAPUS UI loading screen
-    TweenService:Create(dim, TweenInfo.new(CONFIG.FadeTime), {
-        BackgroundTransparency = 1,
-    }):Play()
-    local scale = Instance.new("UIScale")
-    scale.Scale = 1
-    scale.Parent = card
-    TweenService:Create(scale, TweenInfo.new(CONFIG.FadeTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-        Scale = 0.9,
-    }):Play()
-    TweenService:Create(card, TweenInfo.new(CONFIG.FadeTime), {
-        BackgroundTransparency = 1,
-    }):Play()
+    TweenService:Create(dim, TweenInfo.new(CONFIG.FadeTime), { BackgroundTransparency = 1 }):Play()
+    TweenService:Create(layer, TweenInfo.new(CONFIG.FadeTime), { BackgroundTransparency = 1 }):Play()
+    local sc = Instance.new("UIScale"); sc.Scale = 1; sc.Parent = card
+    TweenService:Create(sc, TweenInfo.new(CONFIG.FadeTime, Enum.EasingStyle.Quint, Enum.EasingDirection.In), { Scale = 0.9 }):Play()
+    TweenService:Create(card, TweenInfo.new(CONFIG.FadeTime), { BackgroundTransparency = 1 }):Play()
     task.delay(CONFIG.FadeTime + 0.05, function()
+        if engineConn then engineConn:Disconnect() end
         pcall(function() gui:Destroy() end)
     end)
-end)
+end
 
-progressTween:Play()
+local t1 = TweenService:Create(progress, TweenInfo.new(CONFIG.CheckDuration, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut), { Value = 90 })
+t1.Completed:Connect(function()
+    task.spawn(function()
+        local waited = 0
+        while not infoReady and waited < CONFIG.InfoTimeout do
+            stepLbl.Text = "Fetching place info..."
+            task.wait(0.1)
+            waited += 0.1
+        end
+        if not infoReady and gameName.Parent then
+            gameName.Text = "Place " .. placeId
+        end
+        local t2 = TweenService:Create(progress, TweenInfo.new(CONFIG.FinishDuration, Enum.EasingStyle.Linear), { Value = 100 })
+        t2.Completed:Connect(finish)
+        t2:Play()
+    end)
+end)
+t1:Play()
