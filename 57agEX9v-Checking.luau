@@ -73,7 +73,7 @@ local LoaderConfig = {
             GameIds = {2214661900},
             PlaceIds = {2214661900},
             Urls = {
-                "print("Coming Soon")"
+                "https://raw.githubusercontent.com/Uo2iQnNhD/Super-Maintenance/refs/heads/main/uQ3gXqhH-Area%2051.lua"
             }
         },
 
