@@ -6443,6 +6443,78 @@ executeRemoteScript(
 end,
 })
 end
+
+local function findLibGui()
+    local parents = {}
+    pcall(function() table.insert(parents, game:GetService("CoreGui")) end)
+    pcall(function()
+        local pg = LocalPlayer:FindFirstChild("PlayerGui")
+        if pg then table.insert(parents, pg) end
+    end)
+    if typeof(gethui) == "function" then
+        pcall(function() local h = gethui(); if h then table.insert(parents, h) end end)
+    end
+    for _, p in ipairs(parents) do
+        if p then
+            local g = p:FindFirstChild("ZethHubV5")
+            if g then return g end
+        end
+    end
+    return nil
+end
+
+local function setNamedVisible(names, v)
+    local g = findLibGui()
+    if not g then return end
+    for _, d in ipairs(g:GetDescendants()) do
+        for _, n in ipairs(names) do
+            if d.Name == n and d:IsA("GuiObject") then
+                pcall(function() d.Visible = v end)
+            end
+        end
+    end
+end
+
+local function setKeybindList(v)
+    if Window and Window.ToggleKeybindList then
+        pcall(function() Window:ToggleKeybindList(v) end)
+    else
+        setNamedVisible({"KeybindList"}, v)
+    end
+end
+local function setQuickBar(v)
+    if Window and Window.SetQuickBarVisible then
+        pcall(function() Window:SetQuickBarVisible(v) end)
+    else
+        setNamedVisible({"QuickBar"}, v)
+    end
+end
+local function setNetStats(v)
+    if Window and Window.SetNetStatsBarVisible then
+        pcall(function() Window:SetNetStatsBarVisible(v) end)
+    else
+        setNamedVisible({"NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetStats"}, v)
+    end
+end
+
+Binds:CreateSection("Interface & Visibility")
+Binds:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
+    CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
+    Callback = function() Window:Toggle() end})
+
+-- [NEW] Visibility toggles
+Binds:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
+    Tooltip = "Show/hide the floating Keybinds panel",
+    Callback = function(v) setKeybindList(v) end})
+Binds:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
+    Tooltip = "Show/hide the floating Quick Bar panel",
+    Callback = function(v) setQuickBar(v) end})
+Binds:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
+    Tooltip = "Show/hide the Net performance panel",
+    Callback = function(v) setNetStats(v) end})
+Binds:CreateParagraph({Title = "How to use", Icon = "info",
+    Content = "Click the key badge on the right to rebind any key, Use the Visibility toggles above to hide Quick bar, Net Performance, Keybind"})
+
 --// ==========================================================
 --// THEME TAB [+ LOCK MODE yang BISA di-unlock]
 --// ==========================================================
