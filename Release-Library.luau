@@ -1,8 +1,7 @@
 --[[ Ro-Netrium Updated by Zaycapcay ]]
---[[ Version 5.9.1 - FIXED (dedup PART 2 + RequireConfirm + encoding) ]]
---[[ ZETHUB - Library V5.9.1 ]]
---[[ STEP 1/4 : Core + Theme(37) + Icons + Helpers + Movement + ThemeManager ]]
---[[ GABUNGKAN STEP 1/4 + 2/4 + 3/4 + 4/4 JADI SATU SCRIPT LALU EXECUTE ]]
+--[[ New Interface Generation ]]
+--[[ Powerful & Best Library 2026 ]]
+
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
