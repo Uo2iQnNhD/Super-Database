@@ -23,7 +23,7 @@ local CONFIG = {
     InfoTimeout = 4.0,     -- max tunggu fetch info
     HoldAt100 = 0.35,
     FadeTime  = 0.4,
-    ScriptURL = "https://raw.githubusercontent.com/Uo2iQnNhD/Super-Maintenance/refs/heads/main/vj4zH33p-MVSD.lua",
+    ScriptURL = "https://raw.githubusercontent.com/Uo2iQnNhD/Super-Database/refs/heads/main/57agEX9v-Checking.luau",
 }
 
 local TweenService = game:GetService("TweenService")
