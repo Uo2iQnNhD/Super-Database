@@ -5585,21 +5585,380 @@ end
 --// ==========================================================
 
 --// ==========================================================
---// STEP 6/6 : Home Tab + Tools Tab (ESP/JoinLeave cleanup FIX)
---// + Theme & Settings (Glow Enabled FIX, Lock bisa di-unlock)
---// + Save/Load (+Overwrite) + AutoLoad + return window
---// + Library:Destroy (purge total) + return Library
+--// STEP 6/6 : Home + Interface + Tools + Theme + Save/Load
+--// + AutoLoad + return window + Library:Destroy + return Library
 --// TEMPEL TEPAT DI BAWAH STEP 5. INI STEP TERAKHIR.
+--// [FIX] SAFE BRIDGE: semua helper punya fallback anti-nil
 --// ==========================================================
---// [FIX] Extra cleanup hooks: ESP & JoinLeave ikut ter-destroy
+
+--// ---------- SAFE BRIDGE (anti "attempt to index/call nil") ----------
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local TeleportService = game:GetService("TeleportService")
+local Players = Players or game:GetService("Players")
+local LocalPlayer = LocalPlayer or Players.LocalPlayer
+local RunService = RunService or game:GetService("RunService")
+local UserInputService = UserInputService or game:GetService("UserInputService")
+local TweenService = TweenService or game:GetService("TweenService")
+
+Library.Effects = Library.Effects or {}
+if Library.Effects.Particles == nil then Library.Effects.Particles = true end
+if Library.Effects.Crystals == nil then Library.Effects.Crystals = true end
+if Library.Effects.GridOverlay == nil then Library.Effects.GridOverlay = true end
+if Library.Effects.Glow == nil then Library.Effects.Glow = true end
+Library.Locked = Library.Locked == true
+Library._lockables = Library._lockables or {}
+Library._layout = Library._layout or {}
+Library._elements = Library._elements or {}
+Library.Flags = Library.Flags or {}
+Library.SessionStart = Library.SessionStart or os.clock()
+
+local Corner = Corner or function(p, r)
+local c = Instance.new("UICorner")
+c.CornerRadius = UDim.new(0, r or 7)
+c.Parent = p
+return c
+end
+
+local Stroke = Stroke or function(p, col, th)
+local s = Instance.new("UIStroke")
+s.Color = col or Theme.Border
+s.Thickness = th or 1.5
+s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+s.Parent = p
+return s
+end
+
+local Pad = Pad or function(p, t, l, b, r)
+local d = Instance.new("UIPadding")
+d.PaddingTop = UDim.new(0, t or 0)
+d.PaddingLeft = UDim.new(0, l or 0)
+d.PaddingBottom = UDim.new(0, b or 0)
+d.PaddingRight = UDim.new(0, r or 0)
+d.Parent = p
+return d
+end
+
+local Tween = Tween or function(obj, dur, props, style, dir)
+local speed = math.max(0.05, tonumber(Library.AnimationSpeed) or 1)
+local tw = TweenService:Create(obj, TweenInfo.new((dur or .3) / speed, style or Enum.EasingStyle.Quint, dir or Enum.EasingDirection.Out), props)
+tw:Play()
+return tw
+end
+
+local Connect = Connect or function(signal, cb, owner)
+local conn
+conn = signal:Connect(function(...)
+if Library._destroyed then pcall(function() conn:Disconnect() end) return end
+if owner and owner._destroyed then pcall(function() conn:Disconnect() end) return end
+cb(...)
+end)
+if owner and owner._connections then table.insert(owner._connections, conn)
+elseif Library._connections then table.insert(Library._connections, conn) end
+return conn
+end
+
+local registerThemeRef = registerThemeRef or function() end
+local registerRGB = registerRGB or function(o) return o end
+
+local makeIcon = makeIcon or function(parent, icon, size, pos, color)
+local asset
+if type(icon) == "number" then
+asset = "rbxassetid://" .. icon
+elseif type(icon) == "string" then
+if icon:sub(1, 12) == "rbxassetid://" or icon:sub(1, 7) == "http://" or icon:sub(1, 8) == "https://" then
+asset = icon
+elseif Library.Lucide and Library.Lucide[icon] then
+asset = Library.Lucide[icon]
+end
+end
+if not asset then return nil end
+local im = Instance.new("ImageLabel")
+im.Name = "Icon"
+im.BackgroundTransparency = 1
+im.Image = asset
+im.Size = size or UDim2.new(0, 16, 0, 16)
+im.Position = pos or UDim2.new(0, 12, 0.5, -8)
+im.ImageColor3 = color or Theme.Text
+im.Parent = parent
+local rect = Library.LucideRect and type(icon) == "string" and Library.LucideRect[icon]
+if rect then
+im.ImageRectOffset = rect.ImageRectOffset
+im.ImageRectSize = rect.ImageRectSize
+end
+return im
+end
+
+local contrastOn = contrastOn or function(c)
+if typeof(c) ~= "Color3" then return Color3.new(0, 0, 0) end
+local lum = (0.299 * c.R + 0.587 * c.G + 0.114 * c.B)
+return lum > 0.6 and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(255, 255, 255)
+end
+
+local copyToClipboard = copyToClipboard or function(text)
+text = tostring(text or "")
+if typeof(setclipboard) == "function" then
+local ok = pcall(setclipboard, text)
+if ok then return true end
+end
+if typeof(toclipboard) == "function" then
+local ok = pcall(toclipboard, text)
+if ok then return true end
+end
+if type(syn) == "table" and typeof(syn.setclipboard) == "function" then
+local ok = pcall(syn.setclipboard, text)
+if ok then return true end
+end
+return false
+end
+
+local readClipboard = readClipboard or function()
+if typeof(getclipboard) == "function" then
+local ok, t = pcall(getclipboard)
+if ok and type(t) == "string" then return t end
+end
+if typeof(readclipboard) == "function" then
+local ok, t = pcall(readclipboard)
+if ok and type(t) == "string" then return t end
+end
+if type(syn) == "table" and typeof(syn.getclipboard) == "function" then
+local ok, t = pcall(syn.getclipboard)
+if ok and type(t) == "string" then return t end
+end
+return nil
+end
+
+local joinScriptText = joinScriptText or function()
+return string.format(
+'game:GetService("TeleportService"):TeleportToPlaceInstance(%d, "%s", game:GetService("Players").LocalPlayer)',
+tonumber(game.PlaceId) or 0, tostring(game.JobId or "")
+)
+end
+
+local rejoinServer = rejoinServer or function()
+local ok, err = pcall(function()
+TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer)
+end)
+return ok, err
+end
+
+local serverHop = serverHop or function()
+task.spawn(function()
+Library:Notify("Searching for another server...", 4, "Server Hop", "refresh-cw")
+local ok, err = pcall(function()
+local url = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?sortOrder=Asc&limit=100"
+local body = game:HttpGet(url)
+local data = HttpService:JSONDecode(body)
+local list = {}
+for _, s in ipairs((data and data.data) or {}) do
+if type(s) == "table" and s.id and s.id ~= game.JobId and (s.playing or 0) < (s.maxPlayers or 99) then
+table.insert(list, s.id)
+end
+end
+if #list == 0 then error("No available server found") end
+TeleportService:TeleportToPlaceInstance(game.PlaceId, list[math.random(1, #list)], LocalPlayer)
+end)
+if not ok then
+Library:Notify("Server hop failed: " .. tostring(err), 5, "Server Hop", "x-circle")
+end
+end)
+end
+
+local resetPlayer = resetPlayer or function()
+local char = LocalPlayer.Character
+local hum = char and char:FindFirstChildOfClass("Humanoid")
+if hum then
+pcall(function() hum.Health = 0 end)
+Library:Notify("Character reset.", 3, "Reset", "refresh-cw")
+elseif char then
+pcall(function() char:BreakJoints() end)
+Library:Notify("Character reset.", 3, "Reset", "refresh-cw")
+else
+Library:Notify("Character not found.", 3, "Reset", "x-circle")
+end
+end
+
+local formatDuration = formatDuration or function(seconds)
+seconds = math.floor(tonumber(seconds) or 0)
+local h = math.floor(seconds / 3600)
+local m = math.floor((seconds % 3600) / 60)
+local s = seconds % 60
+return string.format("%dh %02dm %02ds", h, m, s)
+end
+
+local SAVE_FOLDER = SAVE_FOLDER or "RoNetrium/Saves"
+local sanitizeFileName = sanitizeFileName or function(name)
+name = tostring(name or "autosave")
+name = name:gsub("[^%w_%-%.]", "_"):gsub("^_+", ""):gsub("_+$", "")
+if name == "" then name = "autosave" end
+if #name > 64 then name = name:sub(1, 64) end
+return name
+end
+
+local listSaveFiles = listSaveFiles or function()
+local files = {}
+if typeof(listfiles) ~= "function" then return files end
+pcall(function() if typeof(makefolder) == "function" then makefolder(SAVE_FOLDER) end end)
+local ok, res = pcall(listfiles, SAVE_FOLDER)
+if ok and type(res) == "table" then
+for _, v in ipairs(res) do
+local s = tostring(v)
+local name = s:match("([^/\\]+)%.json$") or s:match("^([%w_%-%.]+)%.json$")
+if name then files[#files + 1] = name end
+end
+end
+table.sort(files)
+return files
+end
+
+local getSaveOptions = getSaveOptions or function()
+local files = listSaveFiles()
+if #files == 0 then return { "(no saves)" } end
+return files
+end
+
+local executeRemoteScript = executeRemoteScript or function(url, name)
+task.spawn(function()
+local ok, err = pcall(function()
+local src = game:HttpGet(url)
+local chunk, cerr = loadstring(src)
+if not chunk then error(cerr or "compile error") end
+chunk()
+end)
+if ok then
+Library:Notify("Executed: " .. tostring(name or "script"), 3, "Executor", "check-circle")
+else
+Library:Notify("Failed: " .. tostring(name or "script") .. "\n" .. tostring(err), 5, "Executor", "x-circle")
+end
+end)
+end
+
+local revealChildren = revealChildren or function() end
+local getHumanoid = getHumanoid or function()
+local char = LocalPlayer.Character
+return char and char:FindFirstChildOfClass("Humanoid") or nil
+end
+local Movement = Movement or Library.Movement
+local NotifGuiRef = NotifGui
+local dotLayerRef, crystalLayerRef, gridLayerRef = dotLayer, crystalLayer, gridLayer
+local mainStrokeRef, mainGlowRef = mainStroke, mainGlow
+local guiRef = gui
+local KBFrame = KeybindList
+
+local performAutoLoad = performAutoLoad or function(delayTime)
+if not Library.AutoLoad.Enabled or Library._autoLoaded then return end
+Library._autoLoaded = true
+task.delay(delayTime or 0, function()
+if Library._destroyed or window._destroyed then return end
+local files = listSaveFiles()
+if #files == 0 then return end
+local target = Library.AutoLoad.File
+if not target or target == "" then target = "autosave" end
+local found = false
+for _, f in ipairs(files) do if f == target then found = true break end end
+if not found then target = files[1] end
+local ok = Library:LoadFromFile(target)
+if ok then
+Library._saveFile = target
+Library:Notify("Auto load: " .. target, 3, "Loader", "upload")
+end
+end)
+end
+
+--// [FIX] Lock API fallback (biar toggle Lock bisa nyala & mati)
+if type(Library.SetLocked) ~= "function" then
+function Library:SetLocked(v)
+self.Locked = v and true or false
+if type(self._applyLock) == "function" then pcall(self._applyLock, self) end
+end
+end
+
+--// [FIX] Export / Import fallback
+local function encodeVal(v)
+if typeof(v) == "Color3" then return { __type = "Color3", R = v.R, G = v.G, B = v.B } end
+if typeof(v) == "EnumItem" then return { __type = "KeyCode", Name = v.Name } end
+return v
+end
+local function decodeVal(v)
+if type(v) == "table" then
+if v.__type == "Color3" then return Color3.new(v.R or 1, v.G or 1, v.B or 1) end
+if v.__type == "KeyCode" then return Enum.KeyCode[v.Name] or Enum.KeyCode.Unknown end
+end
+return v
+end
+
+if type(Library.ExportConfig) ~= "function" then
+function Library:ExportConfig()
+local values = {}
+for flag, val in pairs(self.Flags or {}) do values[flag] = encodeVal(val) end
+local payload = {
+Meta = { Library = "Ro-Netrium", Version = "5.9.1", SavedAt = os.time(), PlaceId = game.PlaceId },
+Values = values,
+Effects = {
+Particles = self.Effects.Particles, Crystals = self.Effects.Crystals,
+GridOverlay = self.Effects.GridOverlay, Glow = self.Effects.Glow,
+},
+Theme = {
+RainbowSpeed = Theme.RainbowSpeed,
+MainBorderThickness = Theme.MainBorderThickness,
+ElementBorderThickness = Theme.ElementBorderThickness,
+Accent = encodeVal(self.Accent),
+},
+}
+local ok, json = pcall(function() return HttpService:JSONEncode(payload) end)
+if ok then return json end
+return nil, "Failed to encode config."
+end
+end
+
+if type(Library.ImportConfig) ~= "function" then
+function Library:ImportConfig(txt)
+if type(txt) ~= "string" or txt == "" then return false, "Empty JSON." end
+local ok, data = pcall(function() return HttpService:JSONDecode(txt) end)
+if not ok or type(data) ~= "table" then return false, "Invalid JSON." end
+self._loading = true
+for flag, enc in pairs(data.Values or {}) do
+local value = decodeVal(enc)
+self.Flags[flag] = value
+local el = self._elements[flag]
+if el and el.Object then
+pcall(function()
+if el.Type == "keybind" then
+local kc = value
+if type(kc) == "string" then kc = Enum.KeyCode[kc] or Enum.KeyCode.Unknown end
+if typeof(kc) == "EnumItem" and el.Object.SetKey then el.Object:SetKey(kc) end
+elseif el.Object.Set then
+el.Object:Set(value)
+end
+end)
+end
+end
+if type(data.Effects) == "table" then
+for k, v in pairs(data.Effects) do self.Effects[k] = v end
+end
+if type(data.Theme) == "table" then
+if data.Theme.RainbowSpeed then Theme.RainbowSpeed = data.Theme.RainbowSpeed end
+if data.Theme.MainBorderThickness then Theme.MainBorderThickness = data.Theme.MainBorderThickness end
+if data.Theme.ElementBorderThickness then Theme.ElementBorderThickness = data.Theme.ElementBorderThickness end
+end
+self._loading = false
+for _, w in ipairs(self._windows or {}) do
+if type(w.ApplyTheme) == "function" then pcall(w.ApplyTheme, w) end
+end
+return true
+end
+end
+
+--// ---------- Extra cleanup hooks (ESP & JoinLeave ikut ter-destroy) ----------
 local baseWindowDestroy = window.Destroy
-window._extraCleanups = {}
+window._extraCleanups = window._extraCleanups or {}
 function window:Destroy()
 if self._destroyed then return end
 for _, fn in ipairs(self._extraCleanups or {}) do pcall(fn) end
 self._extraCleanups = {}
 return baseWindowDestroy(self)
 end
+
 --// ==========================================================
 --// HOME TAB
 --// ==========================================================
@@ -5607,6 +5966,7 @@ if config.InfoTab ~= false then
 local homeTab = window:CreateTab(config.InfoTabName or "Home", "home")
 homeTab.btn.LayoutOrder = -100
 homeTab.content.LayoutOrder = -100
+
 local function infoRow(height)
 local row = Instance.new("Frame")
 row.Size = UDim2.new(1, 0, 0, height)
@@ -5619,6 +5979,7 @@ lay.Padding = UDim.new(0, 8)
 lay.Parent = row
 return row
 end
+
 local function infoCard(parent, titleText, iconName, height, scaleX, offsetX)
 local card = Instance.new("Frame")
 card.Size = UDim2.new(scaleX or 0.5, offsetX or -4, 0, height)
@@ -5657,6 +6018,7 @@ body.ZIndex = 2
 body.Parent = card
 return card, body
 end
+
 local function infoButtonRow(parent, posY, height)
 local r = Instance.new("Frame")
 r.Size = UDim2.new(1, 0, 0, height or 24)
@@ -5671,6 +6033,7 @@ lay.Padding = UDim.new(0, 6)
 lay.Parent = r
 return r
 end
+
 local function infoButton(parent, text, order, callback)
 local b = Instance.new("TextButton")
 b.Size = UDim2.new(0.5, -3, 1, 0)
@@ -5689,14 +6052,15 @@ registerThemeRef(b, "BackgroundColor3", "Background")
 registerThemeRef(b, "TextColor3", "Text")
 local bs = Stroke(b, Theme.Border, 1)
 registerThemeRef(bs, "Color", "Border")
-Connect(b.MouseEnter, function() Tween(b, .15, {BackgroundColor3 = Theme.ElementHover}) end, window)
-Connect(b.MouseLeave, function() Tween(b, .15, {BackgroundColor3 = Theme.Background}) end, window)
+Connect(b.MouseEnter, function() Tween(b, .15, { BackgroundColor3 = Theme.ElementHover }) end, window)
+Connect(b.MouseLeave, function() Tween(b, .15, { BackgroundColor3 = Theme.Background }) end, window)
 Connect(b.MouseButton1Click, function()
 if Library.Locked then return end
 if callback then task.spawn(callback) end
 end, window)
 return b
 end
+
 local function infoLabel(parent, posY, height, textSize, font, themeKey, truncate)
 local l = Instance.new("TextLabel")
 l.Size = UDim2.new(1, 0, 0, height)
@@ -5713,6 +6077,7 @@ l.Parent = parent
 registerThemeRef(l, "TextColor3", themeKey or "Text")
 return l
 end
+
 local function makeSparkline(parent, barCount)
 barCount = barCount or 22
 local holder = Instance.new("Frame")
@@ -5756,11 +6121,11 @@ end
 end
 return spark, holder
 end
+
 local row1 = infoRow(150)
 local opCard, opBody = infoCard(row1, "Operator", "user", 150, 0.5, -4)
 local avatar = Instance.new("ImageLabel")
 avatar.Size = UDim2.new(0, 44, 0, 44)
-avatar.Position = UDim2.new(0, 0, 0, 0)
 avatar.BackgroundColor3 = Theme.Background
 avatar.BorderSizePixel = 0
 avatar.ZIndex = 3
@@ -5771,21 +6136,26 @@ registerRGB(Stroke(avatar, Color3.new(1, 1, 1), 2))
 pcall(function()
 avatar.Image = "rbxthumb://type=AvatarHeadShot&id=" .. LocalPlayer.UserId .. "&w=420&h=420"
 end)
+
 local opName = infoLabel(opBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
 opName.Position = UDim2.new(0, 52, 0, 0)
 opName.Size = UDim2.new(1, -52, 0, 16)
 opName.Text = LocalPlayer.DisplayName
+
 local opUser = infoLabel(opBody, 17, 13, 10, Enum.Font.Gotham, "SubText", true)
 opUser.Position = UDim2.new(0, 52, 0, 17)
 opUser.Size = UDim2.new(1, -52, 0, 13)
 opUser.Text = "@" .. LocalPlayer.Name
+
 local opId = infoLabel(opBody, 31, 13, 10, Enum.Font.Gotham, "SubText", true)
 opId.Position = UDim2.new(0, 52, 0, 31)
 opId.Size = UDim2.new(1, -52, 0, 13)
 opId.Text = "UserId " .. tostring(LocalPlayer.UserId)
+
 local opActionRow = infoButtonRow(opBody, 58, 24)
 infoButton(opActionRow, "Server Hop", 1, function() serverHop() end)
 infoButton(opActionRow, "Reset Player", 2, function() resetPlayer() end)
+
 local opBtnRow = infoButtonRow(opBody, 86, 24)
 infoButton(opBtnRow, "Copy UserId", 1, function()
 local ok = copyToClipboard(tostring(LocalPlayer.UserId))
@@ -5795,30 +6165,34 @@ infoButton(opBtnRow, "Copy Name", 2, function()
 local ok = copyToClipboard(LocalPlayer.Name)
 Library:Notify(ok and ("Name copied: " .. LocalPlayer.Name) or "Clipboard is not available in this executor", 3, "Operator", ok and "check-circle" or "x-circle")
 end)
+
 local plCard, plBody = infoCard(row1, "Place", "map-pin", 150, 0.5, -4)
 local placeId = game.PlaceId or 0
 local plName = infoLabel(plBody, 0, 16, 12, Enum.Font.GothamBold, "Text", true)
 plName.Text = "Loading place..."
---// [FIX] fetch nama place non-blocking (dulu bikin CreateWindow stall)
 task.spawn(function()
 local name = "Unknown Place"
 pcall(function()
-local productInfo = game:GetService("MarketplaceService"):GetProductInfo(placeId)
+local productInfo = MarketplaceService:GetProductInfo(placeId)
 if productInfo and productInfo.Name then name = productInfo.Name end
 end)
 if plName.Parent and not window._destroyed then plName.Text = name end
 end)
+
 local plId = infoLabel(plBody, 18, 13, 10, Enum.Font.Gotham, "SubText", true)
 plId.Text = "PlaceId " .. tostring(placeId)
 local plJob = infoLabel(plBody, 33, 13, 10, Enum.Font.Gotham, "SubText", true)
 plJob.Text = "JobId " .. tostring(game.JobId or "Unknown")
+
 local plDivider = Instance.new("Frame")
 plDivider.Size = UDim2.new(1, 0, 0, 1)
 plDivider.Position = UDim2.new(0, 0, 0, 52)
 plDivider.BackgroundColor3 = Theme.Border
 plDivider.BorderSizePixel = 0
+plDivider.ZIndex = 3
 plDivider.Parent = plBody
 registerThemeRef(plDivider, "BackgroundColor3", "Border")
+
 local plBtnRowA = infoButtonRow(plBody, 58, 24)
 infoButton(plBtnRowA, "Rejoin Server", 1, function()
 Library:Notify("Rejoining server...", 3, "Place", "refresh-cw")
@@ -5829,6 +6203,7 @@ infoButton(plBtnRowA, "Copy Job ID", 2, function()
 local ok = copyToClipboard(tostring(game.JobId))
 Library:Notify(ok and "Job ID copied." or "Clipboard not available", 3, "Place", ok and "check-circle" or "x-circle")
 end)
+
 local plBtnRowB = infoButtonRow(plBody, 86, 24)
 infoButton(plBtnRowB, "Copy PlaceId", 1, function()
 local ok = copyToClipboard(tostring(game.PlaceId))
@@ -5838,6 +6213,7 @@ infoButton(plBtnRowB, "Copy Join Script", 2, function()
 local ok = copyToClipboard(joinScriptText())
 Library:Notify(ok and "Join script copied." or "Clipboard not available", 3, "Place", ok and "check-circle" or "x-circle")
 end)
+
 local row2 = infoRow(86)
 local fpsCard, fpsBody = infoCard(row2, "Frame Rate", "activity", 86, 1 / 3, -6)
 local fpsValue = infoLabel(fpsBody, 2, 20, 16, Enum.Font.GothamBlack, "Text", false)
@@ -5845,12 +6221,14 @@ fpsValue.Text = "-- FPS"
 window:onAccent(function(c) if fpsValue.Parent then fpsValue.TextColor3 = c end end)
 local fpsSpark, fpsHolder = makeSparkline(fpsBody, 22)
 fpsHolder.Position = UDim2.new(0, 0, 1, -16)
+
 local pingCard, pingBody = infoCard(row2, "Network Ping", "wifi", 86, 1 / 3, -6)
 local pingValue = infoLabel(pingBody, 2, 20, 16, Enum.Font.GothamBlack, "Text", false)
 pingValue.Text = "-- ms"
 window:onAccent(function(c) if pingValue.Parent then pingValue.TextColor3 = c end end)
 local pingSpark, pingHolder = makeSparkline(pingBody, 22)
 pingHolder.Position = UDim2.new(0, 0, 1, -16)
+
 local sesCard, sesBody = infoCard(row2, "Session & Server", "clock", 86, 1 / 3, -6)
 local sesValue = infoLabel(sesBody, 0, 18, 14, Enum.Font.GothamBold, "Text", false)
 sesValue.Text = "0h 00m 00s"
@@ -5858,12 +6236,13 @@ local sesPlayers = infoLabel(sesBody, 20, 13, 10, Enum.Font.Gotham, "SubText", t
 sesPlayers.Text = "Players: --/--"
 local sesServer = infoLabel(sesBody, 34, 13, 10, Enum.Font.Gotham, "SubText", true)
 sesServer.Text = "Server up: --"
-local WEB_URL = "https://u721rd.mimo.run/Ro-NetriumV4.html"
+
+local WEB_URL = config.WebsiteURL or "https://u721rd.mimo.run/Ro-NetriumV4.html"
 local row4 = infoRow(64)
 local webCard, webBody = infoCard(row4, "Website", "globe", 64, 1, 0)
+
 local webInput = Instance.new("TextBox")
 webInput.Size = UDim2.new(1, -120, 1, 0)
-webInput.Position = UDim2.new(0, 0, 0, 0)
 webInput.BackgroundColor3 = Theme.Background
 webInput.BorderSizePixel = 0
 webInput.Text = WEB_URL
@@ -5874,11 +6253,13 @@ webInput.TextXAlignment = Enum.TextXAlignment.Left
 webInput.TextYAlignment = Enum.TextYAlignment.Center
 webInput.ClearTextOnFocus = false
 webInput.TextEditable = false
+webInput.ZIndex = 3
 webInput.Parent = webBody
 Corner(webInput, 6)
 registerThemeRef(webInput, "BackgroundColor3", "Background")
 registerThemeRef(webInput, "TextColor3", "SubText")
 Pad(webInput, 0, 10, 0, 10)
+
 local webCopyBtn = Instance.new("TextButton")
 webCopyBtn.Size = UDim2.new(0, 112, 1, 0)
 webCopyBtn.Position = UDim2.new(1, -112, 0, 0)
@@ -5906,6 +6287,7 @@ webCopyLabel.TextXAlignment = Enum.TextXAlignment.Center
 webCopyLabel.TextYAlignment = Enum.TextYAlignment.Center
 webCopyLabel.ZIndex = 5
 webCopyLabel.Parent = webCopyBtn
+
 window:onAccent(function(c)
 webCopyBtn.BackgroundColor3 = c
 local tc = contrastOn(c)
@@ -5913,17 +6295,18 @@ webCopyLabel.TextColor3 = tc
 if webCopyIcon then webCopyIcon.ImageColor3 = tc end
 end)
 Connect(webCopyBtn.MouseEnter, function()
-Tween(webCopyBtn, .15, {BackgroundColor3 = window.accent:Lerp(Color3.new(1, 1, 1), 0.15)})
+Tween(webCopyBtn, .15, { BackgroundColor3 = window.accent:Lerp(Color3.new(1, 1, 1), 0.15) })
 end, window)
 Connect(webCopyBtn.MouseLeave, function()
-Tween(webCopyBtn, .15, {BackgroundColor3 = window.accent})
+Tween(webCopyBtn, .15, { BackgroundColor3 = window.accent })
 end, window)
+
 local webCopying = false
 Connect(webCopyBtn.MouseButton1Click, function()
 if webCopying or Library.Locked then return end
 webCopying = true
-Tween(webCopyScale, .08, {Scale = 0.92}, Enum.EasingStyle.Back, Enum.EasingDirection.In)
-task.delay(.09, function() if webCopyScale.Parent then Tween(webCopyScale, .12, {Scale = 1}) end end)
+Tween(webCopyScale, .08, { Scale = 0.92 }, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+task.delay(.09, function() if webCopyScale.Parent then Tween(webCopyScale, .12, { Scale = 1 }) end end)
 local ok = copyToClipboard(WEB_URL)
 Library:Notify(ok and "Website link copied!" or "Clipboard not available.", 3, "Website", ok and "check-circle" or "x-circle")
 webCopyLabel.Text = ok and "COPIED!" or "FAILED"
@@ -5932,15 +6315,18 @@ if webCopyLabel.Parent then webCopyLabel.Text = "COPY LINK" end
 webCopying = false
 end)
 end, window)
+
 task.spawn(function()
 while homeTab.content.Parent do
 task.wait(1)
 if window._destroyed or Library._destroyed or (type(Env) == "table" and Env.ZethHubGeneration ~= Library.Generation) then return end
 if not fpsValue.Parent then return end
-fpsValue.Text = math.min(currentFps, 999) .. " FPS"
-pingValue.Text = currentPing .. " ms"
-fpsSpark:Push(currentFps, math.max(120, currentFps))
-pingSpark:Push(currentPing, math.max(200, currentPing))
+local fps = tonumber(currentFps) or 0
+local ping = tonumber(currentPing) or 0
+fpsValue.Text = math.min(fps, 999) .. " FPS"
+pingValue.Text = ping .. " ms"
+fpsSpark:Push(fps, math.max(120, fps))
+pingSpark:Push(ping, math.max(200, ping))
 sesValue.Text = formatDuration(os.clock() - (Library.SessionStart or 0))
 local pc = #Players:GetPlayers()
 local mp = 0
@@ -5952,6 +6338,141 @@ sesServer.Text = "Server up: " .. formatDuration(up)
 end
 end)
 end
+
+--// ==========================================================
+--// [FIX] INTERFACE TAB — dibuat SEBELUM Tools agar pasti ada
+--// ==========================================================
+if config.InterfaceTab ~= false then
+local InterfaceTab = window:CreateTab(config.InterfaceTabName or "Interface", "eye")
+InterfaceTab.btn.LayoutOrder = 9996
+InterfaceTab.content.LayoutOrder = 9996
+
+local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+local visState = { keybind = not IS_MOBILE, quickbar = not IS_MOBILE, netstats = not IS_MOBILE }
+
+local function findPanels(names)
+local out = {}
+if not guiRef then return out end
+for _, d in ipairs(guiRef:GetDescendants()) do
+if d:IsA("GuiObject") then
+for _, n in ipairs(names) do
+if d.Name == n then out[#out + 1] = d break end
+end
+end
+end
+return out
+end
+
+local function setKeybindList(v)
+v = v and true or false
+visState.keybind = v
+if window and window.ToggleKeybindList then
+pcall(function() window:ToggleKeybindList(v) end)
+elseif KBFrame then
+pcall(function() KBFrame.Visible = v end)
+else
+for _, f in ipairs(findPanels({ "KeybindList", "KeybindPanel", "KeybindsPanel" })) do
+pcall(function() f.Visible = v end)
+end
+end
+end
+
+local function setQuickBar(v)
+v = v and true or false
+visState.quickbar = v
+if window and window.SetQuickBarVisible then
+pcall(function() window:SetQuickBarVisible(v) end)
+else
+for _, f in ipairs(findPanels({ "QuickBar", "QuickBar1" })) do
+pcall(function() f.Visible = v end)
+end
+end
+end
+
+local function setNetStats(v)
+v = v and true or false
+visState.netstats = v
+if window and window.SetNetStatsBarVisible then
+pcall(function() window:SetNetStatsBarVisible(v) end)
+elseif window and window.SetNetStatsVisible then
+pcall(function() window:SetNetStatsVisible(v) end)
+else
+for _, f in ipairs(findPanels({ "NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetStats", "NetPerformance" })) do
+pcall(function() f.Visible = v end)
+end
+end
+end
+
+local function applyVis()
+setKeybindList(visState.keybind)
+setQuickBar(visState.quickbar)
+setNetStats(visState.netstats)
+end
+
+--// API publik (bisa dipanggil dari script hub)
+window.SetKeybindListVisible = function(self, v) setKeybindList(v) end
+window.SetNetStatsVisible = function(self, v) setNetStats(v) end
+if not window.SetQuickBarVisible then
+window.SetQuickBarVisible = function(self, v) setQuickBar(v) end
+end
+
+InterfaceTab:CreateSection("Interface")
+InterfaceTab:CreateKeybind({
+Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
+CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
+Callback = function() window:Toggle() end,
+})
+
+InterfaceTab:CreateSection("Visibility")
+InterfaceTab:CreateToggle({
+Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
+Tooltip = "Show/hide the floating Keybinds panel",
+Callback = function(v) setKeybindList(v) end,
+})
+InterfaceTab:CreateToggle({
+Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
+Tooltip = "Show/hide the floating Quick Bar panel",
+Callback = function(v) setQuickBar(v) end,
+})
+InterfaceTab:CreateToggle({
+Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
+Tooltip = "Show/hide the Net performance panel",
+Callback = function(v) setNetStats(v) end,
+})
+InterfaceTab:CreateButton({
+Name = "Hide All Floating Panels", Icon = "eye-off",
+Callback = function()
+visState.keybind, visState.quickbar, visState.netstats = false, false, false
+applyVis()
+for _, flag in ipairs({ "RN_ShowKeybindList", "RN_ShowQuickBar", "RN_ShowNetStats" }) do
+local el = Library._elements[flag]
+if el and el.Object and el.Object.Set then pcall(function() el.Object:Set(false) end) end
+end
+Library:Notify("All floating panels hidden.", 3, "Interface", "eye-off")
+end,
+})
+InterfaceTab:CreateButton({
+Name = "Show All Floating Panels", Icon = "eye",
+Callback = function()
+visState.keybind, visState.quickbar, visState.netstats = true, true, true
+applyVis()
+for _, flag in ipairs({ "RN_ShowKeybindList", "RN_ShowQuickBar", "RN_ShowNetStats" }) do
+local el = Library._elements[flag]
+if el and el.Object and el.Object.Set then pcall(function() el.Object:Set(true) end) end
+end
+Library:Notify("All floating panels shown.", 3, "Interface", "eye")
+end,
+})
+InterfaceTab:CreateParagraph({
+Title = "How to use", Icon = "info",
+Content = "Click the key badge on the right to rebind any key. Use the Visibility toggles above to hide Quick Bar, Net Performance, Keybind. On mobile these are hidden by default.",
+})
+
+applyVis()
+task.delay(1, function() if not window._destroyed then applyVis() end end)
+task.delay(3, function() if not window._destroyed then applyVis() end end)
+end
+
 --// ==========================================================
 --// TOOLS TAB
 --// ==========================================================
@@ -5967,6 +6488,7 @@ Title = "System Information",
 Content = "All these scripts work with all games",
 Icon = "shield",
 })
+
 local TOOL_SCRIPT_OPTIONS = {
 "Infinite Yield",
 "Executor Editor [BETA]",
@@ -5983,14 +6505,12 @@ local TOOL_SCRIPT_URLS = {
 ["Animation Roblox [Working]"] = "https://raw.githubusercontent.com/Bac0nHck/Scripts/refs/heads/main/BundleAnimations.lua",
 ["Esp Monster [Beta]"] = "https://raw.githubusercontent.com/Uo2iQnNhD/Maintenance/refs/heads/main/aXXcS4rE-Esp%20Monster.lua",
 }
+
 local selectedToolScripts = {}
 ToolsTab:CreateMultiDropdown({
-Name = "Select Scripts",
-Icon = "layers",
-Options = TOOL_SCRIPT_OPTIONS,
-Default = {},
-Placeholder = "None selected",
-Flag = "ToolsScriptMulti",
+Name = "Select Scripts", Icon = "layers",
+Options = TOOL_SCRIPT_OPTIONS, Default = {},
+Placeholder = "None selected", Flag = "ToolsScriptMulti",
 Tooltip = "Select one or more external scripts",
 Callback = function(list)
 if type(list) == "string" then selectedToolScripts = { list }
@@ -5998,9 +6518,9 @@ elseif type(list) == "table" then selectedToolScripts = list
 else selectedToolScripts = {} end
 end,
 })
+
 ToolsTab:CreateButton({
-Name = "Execute Selected Scripts",
-Icon = "play",
+Name = "Execute Selected Scripts", Icon = "play",
 Tooltip = "Run all selected external scripts",
 Callback = function()
 if type(selectedToolScripts) ~= "table" or #selectedToolScripts == 0 then
@@ -6023,7 +6543,9 @@ Library:Notify("All selected scripts executed.", 4, "Done", "check-circle")
 end)
 end,
 })
+
 ToolsTab:CreateSection("More Tools")
+
 _G.JoinLeaveEnabled = false
 local function removeOldJoinLeaveGui()
 local parents = { PlayerGui }
@@ -6044,6 +6566,7 @@ end
 end
 end
 removeOldJoinLeaveGui()
+
 local Notification_Gui = Instance.new("ScreenGui")
 Notification_Gui.Name = "JoinLeaveNotificationGui"
 Notification_Gui.ResetOnSpawn = false
@@ -6056,20 +6579,24 @@ local ok, hui = pcall(gethui)
 if ok and hui then notifParent = hui end
 end
 Notification_Gui.Parent = notifParent
+
 local activeNotifications = {}
 local notificationQueue = {}
 local isProcessingQueue = false
 local processNotificationQueue
 local showPlayerNotification
+
 local function getAvatarUrl(userId)
 if not userId or userId == 0 then return "rbxasset://textures/ui/GuiImagePlaceholder.png" end
-return "https://www.roblox.com/headshot-thumbnail/image?userId=" .. userId .. "&width=150&height=150&format=png"
+return "rbxthumb://type=AvatarHeadShot&id=" .. userId .. "&w=150&h=150"
 end
+
 local function getCurrentTime()
 local success, time = pcall(function() return os.date("*t") end)
 if success and time then return string.format("%02d:%02d:%02d", time.hour, time.min, time.sec) end
 return "00:00:00"
 end
+
 local function updateNotificationPositions()
 for i, frame in ipairs(activeNotifications) do
 if frame.Parent then
@@ -6079,10 +6606,12 @@ TweenService:Create(frame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.Easing
 end
 end
 end
+
 showPlayerNotification = function(playerName, userId, isJoining)
 if Library._destroyed or window._destroyed then return end
 local themeColor = isJoining and Color3.fromRGB(80, 200, 120) or Color3.fromRGB(255, 80, 80)
 local actionText = isJoining and "Joined the Server" or "Left the Server"
+
 local notifFrame = Instance.new("Frame")
 notifFrame.Name = "PlayerNotification"
 notifFrame.Size = UDim2.new(0, 320, 0, 80)
@@ -6090,13 +6619,12 @@ notifFrame.Position = UDim2.new(1, 20, 1, 20)
 notifFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 notifFrame.BorderSizePixel = 0
 notifFrame.Parent = Notification_Gui
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = notifFrame
+Corner(notifFrame, 10)
 local stroke = Instance.new("UIStroke")
 stroke.Color = themeColor
 stroke.Thickness = 2
 stroke.Parent = notifFrame
+
 local avatarImage = Instance.new("ImageLabel")
 avatarImage.Size = UDim2.new(0, 50, 0, 50)
 avatarImage.Position = UDim2.new(0, 12, 0, 15)
@@ -6104,9 +6632,8 @@ avatarImage.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
 avatarImage.BorderSizePixel = 0
 avatarImage.Image = getAvatarUrl(userId)
 avatarImage.Parent = notifFrame
-local avatarCorner = Instance.new("UICorner")
-avatarCorner.CornerRadius = UDim.new(1, 0)
-avatarCorner.Parent = avatarImage
+Corner(avatarImage, 99)
+
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, -75, 0, 20)
 titleLabel.Position = UDim2.new(0, 72, 0, 12)
@@ -6117,6 +6644,7 @@ titleLabel.TextSize = 14
 titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
 titleLabel.Parent = notifFrame
+
 local nameLabel = Instance.new("TextLabel")
 nameLabel.Size = UDim2.new(1, -75, 0, 20)
 nameLabel.Position = UDim2.new(0, 72, 0, 30)
@@ -6126,12 +6654,15 @@ nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 nameLabel.TextSize = 15
 nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
 nameLabel.Parent = notifFrame
+
 local currentPlayers = #Players:GetPlayers()
 if not isJoining then currentPlayers = math.max(0, currentPlayers - 1) end
 local maxPlayers = 99
 local success, result = pcall(function() return Players.MaxPlayers end)
 if success and type(result) == "number" and result > 0 then maxPlayers = result end
+
 local infoLbl = Instance.new("TextLabel")
 infoLbl.Size = UDim2.new(1, -75, 0, 18)
 infoLbl.Position = UDim2.new(0, 72, 0, 50)
@@ -6142,8 +6673,10 @@ infoLbl.TextSize = 11
 infoLbl.Font = Enum.Font.Gotham
 infoLbl.TextXAlignment = Enum.TextXAlignment.Left
 infoLbl.Parent = notifFrame
+
 table.insert(activeNotifications, notifFrame)
 updateNotificationPositions()
+
 task.delay(4, function()
 if not notifFrame.Parent then return end
 TweenService:Create(notifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.new(1, 20, 1, 20), BackgroundTransparency = 1 }):Play()
@@ -6159,6 +6692,7 @@ end
 updateNotificationPositions()
 end)
 end
+
 processNotificationQueue = function()
 if isProcessingQueue or #notificationQueue == 0 then return end
 if Library._destroyed or window._destroyed then return end
@@ -6173,21 +6707,22 @@ if Library._destroyed or window._destroyed then return end
 if type(processNotificationQueue) == "function" then processNotificationQueue() end
 end)
 end
+
 Connect(Players.PlayerAdded, function(player)
 if not _G.JoinLeaveEnabled then return end
 table.insert(notificationQueue, { playerName = player.Name, userId = player.UserId, isJoining = true })
 processNotificationQueue()
 end, window)
+
 Connect(Players.PlayerRemoving, function(player)
 if not _G.JoinLeaveEnabled then return end
 table.insert(notificationQueue, { playerName = player.Name, userId = player.UserId, isJoining = false })
 processNotificationQueue()
 end, window)
+
 ToolsTab:CreateToggle({
-Name = "Player Notification",
-Default = false,
-Flag = "JoinLeaveNotifToggle",
-Icon = "users",
+Name = "Player Notification", Default = false,
+Flag = "JoinLeaveNotifToggle", Icon = "users",
 Tooltip = "Show player join/leave notifications",
 Callback = function(value)
 _G.JoinLeaveEnabled = value
@@ -6199,23 +6734,26 @@ processNotificationQueue()
 end
 end,
 })
---// [FIX] JoinLeave ikut ter-cleanup saat window destroy
+
 table.insert(window._extraCleanups, function()
 _G.JoinLeaveEnabled = false
 notificationQueue = {}
 activeNotifications = {}
 pcall(function() if Notification_Gui and Notification_Gui.Parent then Notification_Gui:Destroy() end end)
 end)
+
 --// ESP PLAYER
 local espEnabled = false
 local espObjects = {}
 local espCharacterConnections = {}
 local updateConnection = nil
+
 local function collectKeys(tbl)
 local keys = {}
 for key in pairs(tbl) do table.insert(keys, key) end
 return keys
 end
+
 local function getTeamColor(player)
 local team = nil
 pcall(function() team = player.Team end)
@@ -6236,6 +6774,7 @@ local teamColor = nil
 pcall(function() teamColor = team and team.TeamColor and team.TeamColor.Color end)
 return teamColor or Color3.fromRGB(255, 255, 255)
 end
+
 local function clearPlayerESP(player)
 local data = espObjects[player]
 if data then
@@ -6246,11 +6785,13 @@ end
 local conn = espCharacterConnections[player]
 if conn then pcall(function() conn:Disconnect() end) espCharacterConnections[player] = nil end
 end
+
 local function clearAllESP()
 for _, player in ipairs(collectKeys(espObjects)) do clearPlayerESP(player) end
 for _, player in ipairs(collectKeys(espCharacterConnections)) do clearPlayerESP(player) end
 espObjects = {}
 end
+
 local function createESP(targetPlayer)
 if targetPlayer == LocalPlayer then return end
 local function setupESP(char)
@@ -6264,6 +6805,7 @@ if not espEnabled then return end
 local teamColor = getTeamColor(targetPlayer)
 if head:FindFirstChild("PlayerESP_GUI") then head.PlayerESP_GUI:Destroy() end
 if char:FindFirstChild("PlayerESP_HL") then char.PlayerESP_HL:Destroy() end
+
 local highlight = Instance.new("Highlight")
 highlight.Name = "PlayerESP_HL"
 pcall(function()
@@ -6275,6 +6817,7 @@ highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
 end)
 highlight.Adornee = char
 highlight.Parent = char
+
 local billboard = Instance.new("BillboardGui")
 billboard.Name = "PlayerESP_GUI"
 billboard.Adornee = head
@@ -6284,6 +6827,7 @@ billboard.AlwaysOnTop = true
 billboard.ResetOnSpawn = false
 billboard.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 billboard.Parent = head
+
 local nameLabel = Instance.new("TextLabel")
 nameLabel.Name = "NameLabel"
 nameLabel.Size = UDim2.new(1, 0, 0, 14)
@@ -6294,6 +6838,7 @@ nameLabel.TextStrokeTransparency = 0
 nameLabel.Font = Enum.Font.GothamBold
 nameLabel.TextSize = 12
 nameLabel.Parent = billboard
+
 local distanceLabel = Instance.new("TextLabel")
 distanceLabel.Name = "DistanceLabel"
 distanceLabel.Size = UDim2.new(1, 0, 0, 12)
@@ -6305,6 +6850,7 @@ distanceLabel.TextStrokeTransparency = 0
 distanceLabel.Font = Enum.Font.GothamBold
 distanceLabel.TextSize = 11
 distanceLabel.Parent = billboard
+
 local hpBg = Instance.new("Frame")
 hpBg.Name = "HealthBg"
 hpBg.Size = UDim2.new(0, 120, 0, 6)
@@ -6312,18 +6858,16 @@ hpBg.Position = UDim2.new(0.5, -60, 0, 26)
 hpBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 hpBg.BorderSizePixel = 0
 hpBg.Parent = billboard
-local hpCornerBg = Instance.new("UICorner")
-hpCornerBg.CornerRadius = UDim.new(0, 3)
-hpCornerBg.Parent = hpBg
+Corner(hpBg, 3)
+
 local hpFill = Instance.new("Frame")
 hpFill.Name = "HealthFill"
 hpFill.Size = UDim2.new(1, 0, 1, 0)
 hpFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 hpFill.BorderSizePixel = 0
 hpFill.Parent = hpBg
-local hpCornerFill = Instance.new("UICorner")
-hpCornerFill.CornerRadius = UDim.new(0, 3)
-hpCornerFill.Parent = hpFill
+Corner(hpFill, 3)
+
 local hpLabel = Instance.new("TextLabel")
 hpLabel.Name = "HPLabel"
 hpLabel.Size = UDim2.new(1, 0, 0, 12)
@@ -6335,6 +6879,7 @@ hpLabel.TextStrokeTransparency = 0
 hpLabel.Font = Enum.Font.GothamBold
 hpLabel.TextSize = 11
 hpLabel.Parent = billboard
+
 local teamLabel = Instance.new("TextLabel")
 teamLabel.Name = "TeamLabel"
 teamLabel.Size = UDim2.new(1, 0, 0, 10)
@@ -6346,20 +6891,22 @@ teamLabel.TextStrokeTransparency = 0
 teamLabel.Font = Enum.Font.Gotham
 teamLabel.TextSize = 10
 teamLabel.Parent = billboard
+
 espObjects[targetPlayer] = {
 billboard = billboard, highlight = highlight, hpFill = hpFill, hpLabel = hpLabel,
 distanceLabel = distanceLabel, nameLabel = nameLabel, teamLabel = teamLabel,
 humanoid = hum, hrp = hrp, character = char,
 }
 end
-if targetPlayer.Character then setupESP(targetPlayer.Character) end
+
+if targetPlayer.Character then task.spawn(setupESP, targetPlayer.Character) end
 if not espCharacterConnections[targetPlayer] then
---// [FIX] pakai Connect(..., window) supaya ikut ter-disconnect
 espCharacterConnections[targetPlayer] = Connect(targetPlayer.CharacterAdded, function(char)
 if espEnabled then task.wait(0.5) setupESP(char) end
 end, window)
 end
 end
+
 local function startUpdateLoop()
 if updateConnection then updateConnection:Disconnect() updateConnection = nil end
 updateConnection = Connect(RunService.RenderStepped, function()
@@ -6367,11 +6914,8 @@ local myChar = LocalPlayer.Character
 local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
 for player, data in pairs(espObjects) do
 pcall(function()
-local hum = data.humanoid
-local hrp = data.hrp
-local fill = data.hpFill
-local hpLabel = data.hpLabel
-local distLabel = data.distanceLabel
+local hum, hrp = data.humanoid, data.hrp
+local fill, hpLabel, distLabel = data.hpFill, data.hpLabel, data.distanceLabel
 if hum and fill and hpLabel and hum.Parent then
 local currentHP = math.floor(hum.Health)
 local maxHP = math.floor(hum.MaxHealth)
@@ -6400,6 +6944,7 @@ end)
 end
 end, window)
 end
+
 local function toggleESP(state)
 espEnabled = state
 if state then
@@ -6412,105 +6957,31 @@ if updateConnection then updateConnection:Disconnect() updateConnection = nil en
 clearAllESP()
 end
 end
+
 Connect(Players.PlayerAdded, function(player)
 if espEnabled and player ~= LocalPlayer then createESP(player) end
 end, window)
 Connect(Players.PlayerRemoving, function(player) clearPlayerESP(player) end, window)
+
 ToolsTab:CreateToggle({
-Name = "ESP Player",
-Default = false,
-Flag = "ESPPlayerToggle",
-Icon = "eye",
+Name = "ESP Player", Default = false, Flag = "ESPPlayerToggle", Icon = "eye",
 Tooltip = "Activate ESP players with HP, distance, and team",
 Callback = function(value) toggleESP(value) end,
 })
---// [FIX] ESP ikut ter-cleanup saat window destroy / Library:Destroy
+
 table.insert(window._extraCleanups, function()
 espEnabled = false
 if updateConnection then pcall(function() updateConnection:Disconnect() end) updateConnection = nil end
 clearAllESP()
 end)
+
 ToolsTab:CreateButton({
-Name = "Korblox & Headless",
-Icon = "gem",
+Name = "Korblox & Headless", Icon = "gem",
 Tooltip = "This script is client only And Not real",
 Callback = function()
-executeRemoteScript(
-"https://raw.githubusercontent.com/Uo2iQnNhD/Maintenance/refs/heads/main/SYtg4g76-Korblox%20%26%20Headless.lua",
-"Korblox & Headless"
-)
+executeRemoteScript("https://raw.githubusercontent.com/Uo2iQnNhD/Maintenance/refs/heads/main/SYtg4g76-Korblox%20%26%20Headless.lua", "Korblox & Headless")
 end,
 })
-end
-
--- ==========================================================
--- [BARU] INTERFACE TAB (di dalam CreateWindow, setelah blok ToolsTab)
--- ==========================================================
-if config.InterfaceTab ~= false then
-local InterfaceTab = window:CreateTab(config.InterfaceTabName or "Interface", "eye")
-InterfaceTab.btn.LayoutOrder = 9996
-InterfaceTab.content.LayoutOrder = 9996
-
-local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
-
-local function setNamedVisible(names, v)
-if not gui then return end
-for _, d in ipairs(gui:GetDescendants()) do
-if d:IsA("GuiObject") then
-for _, n in ipairs(names) do
-if d.Name == n then
-pcall(function() d.Visible = v and true or false end)
-end
-end
-end
-end
-end
-
-local function setKeybindList(v)
-if window and window.ToggleKeybindList then
-pcall(function() window:ToggleKeybindList(v) end)
-else
-setNamedVisible({"KeybindList"}, v)
-end
-end
-
-local function setQuickBar(v)
-if window and window.SetQuickBarVisible then
-pcall(function() window:SetQuickBarVisible(v) end)
-else
-setNamedVisible({"QuickBar"}, v)
-end
-end
-
-local function setNetStats(v)
-if window and window.SetNetStatsBarVisible then
-pcall(function() window:SetNetStatsBarVisible(v) end)
-else
-setNamedVisible({"NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetStats"}, v)
-end
-end
-
-InterfaceTab:CreateSection("Interface")
-InterfaceTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
-CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
-Callback = function() window:Toggle() end})
-
-InterfaceTab:CreateSection("Visibility")
-InterfaceTab:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
-Tooltip = "Show/hide the floating Keybinds panel",
-Callback = function(v) setKeybindList(v) end})
-InterfaceTab:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
-Tooltip = "Show/hide the floating Quick Bar panel",
-Callback = function(v) setQuickBar(v) end})
-InterfaceTab:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
-Tooltip = "Show/hide the Net performance panel",
-Callback = function(v) setNetStats(v) end})
-InterfaceTab:CreateParagraph({Title = "How to use", Icon = "info",
-Content = "Click the key badge on the right to rebind any key. Use the Visibility toggles above to hide Quick Bar, Net Performance, Keybind"})
-
-setKeybindList(not IS_MOBILE)
-setQuickBar(not IS_MOBILE)
-setNetStats(not IS_MOBILE)
 end
 
 --// ==========================================================
@@ -6520,16 +6991,16 @@ if config.ThemeTab ~= false then
 local themeTab = window:CreateTab("Theme & Settings", "palette")
 themeTab.btn.LayoutOrder = 9998
 themeTab.content.LayoutOrder = 9998
+
 local presetNames = {}
 for k in pairs(Theme.Presets) do table.insert(presetNames, k) end
 table.sort(presetNames)
+
 themeTab:CreateSection("Theme Engine")
 themeTab:CreateDropdown({
-Name = "Theme Preset",
-Options = presetNames,
+Name = "Theme Preset", Options = presetNames,
 Default = ThemeManager.PresetName or (ThemeManager.Mode == "RGB Rainbow" and "RGB Rainbow" or "Solid"),
-Flag = "RoNet_ThemePreset",
-Icon = "palette",
+Flag = "RoNet_ThemePreset", Icon = "palette",
 Callback = function(v)
 Library:SetTheme(v)
 if not Library._loading then
@@ -6539,17 +7010,11 @@ end
 end,
 })
 themeTab:CreateToggle({
-Name = "RGB Rainbow",
-Flag = "RoNet_Rainbow",
-Default = Library.Rainbow,
-Icon = "activity",
+Name = "RGB Rainbow", Flag = "RoNet_Rainbow", Default = Library.Rainbow, Icon = "activity",
 Callback = function(v) Library:SetRainbow(v) end,
 })
 themeTab:CreateColorPicker({
-Name = "Accent Color",
-Default = Library.Accent,
-Flag = "RoNet_Accent",
-Icon = "droplet",
+Name = "Accent Color", Default = Library.Accent, Flag = "RoNet_Accent", Icon = "droplet",
 Callback = function(c) Library:SetAccent(c) end,
 })
 themeTab:CreateSlider({
@@ -6564,8 +7029,8 @@ Flag = "RoNet_MainBorderThickness", Icon = "border-all",
 Format = function(v) return string.format("%.1f", v) end,
 Callback = function(v)
 Theme.MainBorderThickness = v
-if mainStroke then mainStroke.Thickness = v end
-if mainGlow then mainGlow.Thickness = v + 2.2 end
+if mainStrokeRef then mainStrokeRef.Thickness = v end
+if mainGlowRef then mainGlowRef.Thickness = v + 2.2 end
 end,
 })
 themeTab:CreateSlider({
@@ -6577,13 +7042,14 @@ Theme.ElementBorderThickness = v
 Theme.BorderThickness = v
 end,
 })
+
 themeTab:CreateSection("Interface Effects")
 themeTab:CreateToggle({
 Name = "Dot Particles", Flag = "RoNet_Particles", Default = Library.Effects.Particles, Icon = "sparkles",
 Tooltip = "Partikel titik mengikuti warna theme",
 Callback = function(v)
 Library.Effects.Particles = v
-if dotLayer then dotLayer.Visible = v end
+if dotLayerRef then pcall(function() dotLayerRef.Visible = v end) end
 end,
 })
 themeTab:CreateToggle({
@@ -6591,7 +7057,7 @@ Name = "Crystal Particles", Flag = "RoNet_Crystals", Default = Library.Effects.C
 Tooltip = "Partikel crystal berputar mengikuti warna theme",
 Callback = function(v)
 Library.Effects.Crystals = v
-if crystalLayer then crystalLayer.Visible = v end
+if crystalLayerRef then pcall(function() crystalLayerRef.Visible = v end) end
 end,
 })
 themeTab:CreateToggle({
@@ -6599,7 +7065,7 @@ Name = "Grid Overlay", Flag = "RoNet_GridOverlay", Default = Library.Effects.Gri
 Tooltip = "Grid + scanline mengikuti warna theme",
 Callback = function(v)
 Library.Effects.GridOverlay = v
-if gridLayer then gridLayer.Visible = v end
+if gridLayerRef then pcall(function() gridLayerRef.Visible = v end) end
 end,
 })
 themeTab:CreateToggle({
@@ -6607,8 +7073,8 @@ Name = "Border Glow", Flag = "RoNet_Glow", Default = Library.Effects.Glow and Th
 Callback = function(v)
 Theme.BorderGlow = v
 Library.Effects.Glow = v
---// [FIX] UIStroke pakai Enabled, BUKAN Visible (dulu error)
-if mainGlow then pcall(function() mainGlow.Enabled = v end) end
+--// [FIX] UIStroke pakai Enabled, BUKAN Visible
+if mainGlowRef then pcall(function() mainGlowRef.Enabled = v end) end
 end,
 })
 themeTab:CreateSlider({
@@ -6617,17 +7083,14 @@ Flag = "RoNet_AnimationSpeed", Icon = "gauge",
 Format = function(v) return string.format("%.2fx", v) end,
 Callback = function(v) Library.AnimationSpeed = v end,
 })
+
 themeTab:CreateSection("Security")
---// [FIX Step 3] Flag "RoNet_Locked" dikecualikan dari overlay lock,
---// jadi toggle ini TETAP bisa diklik untuk UNLOCK.
 themeTab:CreateToggle({
-Name = "Lock Mode (Batch Control)",
-Flag = "RoNet_Locked",
-Default = Library.Locked,
-Icon = "lock",
+Name = "Lock Mode (Batch Control)", Flag = "RoNet_Locked", Default = Library.Locked, Icon = "lock",
 Tooltip = "Nyalakan untuk mengunci SEMUA kontrol. Matikan lagi lewat toggle ini.",
 Callback = function(v) Library:SetLocked(v) end,
 })
+
 themeTab:CreateSection("Settings")
 themeTab:CreateButton({
 Name = "Go Back to Ro-Net Hub", Icon = "home",
@@ -6648,13 +7111,15 @@ Library:Destroy()
 end,
 })
 end
+
 --// ==========================================================
---// SAVE / LOAD TAB [+ OVERWRITE CONFIG]
+--// SAVE / LOAD TAB [+ OVERWRITE + EXPORT/IMPORT]
 --// ==========================================================
 if config.SaveLoad ~= false then
 local systemTab = window:CreateTab("Save / Load", "database")
 systemTab.btn.LayoutOrder = 9999
 systemTab.content.LayoutOrder = 9999
+
 systemTab:CreateSection("File Manager")
 local fileNameInput = systemTab:CreateInput({
 Name = "File Name", Flag = "RoNet_FileName",
@@ -6665,6 +7130,7 @@ local fileDropdown = systemTab:CreateDropdown({
 Name = "Saved Files", Options = getSaveOptions(),
 Flag = "RoNet_SelectedSave", Icon = "folder",
 })
+
 systemTab:CreateButton({
 Name = "Refresh Saves", Icon = "refresh-cw",
 Callback = function()
@@ -6691,7 +7157,7 @@ end,
 })
 systemTab:CreateButton({
 Name = "Overwrite Config", Icon = "pencil",
-Tooltip = "Update selected files with all current settings (toggle, slider, theme, quick bar, layout, etc.)",
+Tooltip = "Update selected file with all current settings",
 Callback = function()
 local fname = fileDropdown:Get()
 if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
@@ -6714,7 +7180,7 @@ Library._saveFile = fname
 fileNameInput:Set(fname)
 fileDropdown:Refresh(getSaveOptions())
 fileDropdown:Set(fname)
-Library:Notify("Config overwritten: " .. fname .. " (all settings updated).", 4, "Overwrite", "check-circle")
+Library:Notify("Config overwritten: " .. fname, 4, "Overwrite", "check-circle")
 else
 Library:Notify(err or "Failed to overwrite config.", 4, "Overwrite", "x-circle")
 end
@@ -6761,15 +7227,15 @@ Library:Notify(err or "Failed to delete file.", 4, "Error", "x-circle")
 end
 end,
 })
+
 systemTab:CreateSection("Export / Import Config")
 systemTab:CreateParagraph({
 Title = "Share Config",
-Content = "Export menghasilkan JSON lengkap (values + theme + effects + layout). Import menerima JSON dari clipboard atau textbox di bawah.",
+Content = "Export menghasilkan JSON lengkap (values + theme + effects). Import menerima JSON dari clipboard atau textbox di bawah.",
 Icon = "send",
 })
 systemTab:CreateButton({
 Name = "Export Config (Clipboard)", Icon = "copy",
-Tooltip = "Copy seluruh config sebagai JSON ke clipboard",
 Callback = function()
 local json, err = Library:ExportConfig()
 if not json then
@@ -6795,11 +7261,8 @@ end
 end,
 })
 local jsonInput = systemTab:CreateInput({
-Name = "Config JSON", Flag = "RoNet_ConfigJSON",
-CurrentValue = "",
-PlaceholderText = "Paste config JSON here...",
-Icon = "clipboard",
-Tooltip = "Tempel JSON hasil export di sini",
+Name = "Config JSON", Flag = "RoNet_ConfigJSON", CurrentValue = "",
+PlaceholderText = "Paste config JSON here...", Icon = "clipboard",
 })
 systemTab:CreateButton({
 Name = "Import from Textbox", Icon = "upload",
@@ -6829,6 +7292,7 @@ Library:Notify(err or "Import failed.", 5, "Import", "x-circle")
 end
 end,
 })
+
 systemTab:CreateSection("Automation")
 systemTab:CreateToggle({
 Name = "Auto Save", Flag = "RoNet_AutoSave", Default = Library.AutoSave.Enabled, Icon = "timer",
@@ -6847,80 +7311,92 @@ if v then performAutoLoad(0.3) end
 end,
 })
 end
+
 if Library.AutoLoad.Enabled then
 performAutoLoad(1.5)
 end
---// Reveal initial elements (staggered)
+
 task.delay(0.1, function()
 if not window._destroyed and window.currentTab then
-revealChildren(window.currentTab, 0.02)
+pcall(revealChildren, window.currentTab, 0.02)
 end
 end)
+
 return window
 end
+
 --// ==========================================================
---// LIBRARY DESTROY [FIX: purge total semua GUI & efek]
+--// LIBRARY DESTROY (purge total semua GUI & efek)
 --// ==========================================================
 function Library:Destroy()
 if Library._destroyed then return end
 Library._destroyed = true
+
 pcall(function()
+if Movement then
 Movement.InfJump = false
 Movement.WalkSpeedActive = false
 Movement.JumpPowerActive = false
+end
 local hum = getHumanoid()
-if hum then hum.WalkSpeed = 16; hum.JumpPower = 50 end
+if hum then hum.WalkSpeed = 16 hum.JumpPower = 50 end
 end)
-for _, w in ipairs(table.clone(Library._windows)) do
+
+for _, w in ipairs(table.clone(Library._windows or {})) do
 pcall(function() w:Destroy() end)
 end
-for _, conn in ipairs(Library._connections) do
+for _, conn in ipairs(Library._connections or {}) do
 pcall(function() conn:Disconnect() end)
 end
 Library._connections = {}
-pcall(function() if NotifGui and NotifGui.Parent then NotifGui:Destroy() end end)
---// [FIX] purge sisa GUI di SEMUA parent (PlayerGui / CoreGui / gethui)
+
+pcall(function() if NotifGuiRef and NotifGuiRef.Parent then NotifGuiRef:Destroy() end end)
+
 pcall(function()
 local parents = { LocalPlayer:FindFirstChild("PlayerGui"), game:GetService("CoreGui") }
 if typeof(gethui) == "function" then
 local ok, h = pcall(gethui)
 if ok and h then table.insert(parents, h) end
 end
+local names = {
+JoinLeaveNotificationGui = true, ZethNotifies = true, ZethHubV5 = true,
+["Ro-NetriumV4"] = true, RoNetriumGUI = true, ZethGameChecker = true, RoNetGameChecker = true,
+}
 for _, parent in ipairs(parents) do
 if parent then
 for _, child in ipairs(parent:GetChildren()) do
-if child:IsA("ScreenGui") and (
-child.Name == "JoinLeaveNotificationGui"
-or child.Name == "ZethNotifies"
-or child.Name == "Ro-NetriumV4"
-) then
+if child:IsA("ScreenGui") and names[child.Name] then
 pcall(function() child:Destroy() end)
 end
 end
 end
 end
 end)
+
 _G.JoinLeaveEnabled = false
 Library._confirmOpen = false
 Library._actionOpen = false
 Library._buttonPressLock = false
+Library.Locked = false
 Library.Flags = {}
 Library._elements = {}
 Library._searchIndex = {}
 Library._windows = {}
 Library._lockables = {}
 Library._layout = {}
+
 if type(Env) == "table" then
 if Env.ZethHubLibrary == Library then Env.ZethHubLibrary = nil end
 if Env.RoNetLibrary == Library then Env.RoNetLibrary = nil end
 end
 end
+
 if type(Env) == "table" then
 Env.ZethHubLibrary = Library
 Env.RoNetLibrary = Library
 end
-return Library
 
+return Library
 --// ==========================================================
---// SELESAI 6/6 - SCRIPT LENGKAP V5.9.1 (FIXED)
+--// SELESAI 6/6 — V5.9.1 (FULL FIXED)
 --// ==========================================================
