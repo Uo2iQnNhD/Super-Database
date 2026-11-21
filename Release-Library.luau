@@ -6444,8 +6444,13 @@ end,
 end
 
 -- ==========================================================
--- [BARU] INTERFACE & VISIBILITY (di dalam blok ToolsTab)
+-- [BARU] INTERFACE TAB (di dalam CreateWindow, setelah blok ToolsTab)
 -- ==========================================================
+if config.InterfaceTab ~= false then
+local InterfaceTab = window:CreateTab(config.InterfaceTabName or "Interface", "eye")
+InterfaceTab.btn.LayoutOrder = 9996
+InterfaceTab.content.LayoutOrder = 9996
+
 local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
 
 local function setNamedVisible(names, v)
@@ -6485,31 +6490,28 @@ setNamedVisible({"NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetSta
 end
 end
 
-ToolsTab:CreateSection("Interface & Visibility")
-
-ToolsTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
+InterfaceTab:CreateSection("Interface")
+InterfaceTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
 CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
 Callback = function() window:Toggle() end})
 
-ToolsTab:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
+InterfaceTab:CreateSection("Visibility")
+InterfaceTab:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
 Tooltip = "Show/hide the floating Keybinds panel",
 Callback = function(v) setKeybindList(v) end})
-
-ToolsTab:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
+InterfaceTab:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
 Tooltip = "Show/hide the floating Quick Bar panel",
 Callback = function(v) setQuickBar(v) end})
-
-ToolsTab:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
+InterfaceTab:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
 Tooltip = "Show/hide the Net performance panel",
 Callback = function(v) setNetStats(v) end})
-
-ToolsTab:CreateParagraph({Title = "How to use", Icon = "info",
+InterfaceTab:CreateParagraph({Title = "How to use", Icon = "info",
 Content = "Click the key badge on the right to rebind any key. Use the Visibility toggles above to hide Quick Bar, Net Performance, Keybind"})
 
--- [PENTING] Default tidak auto-fire callback saat create, jadi apply manual
 setKeybindList(not IS_MOBILE)
 setQuickBar(not IS_MOBILE)
 setNetStats(not IS_MOBILE)
+end
 
 --// ==========================================================
 --// THEME TAB [+ LOCK MODE yang BISA di-unlock]
