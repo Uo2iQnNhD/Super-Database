@@ -1,5 +1,5 @@
 --[[ Ro-Netrium Updated by Zaycapcay ]]
---[[ New Interface Generation ]]
+--[[ New Interface Generation, powered by exterminate0 ]]
 --[[ Powerful & Best Library 2026 ]]
 
 local TweenService = game:GetService("TweenService")
