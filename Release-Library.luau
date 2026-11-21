@@ -5961,12 +5961,7 @@ local ToolsTab = window:CreateTab("Tools", "wrench")
 ToolsTab.btn.LayoutOrder = 9997
 ToolsTab.content.LayoutOrder = 9997
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-ToolsTab:CreateSection("Movement")
-ToolsTab:CreateParagraph({
-Title = "Movement Tools",
-Content = "WalkSpeed, JumpPower, and Infinite Jump are now in the QUICK BAR (floating bar above the window). It can be collapsed and dragged via its header. All Quick Bar settings are saved with your config.",
-Icon = "gauge",
-})
+
 ToolsTab:CreateSection("External Scripts")
 ToolsTab:CreateParagraph({
 Title = "System Information",
@@ -6574,7 +6569,7 @@ themeTab:CreateButton({
 Name = "Destroy Interface", Icon = "trash-2",
 RequireConfirm = true,
 ConfirmTitle = "Self-Destruct",
-ConfirmContent = "Are you sure you want to destroy the entire interface? This cannot be undone without re-executing the script.",
+ConfirmContent = "Are you sure you want to destroy the entire interface? This cannot be undone without re-executing the script",
 ConfirmCooldown = 3,
 Callback = function()
 Library:Notify("Self-destructing in 7 seconds...", 7, "Warning", "shield-alert")
@@ -6609,7 +6604,7 @@ end,
 })
 systemTab:CreateButton({
 Name = "Save Current Config", Icon = "download",
-Tooltip = "Menyimpan semua toggle, slider, dropdown, keybind, theme & effects",
+Tooltip = "Save all toggles, sliders, dropdowns, keybinds, themes & effects",
 Callback = function()
 local fname = fileNameInput:Get()
 if fname == "" then fname = Library._saveFile or "autosave" end
@@ -6626,7 +6621,7 @@ end,
 })
 systemTab:CreateButton({
 Name = "Overwrite Config", Icon = "pencil",
-Tooltip = "Update file terpilih dengan SEMUA setting saat ini (toggle, slider, theme, quick bar, layout, dll)",
+Tooltip = "Update selected files with all current settings (toggle, slider, theme, quick bar, layout, etc.)",
 Callback = function()
 local fname = fileDropdown:Get()
 if not fname or fname == "" or fname == "(no saves)" then fname = fileNameInput:Get() end
@@ -6855,11 +6850,7 @@ Env.ZethHubLibrary = Library
 Env.RoNetLibrary = Library
 end
 return Library
+
 --// ==========================================================
 --// SELESAI 6/6 - SCRIPT LENGKAP V5.9.1 (FIXED)
---// Cara pakai (di script utamamu, seperti sebelumnya):
---// local Library = loadstring(game:HttpGet("URL_FILE_INI"))()
---// local Window = Library:CreateWindow({ Title = "Ro-Netrium" })
---// local Tab = Window:CreateTab("Main", "home")
---// Tab:CreateToggle({ Name = "Test", Flag = "Test", Callback = function(v) print(v) end })
 --// ==========================================================
