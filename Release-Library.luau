@@ -6443,76 +6443,73 @@ end,
 })
 end
 
-local function findLibGui()
-    local parents = {}
-    pcall(function() table.insert(parents, game:GetService("CoreGui")) end)
-    pcall(function()
-        local pg = LocalPlayer:FindFirstChild("PlayerGui")
-        if pg then table.insert(parents, pg) end
-    end)
-    if typeof(gethui) == "function" then
-        pcall(function() local h = gethui(); if h then table.insert(parents, h) end end)
-    end
-    for _, p in ipairs(parents) do
-        if p then
-            local g = p:FindFirstChild("ZethHubV5")
-            if g then return g end
-        end
-    end
-    return nil
-end
+-- ==========================================================
+-- [BARU] INTERFACE & VISIBILITY (di dalam blok ToolsTab)
+-- ==========================================================
+local IS_MOBILE = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
 
 local function setNamedVisible(names, v)
-    local g = findLibGui()
-    if not g then return end
-    for _, d in ipairs(g:GetDescendants()) do
-        for _, n in ipairs(names) do
-            if d.Name == n and d:IsA("GuiObject") then
-                pcall(function() d.Visible = v end)
-            end
-        end
-    end
+if not gui then return end
+for _, d in ipairs(gui:GetDescendants()) do
+if d:IsA("GuiObject") then
+for _, n in ipairs(names) do
+if d.Name == n then
+pcall(function() d.Visible = v and true or false end)
+end
+end
+end
+end
 end
 
 local function setKeybindList(v)
-    if Window and Window.ToggleKeybindList then
-        pcall(function() Window:ToggleKeybindList(v) end)
-    else
-        setNamedVisible({"KeybindList"}, v)
-    end
+if window and window.ToggleKeybindList then
+pcall(function() window:ToggleKeybindList(v) end)
+else
+setNamedVisible({"KeybindList"}, v)
 end
+end
+
 local function setQuickBar(v)
-    if Window and Window.SetQuickBarVisible then
-        pcall(function() Window:SetQuickBarVisible(v) end)
-    else
-        setNamedVisible({"QuickBar"}, v)
-    end
+if window and window.SetQuickBarVisible then
+pcall(function() window:SetQuickBarVisible(v) end)
+else
+setNamedVisible({"QuickBar"}, v)
 end
+end
+
 local function setNetStats(v)
-    if Window and Window.SetNetStatsBarVisible then
-        pcall(function() Window:SetNetStatsBarVisible(v) end)
-    else
-        setNamedVisible({"NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetStats"}, v)
-    end
+if window and window.SetNetStatsBarVisible then
+pcall(function() window:SetNetStatsBarVisible(v) end)
+else
+setNamedVisible({"NetStatsBar", "NetStatsOuter", "NetStatsInner", "SidebarNetStats"}, v)
+end
 end
 
 ToolsTab:CreateSection("Interface & Visibility")
-ToolsTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
-    CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
-    Callback = function() Window:Toggle() end})
 
--- [NEW] Visibility toggles
+ToolsTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
+CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
+Callback = function() window:Toggle() end})
+
 ToolsTab:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
-    Tooltip = "Show/hide the floating Keybinds panel",
-    Callback = function(v) setKeybindList(v) end})
+Tooltip = "Show/hide the floating Keybinds panel",
+Callback = function(v) setKeybindList(v) end})
+
 ToolsTab:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
-    Tooltip = "Show/hide the floating Quick Bar panel",
-    Callback = function(v) setQuickBar(v) end})
+Tooltip = "Show/hide the floating Quick Bar panel",
+Callback = function(v) setQuickBar(v) end})
+
 ToolsTab:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
-    Tooltip = "Show/hide the Net performance panel",
-    Callback = function(v) setNetStats(v) end})
+Tooltip = "Show/hide the Net performance panel",
+Callback = function(v) setNetStats(v) end})
+
 ToolsTab:CreateParagraph({Title = "How to use", Icon = "info",
-    Content = "Click the key badge on the right to rebind any key, Use the Visibility toggles above to hide Quick bar, Net Performance, Keybind"})
+Content = "Click the key badge on the right to rebind any key. Use the Visibility toggles above to hide Quick Bar, Net Performance, Keybind"})
+
+-- [PENTING] Default tidak auto-fire callback saat create, jadi apply manual
+setKeybindList(not IS_MOBILE)
+setQuickBar(not IS_MOBILE)
+setNetStats(not IS_MOBILE)
 
 --// ==========================================================
 --// THEME TAB [+ LOCK MODE yang BISA di-unlock]
