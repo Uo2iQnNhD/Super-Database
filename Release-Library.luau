@@ -6496,22 +6496,22 @@ local function setNetStats(v)
     end
 end
 
-Binds:CreateSection("Interface & Visibility")
-Binds:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
+ToolsTab:CreateSection("Interface & Visibility")
+ToolsTab:CreateKeybind({Name = "Hide/Show Interface", Icon = "eye", Flag = "Bind_ToggleUI",
     CurrentKeybind = Enum.KeyCode.RightControl, Tooltip = "Toggle the whole interface",
     Callback = function() Window:Toggle() end})
 
 -- [NEW] Visibility toggles
-Binds:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
+ToolsTab:CreateToggle({Name = "Show Keybind List", Icon = "key", Flag = "RN_ShowKeybindList", Default = not IS_MOBILE,
     Tooltip = "Show/hide the floating Keybinds panel",
     Callback = function(v) setKeybindList(v) end})
-Binds:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
+ToolsTab:CreateToggle({Name = "Show Quick Bar 1", Icon = "gauge", Flag = "RN_ShowQuickBar", Default = not IS_MOBILE,
     Tooltip = "Show/hide the floating Quick Bar panel",
     Callback = function(v) setQuickBar(v) end})
-Binds:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
+ToolsTab:CreateToggle({Name = "Show Net Performance", Icon = "activity", Flag = "RN_ShowNetStats", Default = not IS_MOBILE,
     Tooltip = "Show/hide the Net performance panel",
     Callback = function(v) setNetStats(v) end})
-Binds:CreateParagraph({Title = "How to use", Icon = "info",
+ToolsTab:CreateParagraph({Title = "How to use", Icon = "info",
     Content = "Click the key badge on the right to rebind any key, Use the Visibility toggles above to hide Quick bar, Net Performance, Keybind"})
 
 --// ==========================================================
