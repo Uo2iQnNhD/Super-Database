@@ -7231,7 +7231,7 @@ end,
 systemTab:CreateSection("Export / Import Config")
 systemTab:CreateParagraph({
 Title = "Share Config",
-Content = "Export menghasilkan JSON lengkap (values + theme + effects). Import menerima JSON dari clipboard atau textbox di bawah.",
+Content = "Export produces complete JSON (values + themes + effects), Import receives JSON from the clipboard or textbox below",
 Icon = "send",
 })
 systemTab:CreateButton({
